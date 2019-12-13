@@ -7,5 +7,36 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(fs)
+library(readr)
+library(tibble)
 ```
 
+```{r Tabula rasa}
+rm(list=ls())
+```
+
+
+## Importing data
+```{r}
+reports <- 
+  # 1. Figure out which files need to be loaded
+  tibble(filename = as.character(dir_ls(path = "Data", glob  = "*gears*.csv"))) %>%
+  
+  # 2. Load files on by one (hence rowwise())
+  rowwise() %>%
+  do(read_csv(.$filename[1], 
+              col_types = cols(Participant = col_character(),
+                               Session = col_character(),
+                               Block = col_integer(),
+                               OnsetDelay = col_double(),
+                               Condition = col_character(),
+                               Distance = col_double(),
+                               DisplayLeft = col_character(),
+                               DisplayRight = col_character(),
+                               Occlusion = col_character(),
+                               Percept = col_character(),
+                               Time = col_double())))
+```
