@@ -44,9 +44,10 @@ reports <-
   # 3. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
   group_by(Participant, Block) %>%
   mutate(Duration = lead(Time) - Time) %>%
-  ungroup()
+  ungroup() %>%
   
   # 4. Drop "end" Percept
+  filter(Percept != "end")
   
   # 5. Figuring out OTHER gear display. "gear24" for fully ambiguous, other image for disambiguated cases.
   #    Logic: if DisplayLeft == "gear24" then it is "DisplayRight" else it is DisplayLeft.
