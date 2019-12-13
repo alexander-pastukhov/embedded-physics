@@ -20,7 +20,7 @@ rm(list=ls())
 
 
 ## Importing data
-```{r}
+```{r Import}
 reports <- 
   # 1. Figure out which files need to be loaded
   tibble(filename = as.character(dir_ls(path = "Data", glob  = "*gears*.csv"))) %>%
