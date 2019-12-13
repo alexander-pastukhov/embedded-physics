@@ -38,8 +38,13 @@ reports <-
                                DisplayRight = col_character(),
                                Occlusion = col_character(),
                                Percept = col_character(),
-                               Time = col_double())))
-  # 3. Compute duration. Inside mutate use "lead(Time)".
+                               Time = col_double()))) %>%
+  ungroup() %>%
+  
+  # 3. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
+  group_by(Participant, Block) %>%
+  mutate(Duration = lead(Time) - Time) %>%
+  ungroup()
   
   # 4. Drop "end" Percept
   
