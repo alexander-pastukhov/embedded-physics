@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(fs)
+library(forcats)
 library(readr)
 library(tibble)
 ```
@@ -51,9 +52,18 @@ reports <-
   
   # 5. Figuring out OTHER gear display. "gear24" for fully ambiguous, other image for disambiguated cases.
   #    Logic: if DisplayLeft == "gear24" then it is "DisplayRight" else it is DisplayLeft.
-  mutate(Display = ifelse(DisplayLeft=="gear24", DisplayRight, DisplayLeft))%>% ##turn into factor
+  mutate(Display = ifelse(DisplayLeft=="gear24", DisplayRight, DisplayLeft))%>% #turn into factor
   # 6. Convert Occlusion into numeric. First, change "None" to "0" via stringr::str_replace_all(Occlusion, "None", "0").
   #    Then, convert it to numeric in mutate.
-  mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))
+  mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))%>%
+  # 7. Renaming Displays
+  mutate(Percept=as.factor(Percept),
+         Percept=fct_recode(Percept, "Counterrotation"="up","down", "Corotation"="left", "right"), DisplayLeft=fct_recode(DisplayLeft, "easy"="gear24-strong", "medium"="gear24-medium-strong", "hard"="gear24-weak", "full"= "gear24"), 
+         DisplayRight=fct_recode(DisplayRight, "easy"="gear24-strong", "medium"="gear24-medium-strong", "hard"="gear24-weak", "very hard"= "gear24"))
   
 ```
+
+```{r}
+
+```
+
