@@ -61,5 +61,19 @@ reports <-
          Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"), DisplayLeft=fct_recode(DisplayLeft, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"), 
          DisplayRight=fct_recode(DisplayRight, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"))
 ```
+##Distance Condition
 
+```{r}
+#Computing Distance Duration
+distance<- reports%>%
+  filter(Condition=="Control"|Condition=="Separation")%>% 
+  filter(Percept!="unclear")%>%
+# each participant and Distance seperatly
+    group_by(Participant, Distance)%>% 
+  summarize(TotalDuration=sum(Duration),
+#if value in the brackets is true itll be considered if not it will not
+  CorotateDur=sum(Duration[Percept=="Corotation"]),
+  PCorotation=CorotateDur/TotalDuration)
+
+```
 
