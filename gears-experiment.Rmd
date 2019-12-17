@@ -4,13 +4,17 @@ author: "Lisa Koßmann"
 date: "13 Dezember 2019"
 output: html_document
 ---
+```{r}
+install.packages("BMS")
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(BMS)
 library(dplyr)
 library(fs)
 library(forcats)
+library(ggplot2)
 library(readr)
 library(tibble)
 ```
@@ -73,7 +77,15 @@ distance<- reports%>%
   summarize(TotalDuration=sum(Duration),
 #if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
-  PCorotation=CorotateDur/TotalDuration)
+  Pcorotation=CorotateDur/TotalDuration)
+#Plotting Distance
+ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation) )+
+  geom_boxplot()+
+  geom_point()
+
+```
+
+```{r}
 
 ```
 
