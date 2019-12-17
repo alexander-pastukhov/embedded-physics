@@ -58,9 +58,8 @@ reports <-
   mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))%>%
   # 7. Renaming Displays
   mutate(Percept=as.factor(Percept),
-         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"), DisplayLeft=fct_recode(DisplayLeft, "easy"="gear24-strong", "medium"="gear24-medium-strong", "hard"="gear24-weak", "full"= "gear24"), 
-         DisplayRight=fct_recode(DisplayRight, "easy"="gear24-strong", "medium"="gear24-medium-strong", "hard"="gear24-weak", "very hard"= "gear24"))
-
-
-  
+         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"), DisplayLeft=fct_recode(DisplayLeft, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"), 
+         DisplayRight=fct_recode(DisplayRight, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"))
 ```
+
+
