@@ -87,6 +87,6 @@ ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation) )+
 
 ```{r}
 #Bayesian Model Averaging Distance
-bms(distance, mprior = "uniform", g = "UIP", user.int = F)
+bms(distance, mprior = 0.01,0.01, g = "UIP", user.int = F)
 ```
 
