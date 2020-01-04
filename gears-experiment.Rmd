@@ -89,4 +89,40 @@ ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation) )+
 #Bayesian Model Averaging Distance
 bms(distance, mprior = 0.01,0.01, g = "UIP", user.int = F)
 ```
+##Occlusion Condition
+```{r}
+#Computing Occlusion Duration
+occlusion<- reports%>%
+  filter(Condition=="Control"|Condition=="Occlusion")%>% 
+  filter(Percept!="unclear")%>%
+# each participant and Occlusion seperatly
+    group_by(Participant, Occlusion)%>% 
+  summarize(TotalDuration=sum(Duration),
+#if value in the brackets is true itll be considered if not it will not
+  CorotateDur=sum(Duration[Percept=="Corotation"]),
+  Pcorotation=CorotateDur/TotalDuration)
+#Plotting Occlusion
+ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation) )+
+  geom_boxplot()+
+  geom_point()
+```
+
+## Ambiguity Condition
+```{r}
+#Computing Ambiguity Duration
+ambiguity<- reports%>%
+  filter(Condition=="Control"|Condition=="Ambiguity")%>% 
+  filter(Percept!="unclear")%>%
+# each participant and Ambiguity seperatly
+    group_by(Participant, Display)%>% 
+  summarize(TotalDuration=sum(Duration),
+#if value in the brackets is true itll be considered if not it will not
+  CorotateDur=sum(Duration[Percept=="Corotation"]),
+  Pcorotation=CorotateDur/TotalDuration)
+#Plotting Ambiguity
+ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
+  geom_boxplot()+
+  geom_point()
+
+```
 
