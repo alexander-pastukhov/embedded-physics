@@ -108,6 +108,10 @@ occlusion<- reports%>%
   
   # reorder Occlusion to factor
   # 1. Display to factor
+  mutate(Display=as.factor(Display),
+         mutate(Percept=as.factor(Percept),
+         Percept=fct_recode(Occlusion, "0"="None"),
+         fct_level(0, "first level"))%>%
   # 2. Use fct_relevel function, which goes Var = fct_relevel(Var, "first level", "second level", ...)
   
   # each participant and Occlusion seperatly
@@ -116,12 +120,19 @@ occlusion<- reports%>%
 
   #if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
-  Pcorotation=CorotateDur/TotalDuration)
+  Pcorotation=CorotateDur/TotalDuration)%>%
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
 
 #Plotting Occlusion
-ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation) )+
+ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation))+
   geom_boxplot()+
   geom_point()
+```
+
+```{r}
+# Computing brm for Occlusion condition
+distancefit<- brm(PCorotationAdj ~ Distance + (1|Participant), family=Beta(), data=occlusion, 
+    prior=c(prior(normal(0,10),class="b", coef=Occlusion)))
 ```
 
 ## Ambiguity Condition
