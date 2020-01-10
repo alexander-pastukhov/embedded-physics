@@ -5,7 +5,7 @@ date: "13 Dezember 2019"
 output: html_document
 ---
 ```{r}
-install.packages("BMS")
+install.packages("brms")
 ```
 
 ```{r setup, include=FALSE}
@@ -78,7 +78,8 @@ distance<- reports%>%
   summarize(TotalDuration=sum(Duration),
 #if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
-  Pcorotation=CorotateDur/TotalDuration)
+  Pcorotation=CorotateDur/TotalDuration)%>%
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
 
 #Plotting Distance
 ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+
@@ -91,7 +92,12 @@ ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Parti
 ```
 
 ```{r}
-brm()
+distancefit<- brm(PCorotationAdj ~ Distance + (1|Participant), family=Beta(), data=distance, 
+    prior=c(prior(normal(0,10),class="b", coef=Distance)))
+```
+
+```{r}
+plot(distancefit)
 ```
 ##Occlusion Condition
 ```{r}
