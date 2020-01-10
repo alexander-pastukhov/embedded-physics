@@ -10,10 +10,11 @@ install.packages("BMS")
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(BMS)
+library(brms)
 library(dplyr)
 library(fs)
 library(forcats)
+library(ggbeeswarm)
 library(ggplot2)
 library(readr)
 library(tibble)
@@ -78,29 +79,39 @@ distance<- reports%>%
 #if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
   Pcorotation=CorotateDur/TotalDuration)
+
 #Plotting Distance
-ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation) )+
-  geom_boxplot()+
-  geom_point()
+ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+
+  geom_boxplot(outlier.shape = NA)+
+  # geom_point() +
+  geom_beeswarm() + # geom_quasirandom() +
+  scale_x_continuous(breaks = c(0, 10, 20)) + 
+  theme(legend.position = "none")
 
 ```
 
 ```{r}
-#Bayesian Model Averaging Distance
-bms(distance, mprior = 0.01,0.01, g = "UIP", user.int = F)
+brm()
 ```
 ##Occlusion Condition
 ```{r}
 #Computing Occlusion Duration
 occlusion<- reports%>%
-  filter(Condition=="Control"|Condition=="Occlusion")%>% 
-  filter(Percept!="unclear")%>%
-# each participant and Occlusion seperatly
-    group_by(Participant, Occlusion)%>% 
+  filter(Condition=="Control"|Condition=="Occlusion") %>%
+  filter(Percept!="unclear") %>%
+  
+  # reorder Occlusion to factor
+  # 1. Display to factor
+  # 2. Use fct_relevel function, which goes Var = fct_relevel(Var, "first level", "second level", ...)
+  
+  # each participant and Occlusion seperatly
+  group_by(Participant, Occlusion)%>% 
   summarize(TotalDuration=sum(Duration),
-#if value in the brackets is true itll be considered if not it will not
+
+  #if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
   Pcorotation=CorotateDur/TotalDuration)
+
 #Plotting Occlusion
 ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation) )+
   geom_boxplot()+
@@ -113,12 +124,20 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation) )+
 ambiguity<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
   filter(Percept!="unclear")%>%
-# each participant and Ambiguity seperatly
-    group_by(Participant, Display)%>% 
+  
+  # 1. Display to factor
+  # 2. Rename levels using fct_recode
+  # 3. Reorder Display
+  
+  # each participant and Ambiguity seperatly
+  group_by(Participant, Display)%>% 
   summarize(TotalDuration=sum(Duration),
-#if value in the brackets is true itll be considered if not it will not
+  
+  # if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
   Pcorotation=CorotateDur/TotalDuration)
+
+
 #Plotting Ambiguity
 ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
   geom_boxplot()+
