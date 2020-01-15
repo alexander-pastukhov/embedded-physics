@@ -79,10 +79,13 @@ distance<- reports%>%
 #if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
   Pcorotation=CorotateDur/TotalDuration)%>%
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
+  #changing distance to factor
+  mutate(Distance=as.factor(Distance),
+         relevel(Distance,"-8.13"))
 
 #Plotting Distance
-ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+
+ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
   geom_boxplot(outlier.shape = NA)+ 
   geom_point()+
   geom_beeswarm() + 
