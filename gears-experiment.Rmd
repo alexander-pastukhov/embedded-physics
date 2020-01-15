@@ -88,8 +88,8 @@ ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Parti
   geom_boxplot(outlier.shape = NA)+ 
   geom_point()+
   geom_beeswarm() + 
-  geom_quasirandom()+ 
-  scale_x_discrete(breaks = c(0, 10, 20, 30, 40, 50, 60, 70)) + 
+  geom_quasirandom()+
+  scale_x_discrete()+
   theme(legend.position = "none")
 
 ```
@@ -114,7 +114,7 @@ occlusion<- reports%>%
   mutate(Display=as.factor(Display),
          Occlusion=as.factor(Occlusion),
          Occlusion=fct_recode(Occlusion, "0"="None", "8.13"="8.13", "16.26"="16.26", "32.52"="32.52","65.04"="65.04"),
-         fct_relevel(Occlusion, "0","8.13", "16.26", "32.52", "65.04"))%>%
+         Occlusion=fct_relevel(Occlusion, "0","8.13", "16.26", "32.52", "65.04"))%>%
   # 2. Use fct_relevel function, which goes Var = fct_relevel(Var, "first level", "second level", ...)
   
   # each participant and Occlusion seperatly
@@ -132,7 +132,6 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
   geom_point()+
   geom_beeswarm()+
   geom_quasirandom()+
-   scale_x_continuous(breaks = c(0, 10, 20)) + 
   theme(legend.position = "none")
 ```
 
