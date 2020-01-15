@@ -102,6 +102,16 @@ distancefit<- brm(PCorotationAdj ~ Distance + (1|Participant), family=Beta(), da
 ```{r}
 plot(distancefit)
 ```
+
+```{r}
+distancefit2<- brm(PCorotationAdj ~ Distance + (1|Participant), family=Beta(), data=distance)
+```
+```{r}
+plot(distancefit2)
+```
+
+
+
 ##Occlusion Condition
 ```{r}
 #Computing Occlusion Duration
