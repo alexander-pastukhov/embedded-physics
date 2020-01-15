@@ -127,9 +127,13 @@ occlusion<- reports%>%
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
 
 #Plotting Occlusion
-ggplot(data=Occlusion, aes(x=Occlusion,group=Occlusion, y=PCorotation))+
-  geom_boxplot()+
-  geom_point()
+ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_point()+
+  geom_beeswarm()+
+  geom_quasirandom()+
+   scale_x_continuous(breaks = c(0, 10, 20)) + 
+  theme(legend.position = "none")
 ```
 
 ```{r}
