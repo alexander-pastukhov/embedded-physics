@@ -82,8 +82,7 @@ distance<- reports%>%
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
   #changing distance to factor
   mutate(Distance=as.factor(Distance),
-         relevel(Distance,"-8.13"))
-
+         Distance=fct_relevel(Distance,"-8.13", "0", "8.13", "32.25", "65.04"))
 #Plotting Distance
 ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
   geom_boxplot(outlier.shape = NA)+ 
