@@ -52,16 +52,25 @@ reports <-
   # 4. Drop "end" Percept
   filter(Percept != "end") %>%
   
+  # 5. Renaming Displays
+  mutate(Percept=as.factor(Percept),
+         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"),
+         DisplayLeft = fct_recode(DisplayLeft, "strong"="gear24-strong",
+                                               "mediud"= "gear24-medium",
+                                               "medium-strong"="gear24-medium-strong",
+                                               "weak"="gear24-weak",
+                                               "ambiguous"= "gear24"),
+         DisplayLeft = fct_relevel(DisplayLeft, ) %>%
+         DisplayRight=fct_recode(DisplayRight, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"))
+  
   # 5. Figuring out OTHER gear display. "gear24" for fully ambiguous, other image for disambiguated cases.
   #    Logic: if DisplayLeft == "gear24" then it is "DisplayRight" else it is DisplayLeft.
   mutate(Display = ifelse(DisplayLeft=="gear24", DisplayRight, DisplayLeft))%>% #turn into factor
+  
   # 6. Convert Occlusion into numeric. First, change "None" to "0" via stringr::str_replace_all(Occlusion, "None", "0").
   #    Then, convert it to numeric in mutate.
   mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))%>%
-  # 7. Renaming Displays
-  mutate(Percept=as.factor(Percept),
-         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"), DisplayLeft=fct_recode(DisplayLeft, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"), 
-         DisplayRight=fct_recode(DisplayRight, "weak"="gear24-strong", "medium"="gear24-medium-strong", "strong"="gear24-weak", "full"= "gear24"))
+
 ```
 ##Distance Condition
 
