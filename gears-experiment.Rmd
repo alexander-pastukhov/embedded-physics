@@ -82,42 +82,49 @@ reports <-
 
 ```
 
-##Distance Condition
+## Distance condition
 
 ```{r}
 #Computing Distance Duration
-distance<- reports%>%
+distance <-
+  reports%>%
   filter(Condition=="Control"|Condition=="Separation")%>% 
   filter(Percept!="unclear")%>%
-# each participant and Distance seperatly
-    group_by(Participant, Distance)%>% 
+  
+  # each participant and Distance seperatly
+  group_by(Participant, Distance)%>% 
   summarize(TotalDuration=sum(Duration),
-#if value in the brackets is true itll be considered if not it will not
-  CorotateDur=sum(Duration[Percept=="Corotation"]),
-  Pcorotation=CorotateDur/TotalDuration)%>%
+            # if value in the brackets is true itll be considered if not it will not
+            CorotateDur=sum(Duration[Percept=="Corotation"]),
+            Pcorotation=CorotateDur/TotalDuration)%>%
+  
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
+  
   #changing distance to factor
   mutate(Distance=as.factor(Distance),
-         Distance=fct_relevel(Distance,"-8.13", "0", "8.13", "32.25", "65.04"))
-#Plotting Distance
-ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
-  geom_boxplot(outlier.shape = NA)+ 
-  geom_beeswarm() + 
-  # geom_quasirandom()+
-  scale_x_discrete(breaks=c(-10, 0, 10, 20, 30, 40))+
-  theme(legend.position = "none")
+         Distance=fct_relevel(Distance,"-8.13", "0", "8.13", "32.52", "65.04"))
+
+  #Plotting Distance
+  ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
+    geom_boxplot(outlier.shape = NA)+ 
+    geom_beeswarm() + 
+    # scale_x_discrete(breaks=c(-10, 0, 10, 20, 30, 40))+
+    theme(legend.position = "none")
 
 ```
 
+### Pairwise comparison to the -8.13 conditions
+
 ```{r}
-distancefit<- brm(PCorotationAdj ~ Distance + (1|Participant),
-                  family=Beta(),
-                  data=distance, 
-                  prior=c(prior(normal(0,10), class="b")))
+distance_fit<- brm(PCorotationAdj ~ Distance + (1|Participant),
+                   family=Beta(),
+                   data=distance,
+                   prior=c(prior(normal(0,10), class="b")))
 ```
 
 ```{r}
-plot(distancefit)
+# plot(distance_fit)
+distance_fit
 ```
 
 
@@ -155,8 +162,8 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
 
 ```{r}
 # Computing brm for Occlusion condition
-Oc<- brm(PCorotationAdj ~ Occlusion + (1|Participant), family=Beta(), data=occlusion, 
-    prior=c(prior(normal(0,10),class="b", coef=Occlusion)))
+# Oc<- brm(PCorotationAdj ~ Occlusion + (1|Participant), family=Beta(), data=occlusion, 
+#     prior=c(prior(normal(0,10),class="b", coef="Occlusion")))
 ```
 
 ## Ambiguity Condition
