@@ -12,6 +12,7 @@ library(dplyr)
 library(fs)
 library(forcats)
 library(ggbeeswarm)
+library(glue)
 library(ggplot2)
 library(readr)
 library(tibble)
@@ -120,15 +121,10 @@ distance_as_factor_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
                               family=Beta(),
                               data=distance_as_factor,
                               prior=c(prior(normal(0,10), class="b")))
+samples <- posterior_samples(distance_as_factor_fit)
 ```
 
 ```{r}
-#summary(distance_as_factor_fit)
-
-
-samples <- posterior_samples(distance_as_factor_fit)
-
-
 pairwise_difference <- bind_rows(
   tibble(Difference = samples$b_Distance0,
          Distance = "0"),
@@ -140,9 +136,12 @@ pairwise_difference <- bind_rows(
          Distance="65.04")) %>%
   mutate(Distance=factor(Distance, levels=c("0", "8.13", "32.52", "65.04")))
 
-difference_above_zero<- pairwise_difference%>%
-  group_by(Distance)%>%
-  summarize(Pabove=mean(Difference>0)) %>%
+difference_above_zero <- 
+  pairwise_difference %>%
+  # mutate(Distance = as.character(Distance)) %>%
+  group_by(Distance) %>%
+  summarize(Pabove = round(100 * mean(Difference>0), 1)) %>%
+  mutate(Pabove = glue("{Distance}, P>0: {Pabove}%")) %>%
   deframe()
 
 ggplot(pairwise_difference, aes(x= Difference)) + 
