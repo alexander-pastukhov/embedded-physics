@@ -61,13 +61,18 @@ reports <-
                                                "weak"="gear24-weak",
                                                "ambiguous"= "gear24"),
          DisplayLeft = fct_relevel(DisplayLeft, "ambiguous", "weak", "medium", "medium-strong", "strong" ),
-         DisplayRight=fct_recode(DisplayRight, "strong"="gear24-strong", "medium-strong"="gear24-medium-strong", "medium"="gear24-medium", "weak"="gear24-weak", "ambiguous"= "gear24"),
-DisplayRight=fct_relevel(DisplayRight, "ambiguous", "weak", "medium", "medium-strong", "strong"))%>%
+         
+         DisplayRight=fct_recode(DisplayRight, "strong"="gear24-strong",
+                                               "medium-strong"="gear24-medium-strong",
+                                               "medium"="gear24-medium",
+                                               "weak"="gear24-weak",
+                                               "ambiguous"= "gear24"),
+        DisplayRight=fct_relevel(DisplayRight, "ambiguous", "weak", "medium", "medium-strong", "strong"))%>%
 
   
   # 5. Figuring out OTHER gear display. "gear24" for fully ambiguous, other image for disambiguated cases.
   #    Logic: if DisplayLeft == "gear24" then it is "DisplayRight" else it is DisplayLeft.
-  mutate(Display = ifelse(DisplayLeft=="ambiguous", DisplayRight, DisplayLeft))%>% #turn into factor
+  mutate(Display = ifelse(DisplayLeft=="ambiguous", DisplayRight, DisplayLeft))%>% 
   
   # 6. Convert Occlusion into numeric. First, change "None" to "0" via stringr::str_replace_all(Occlusion, "None", "0").
   #    Then, convert it to numeric in mutate.
