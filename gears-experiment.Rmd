@@ -123,7 +123,7 @@ distance_as_factor_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
 ```
 
 ```{r}
-summary(distance_as_factor_fit)
+#summary(distance_as_factor_fit)
 
 
 samples <- posterior_samples(distance_as_factor_fit)
@@ -133,7 +133,12 @@ pairwise_difference <- bind_rows(
   tibble(Difference = samples$b_Distance0,
          Distance = "0"),
   tibble(Difference = samples$b_Distance8.13,
-         Distance = "8.13"))
+         Distance = "8.13"),
+  tibble(Difference= samples$b_Distance32.52,
+         Distance="32.52"),
+  tibble(Difference= samples$b_Distance65.04,
+         Distance="65.04")) %>%
+  mutate(Distance=as.factor(Distance, levels=c("0", "8.13", "32.52", "65.04")))
 
 ggplot(pairwise_difference, aes(x= Difference)) + 
   geom_histogram(bins=50) + 
