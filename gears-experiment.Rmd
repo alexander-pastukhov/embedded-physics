@@ -81,6 +81,7 @@ reports <-
   mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))
 
 ```
+
 ##Distance Condition
 
 ```{r}
@@ -109,8 +110,10 @@ ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Parti
 ```
 
 ```{r}
-distancefit<- brm(PCorotationAdj ~ Distance + (1|Participant), family=Beta(), data=distance, 
-    prior=c(prior(normal(0,10),class="b", coef=Distance)))
+distancefit<- brm(PCorotationAdj ~ Distance + (1|Participant),
+                  family=Beta(),
+                  data=distance, 
+                  prior=c(prior(normal(0,10), class="b")))
 ```
 
 ```{r}
