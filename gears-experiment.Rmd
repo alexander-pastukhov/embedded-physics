@@ -96,30 +96,30 @@ distance <-
   summarize(TotalDuration=sum(Duration),
             # if value in the brackets is true itll be considered if not it will not
             CorotateDur=sum(Duration[Percept=="Corotation"]),
-            Pcorotation=CorotateDur/TotalDuration)%>%
+            Pcorotation=CorotateDur/TotalDuration) %>%
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
   
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
-  
+distance_as_factor <-
+  distance %>%
   #changing distance to factor
   mutate(Distance=as.factor(Distance),
          Distance=fct_relevel(Distance,"-8.13", "0", "8.13", "32.52", "65.04"))
 
   #Plotting Distance
-  ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
+  ggplot(data=distance_as_factor,
+         aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
     geom_boxplot(outlier.shape = NA)+ 
     geom_beeswarm() + 
-    # scale_x_discrete(breaks=c(-10, 0, 10, 20, 30, 40))+
     theme(legend.position = "none")
-
 ```
 
 ### Pairwise comparison to the -8.13 conditions
 
 ```{r}
-distance_fit<- brm(PCorotationAdj ~ Distance + (1|Participant),
-                   family=Beta(),
-                   data=distance,
-                   prior=c(prior(normal(0,10), class="b")))
+distance_as_factor_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
+                              family=Beta(),
+                              data=distance_as_factor,
+                              prior=c(prior(normal(0,10), class="b")))
 ```
 
 ```{r}
