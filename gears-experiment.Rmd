@@ -89,7 +89,7 @@ ggplot(data=distance, aes(x=Distance, group=Distance, y=Pcorotation, color=Parti
   geom_point()+
   geom_beeswarm() + 
   geom_quasirandom()+
-  scale_x_discrete()+
+  scale_x_discrete(breaks=c(-10, 0, 10, 20, 30, 40))+
   theme(legend.position = "none")
 
 ```
