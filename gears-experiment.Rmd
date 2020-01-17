@@ -4,9 +4,6 @@ author: "Lisa Koßmann"
 date: "13 Dezember 2019"
 output: html_document
 ---
-```{r}
-install.packages("brms")
-```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
