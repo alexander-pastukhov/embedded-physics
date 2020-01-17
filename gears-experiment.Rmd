@@ -138,12 +138,17 @@ pairwise_difference <- bind_rows(
          Distance="32.52"),
   tibble(Difference= samples$b_Distance65.04,
          Distance="65.04")) %>%
-  mutate(Distance=as.factor(Distance, levels=c("0", "8.13", "32.52", "65.04")))
+  mutate(Distance=factor(Distance, levels=c("0", "8.13", "32.52", "65.04")))
+
+difference_above_zero<- pairwise_difference%>%
+  group_by(Distance)%>%
+  summarize(Pabove=mean(Difference>0)) %>%
+  deframe()
 
 ggplot(pairwise_difference, aes(x= Difference)) + 
   geom_histogram(bins=50) + 
   geom_vline(xintercept = 0, color="red") + 
-  facet_grid(rows="Distance")
+  facet_grid(rows="Distance", labeller=labeller(Distance=difference_above_zero))
 ```
 
 
