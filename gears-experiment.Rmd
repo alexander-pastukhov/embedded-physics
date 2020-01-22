@@ -180,7 +180,7 @@ occlusion_as_factor <-
   occlusion %>%
   #changing occlusion to factor
   mutate(Occlusion=as.factor(Occlusion),
-         Occlusion=fct_relevel(Occlusion,"-8.13", "0", "8.13", "32.52", "65.04"))
+         Occlusion=fct_relevel(Occlusion, "0", "8.13", "16.26", "32.52", "65.04"))
 
 
 #Plotting Occlusion
@@ -210,7 +210,7 @@ samples_occlusion_as_factor_fit <- posterior_samples(occlusion_as_factor_fit)
 ```
 
 ```{r}
-pairwise_difference <- bind_rows(
+pairwise_difference_occlusion <- bind_rows(
   tibble(Difference = samples$b_Occlusion0,
          Occlusion = "0"), # this is the part that doesnt work
   tibble(Difference = samples$b_Occlusion8.13,
@@ -221,9 +221,9 @@ pairwise_difference <- bind_rows(
          Occlusion="65.04")) %>%
   mutate(Occlusion=factor(Occlusion, levels=c("0", "8.13", "32.52", "65.04")))
 
-difference_above_zero <- 
+difference_above_zero_occlusion <- 
   pairwise_difference %>%
-  # mutate(Occlusion = as.character(Occlusion)) %>%
+  mutate(Occlusion = as.character(Occlusion)) %>%
   group_by(occlusion) %>%
   summarize(Pabove = round(100 * mean(Difference>0), 1)) %>%
   mutate(Pabove = glue("{Occlusion}, P>0: {Pabove}%")) %>%
