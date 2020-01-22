@@ -259,3 +259,7 @@ ambiguity_brm<- brm(PCorotationAdj ~ Display +(1|Participant),
                                                  prior=c(prior(normal(0,10), class="b")))
 ```
 
+```{r}
+samples_ambiguity_brm<- sample(ambiguity_brm)
+```
+
