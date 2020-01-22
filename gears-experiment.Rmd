@@ -200,7 +200,7 @@ ambiguity<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
   filter(Percept!="unclear")%>%
   
-  # 1. Display to factor
+  # 1. Display to factor                 ## isnt this part of preprossessing now?
   # 2. Rename levels using fct_recode
   # 3. Reorder Display
   
@@ -210,13 +210,24 @@ ambiguity<- reports%>%
   
   # if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
-  Pcorotation=CorotateDur/TotalDuration)
+  Pcorotation=CorotateDur/TotalDuration)%>%
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
+
 
 
 #Plotting Ambiguity
-ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
-  geom_boxplot()+
-  geom_point()
+ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation, color=Participant) )+
+  geom_boxplot(outlier.shape = NA)+
+  geom_beeswarm()+
+  theme(legend.position="none")
+  
 
+```
+
+```{r}
+ambiguity_brm<- brm(PCorotationAdj ~ Display +(1|Participant),
+                                                 family= Beta(),
+                                                 data=ambiguity,
+                                                 prior=c(prior(normal(0,10), class="b")))
 ```
 
