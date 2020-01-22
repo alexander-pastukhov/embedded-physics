@@ -175,6 +175,14 @@ occlusion<- reports%>%
   Pcorotation=CorotateDur/TotalDuration)%>%
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
 
+#alternate table with occlusion as factor
+occlusion_as_factor <-
+  occlusion %>%
+  #changing occlusion to factor
+  mutate(Occlusion=as.factor(Occlusion),
+         Occlusion=fct_relevel(Occlusion,"-8.13", "0", "8.13", "32.52", "65.04"))
+
+
 #Plotting Occlusion
 ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant))+
   geom_boxplot(outlier.shape = NA)+
