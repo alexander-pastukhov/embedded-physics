@@ -183,11 +183,15 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
   theme(legend.position = "none")
 ```
 
+
 ```{r}
 # Computing brm for Occlusion condition
-# Oc<- brm(PCorotationAdj ~ Occlusion + (1|Participant), family=Beta(), data=occlusion, 
-#     prior=c(prior(normal(0,10),class="b", coef="Occlusion")))
+occlusion_brm<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
+                               family=Beta(), data=occlusion, prior=c(prior(normal(0, 10),class="b", coef="Occlusion")))
+
+samples_occlusion_brm <- posterior_samples(occlusion_brm)
 ```
+
 
 ## Ambiguity Condition
 ```{r}
