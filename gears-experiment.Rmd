@@ -183,11 +183,6 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
   theme(legend.position = "none")
 ```
 
-ambiguity_brm<- brm(PCorotationAdj ~ Display +(1|Participant),
-                                                 family= Beta(),
-                                                 data=ambiguity,
-                                                 prior=c(prior(normal(0,10), class="b")))
-
 ```{r}
 # Computing brm for Occlusion condition
 occlusion_brm<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
@@ -195,6 +190,33 @@ occlusion_brm<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
                     data=occlusion,
                     prior=c(prior(normal(0,10), class="b")))
 samples_occlusion_brm <- posterior_samples(occlusion_brm)
+
+```
+
+```{r}
+pairwise_difference <- bind_rows(
+  tibble(Difference = samples$b_Occlusion0,
+         Occlusion = "0"), # this is the part that doesnt work
+  tibble(Difference = samples$b_Occlusion8.13,
+         Occlusion = "8.13"),
+  tibble(Difference= samples$b_Occluion32.52,
+         Occlusion="32.52"),
+  tibble(Difference= samples$b_Occlusion65.04,
+         Occlusion="65.04")) %>%
+  mutate(Occlusion=factor(Occlusion, levels=c("0", "8.13", "32.52", "65.04")))
+
+difference_above_zero <- 
+  pairwise_difference %>%
+  # mutate(Occlusion = as.character(Occlusion)) %>%
+  group_by(occlusion) %>%
+  summarize(Pabove = round(100 * mean(Difference>0), 1)) %>%
+  mutate(Pabove = glue("{Occlusion}, P>0: {Pabove}%")) %>%
+  deframe()
+
+ggplot(pairwise_difference, aes(x= Difference)) + 
+  geom_histogram(bins=50) + 
+  geom_vline(xintercept = 0, color="red") + 
+  facet_grid(rows="Occlusion", labeller=labeller(Distance=difference_above_zero))
 
 ```
 
