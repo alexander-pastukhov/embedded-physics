@@ -200,6 +200,14 @@ occlusion_brm<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
 samples_occlusion_brm <- posterior_samples(occlusion_brm)
 
 ```
+```{r}
+#  Computing brm for Occlusion as factor condition
+occlusion_as_factor_fit<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
+                    family=Beta(),
+                    data=occlusion_as_factor,
+                    prior=c(prior(normal(0,10), class="b")))
+samples_occlusion_as_factor_fit <- posterior_samples(occlusion_as_factor_fit)
+```
 
 ```{r}
 pairwise_difference <- bind_rows(
