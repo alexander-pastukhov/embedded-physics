@@ -232,7 +232,7 @@ difference_above_zero_occlusion <-
 ggplot(pairwise_difference, aes(x= Difference)) + 
   geom_histogram(bins=50) + 
   geom_vline(xintercept = 0, color="red") + 
-  facet_grid(rows="Occlusion", labeller=labeller(Distance=difference_above_zero))
+  facet_grid(rows="Occlusion", labeller=labeller(Occlusion=difference_above_zero))
 
 ```
 
@@ -269,13 +269,17 @@ ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation, color=Partic
 ```
 
 ```{r}
-ambiguity_brm<- brm(PCorotationAdj ~ Display +(1|Participant),
+ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
                                                  family= Beta(),
-                                                 data=ambiguity,
+                                                 data= ambiguity,
                                                  prior=c(prior(normal(0,10), class="b")))
 ```
 
 ```{r}
 samples_ambiguity_brm<- sample(ambiguity_brm)
+```
+
+```{r}
+
 ```
 
