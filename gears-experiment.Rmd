@@ -114,14 +114,44 @@ ggplot(data=distance,
   theme(legend.position = "none")
 ```
 
+```{r Fitting distance as a continuous variable}
+# Computing brm for distance condition
+set.seed(9578175)
+distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
+                     family=Beta(),
+                     data=distance,
+                     prior=c(prior(normal(0,10), class="b")))
+```
+
+
 ### Pairwise comparison to the -8.13 conditions
 
-```{r}
-distance_as_factor_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
-                              family=Beta(),
-                              data=distance_as_factor,
+```{r fitting distance as factor}
+set.seed(9847899)
+distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
+                              family=Beta(), 
+                              data=distance,
                               prior=c(prior(normal(0,10), class="b")))
 samples <- posterior_samples(distance_as_factor_fit)
+```
+
+
+```{r Plot Distance as continuous predictions}
+# predict GROUP-LEVEL Pcorotation
+distance_fit_predictions <- predict(distance_fit,
+                                     newdata = data.frame(Distance = seq(-10, 70, 1), Participant=NA),
+                                     re_formula = ~ (1 | Participant)) %>%
+  data.frame() %>%
+  add_column(Distance = seq(-10, 70, 1))
+
+ggplot(data=distance_fit_predictions, 
+      aes(x = Distance, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_line() + 
+  geom_beeswarm(data=distance, 
+                aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) + 
+  theme(legend.position = "none") + 
+  ylim(0, 1)
 ```
 
 ```{r}
@@ -214,8 +244,14 @@ ggplot(data=occlusion_fit_predictions,
   ylim(0, 1)
 ```
 
-```{r Slope when occlusion is a continuous variable}
-samples_occlusion_brm <- posterior_samples(occlusion_brm)
+```{r}
+  posterior_samples(occlusion_fit) %>%
+  select(b_Occlusion) %>%
+
+  ggplot(aes(x=b_Occlusion))+
+           geom_histogram()
+
+
 ```
 
 
@@ -248,6 +284,18 @@ ggplot(data=occlusion_levels,
        aes(x = Beta, fill=Occlusion)) + 
   geom_histogram(alpha=0.5, position="identity", bins=100)
 ```
+
+```{r plotting histogram for one beta occlusion}
+occlusion_no_levels <-
+  occlusion_levels%>% 
+  select("8.13")
+
+ggplot(data=occlusion_no_levels,
+       aes(x= Beta, fill=Occlusion)) +
+  geaom_histogram(alpha0.5, position= "identity", bins=100)
+
+```
+
 
 ```{r}
 pairwise_difference_occlusion <- bind_rows(
