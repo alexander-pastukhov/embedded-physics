@@ -219,7 +219,7 @@ pairwise_difference_occlusion <- bind_rows(
          Occlusion="32.52"),
   tibble(Difference= samples$b_Occlusion65.04,
          Occlusion="65.04")) %>%
-  mutate(Occlusion=factor(Occlusion, levels=c("0", "8.13", "32.52", "65.04")))
+  mutate(Occlusion=factor(Occlusion, levels=c("0", "8.13", "16.26", "32.52", "65.04")))
 
 difference_above_zero_occlusion <- 
   pairwise_difference %>%
