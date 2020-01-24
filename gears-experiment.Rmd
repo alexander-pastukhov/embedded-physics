@@ -188,6 +188,7 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
 
 ```{r Fitting occlusion as a continuous variable}
 # Computing brm for Occlusion condition
+set.seed(9789931)
 occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
                      family=Beta(),
                      data=occlusion,
