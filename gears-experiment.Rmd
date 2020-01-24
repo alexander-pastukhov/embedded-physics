@@ -124,18 +124,6 @@ distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
 ```
 
 
-### Pairwise comparison to the -8.13 conditions
-
-```{r fitting distance as factor}
-set.seed(9847899)
-distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
-                              family=Beta(), 
-                              data=distance,
-                              prior=c(prior(normal(0,10), class="b")))
-samples <- posterior_samples(distance_as_factor_fit)
-```
-
-
 ```{r Plot Distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 distance_fit_predictions <- predict(distance_fit,
@@ -159,6 +147,37 @@ posterior_samples(distance_fit)%>%
   
   ggplot(aes(x=b_Distance)) +
   geom_histogram()
+```
+
+## Distance as factor
+```{r fitting distance as factor}
+set.seed(9847899)
+distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
+                              family=Beta(), 
+                              data=distance,
+                              prior=c(prior(normal(0,10), class="b")))
+```
+
+```{r plotting pairwise comparisons for the individual levels of the occlusion}
+samples_distance_as_factor_fit <- posterior_samples(distance_as_factor_fit)
+
+distance_levels <- 
+  samples_distance_as_factor_fit%>%
+  
+  # only retain distacn levels
+  select(starts_with("b_Distance")) %>%
+  
+  # wide to long
+  pivot_longer(cols=everything(), names_to = "Distance", values_to = "Beta") %>%
+
+  # turn occlusion name into a factor
+  mutate(Distance = str_remove_all(Distance, "b_DistanceAsFactor"), 
+         Distance = as.factor(Distance),
+         Distance = fct_relevel(Distance, "-8.13", "0", "8.13", "32.52", "65.04"))
+
+ggplot(data=distance_levels, 
+       aes(x = Beta, fill=Distance)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=100)
 ```
 
 
