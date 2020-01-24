@@ -15,7 +15,9 @@ library(ggbeeswarm)
 library(glue)
 library(ggplot2)
 library(readr)
+library(stringr)
 library(tibble)
+library(tidyr)
 ```
 
 ```{r Tabula rasa}
@@ -89,29 +91,27 @@ reports <-
 #Computing Distance Duration
 distance <-
   reports%>%
-  filter(Condition=="Control"|Condition=="Separation")%>% 
-  filter(Percept!="unclear")%>%
-  
+  filter(Condition=="Control"|Condition=="Separation") %>% 
+  filter(Percept!="unclear") %>%
+
+  # distance as factor  
+  mutate(DistanceAsFactor=as.factor(Distance),
+         DistanceAsFactor=fct_relevel(DistanceAsFactor,"-8.13", "0", "8.13", "32.52", "65.04")) %>%
+
   # each participant and Distance seperatly
-  group_by(Participant, Distance)%>% 
+  group_by(Participant, Distance, DistanceAsFactor) %>% 
   summarize(TotalDuration=sum(Duration),
             # if value in the brackets is true itll be considered if not it will not
             CorotateDur=sum(Duration[Percept=="Corotation"]),
             Pcorotation=CorotateDur/TotalDuration) %>%
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
   
-distance_as_factor <-
-  distance %>%
-  #changing distance to factor
-  mutate(Distance=as.factor(Distance),
-         Distance=fct_relevel(Distance,"-8.13", "0", "8.13", "32.52", "65.04"))
-
-  #Plotting Distance
-  ggplot(data=distance_as_factor,
-         aes(x=Distance, group=Distance, y=Pcorotation, color=Participant))+ ## the mistake is caused by mutating distance colum but how do I fix it?
-    geom_boxplot(outlier.shape = NA)+ 
-    geom_beeswarm() + 
-    theme(legend.position = "none")
+#Plotting Distance
+ggplot(data=distance,
+       aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_beeswarm() +
+  theme(legend.position = "none")
 ```
 
 ### Pairwise comparison to the -8.13 conditions
@@ -158,30 +158,25 @@ occlusion<- reports%>%
   filter(Condition=="Control"|Condition=="Occlusion") %>%
   filter(Percept!="unclear") %>%
   
+  # replace "None" with "0" and then turn Occlusion to a numeric variable
+  mutate(Occlusion = ifelse(Occlusion == "None", "0", Occlusion), 
+         Occlusion = as.numeric(Occlusion)) %>%
+  
   # reorder Occlusion to factor
   # 1. Display to factor
   mutate(Display=as.factor(Display),
-         Occlusion=as.factor(Occlusion),
-         Occlusion=fct_recode(Occlusion, "0"="None", "8.13"="8.13", "16.26"="16.26", "32.52"="32.52","65.04"="65.04"),
-         Occlusion=fct_relevel(Occlusion, "0","8.13", "16.26", "32.52", "65.04"))%>%
+         OcclusionAsFactor=as.factor(Occlusion),
+         OcclusionAsFactor=fct_relevel(OcclusionAsFactor, "0","8.13", "16.26", "32.52", "65.04")) %>%
   
   # 2. Use fct_relevel function, which goes Var = fct_relevel(Var, "first level", "second level", ...)
   # each participant and Occlusion seperatly
-  group_by(Participant, Occlusion)%>% 
-  summarize(TotalDuration=sum(Duration),
-
-  #if value in the brackets is true itll be considered if not it will not
-  CorotateDur=sum(Duration[Percept=="Corotation"]),
-  Pcorotation=CorotateDur/TotalDuration)%>%
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
-
-#alternate table with occlusion as factor
-occlusion_as_factor <-
-  occlusion %>%
-  #changing occlusion to factor
-  mutate(Occlusion=as.factor(Occlusion),
-         Occlusion=fct_relevel(Occlusion, "0", "8.13", "16.26", "32.52", "65.04"))
-
+  group_by(Participant, Occlusion, OcclusionAsFactor) %>% 
+  summarize(TotalDuration = sum(Duration),
+           #if value in the brackets is true itll be considered if not it will not
+            CorotateDur = sum(Duration[Percept == "Corotation"]),
+            Pcorotation = CorotateDur / TotalDuration)%>%
+  
+  mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
 
 #Plotting Occlusion
 ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant))+
@@ -191,22 +186,67 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
   theme(legend.position = "none")
 ```
 
-```{r}
+```{r Fitting occlusion as a continuous variable}
 # Computing brm for Occlusion condition
-occlusion_brm<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
-                    family=Beta(),
-                    data=occlusion,
-                    prior=c(prior(normal(0,10), class="b")))
-samples_occlusion_brm <- posterior_samples(occlusion_brm)
-
+set.seed(9789931)
+occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
+                     family=Beta(),
+                     data=occlusion,
+                     prior=c(prior(normal(0,10), class="b")))
 ```
-```{r}
+
+
+```{r Plot occlusions as continuous predictions}
+# predict GROUP-LEVEL Pcorotation
+occlusion_fit_predictions <- predict(occlusion_fit,
+                                     newdata = data.frame(Occlusion = seq(0, 70, 1), Participant=NA),
+                                     re_formula = ~ (1 | Participant)) %>%
+  data.frame() %>%
+  add_column(Occlusion = seq(0, 70, 1))
+
+ggplot(data=occlusion_fit_predictions, 
+      aes(x = Occlusion, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_line() + 
+  geom_beeswarm(data=occlusion, 
+                aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant)) + 
+  theme(legend.position = "none") + 
+  ylim(0, 1)
+```
+
+```{r Slope when occlusion is a continuous variable}
+samples_occlusion_brm <- posterior_samples(occlusion_brm)
+```
+
+
+```{r occlusion as factor fit}
 #  Computing brm for Occlusion as factor condition
-occlusion_as_factor_fit<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
-                    family=Beta(),
-                    data=occlusion_as_factor,
-                    prior=c(prior(normal(0,10), class="b")))
+occlusion_as_factor_fit <- brm(PCorotationAdj ~ OcclusionAsFactor + (1|Participant),
+                               family=Beta(),
+                               data=occlusion,
+                               prior=c(prior(normal(0,10), class="b")))
+```
+
+```{r plotting pairwise comparisons for the individual levels of the occlusion}
 samples_occlusion_as_factor_fit <- posterior_samples(occlusion_as_factor_fit)
+
+occlusion_levels <- 
+  samples_occlusion_as_factor_fit %>%
+  
+  # only retain Occlusion levels
+  select(starts_with("b_Occlusion")) %>%
+  
+  # wide to long
+  pivot_longer(cols=everything(), names_to = "Occlusion", values_to = "Beta") %>%
+
+  # turn occlusion name into a factor
+  mutate(Occlusion = str_remove_all(Occlusion, "b_OcclusionAsFactor"), 
+         Occlusion = as.factor(Occlusion),
+         Occlusion = fct_relevel(Occlusion, "8.13", "16.26", "32.52", "65.04"))
+
+ggplot(data=occlusion_levels, 
+       aes(x = Beta, fill=Occlusion)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=100)
 ```
 
 ```{r}
