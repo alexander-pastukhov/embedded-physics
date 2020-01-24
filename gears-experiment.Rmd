@@ -175,6 +175,14 @@ occlusion<- reports%>%
   Pcorotation=CorotateDur/TotalDuration)%>%
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
 
+#alternate table with occlusion as factor
+occlusion_as_factor <-
+  occlusion %>%
+  #changing occlusion to factor
+  mutate(Occlusion=as.factor(Occlusion),
+         Occlusion=fct_relevel(Occlusion, "0", "8.13", "16.26", "32.52", "65.04"))
+
+
 #Plotting Occlusion
 ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant))+
   geom_boxplot(outlier.shape = NA)+
@@ -185,9 +193,49 @@ ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Pa
 
 ```{r}
 # Computing brm for Occlusion condition
-# Oc<- brm(PCorotationAdj ~ Occlusion + (1|Participant), family=Beta(), data=occlusion, 
-#     prior=c(prior(normal(0,10),class="b", coef="Occlusion")))
+occlusion_brm<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
+                    family=Beta(),
+                    data=occlusion,
+                    prior=c(prior(normal(0,10), class="b")))
+samples_occlusion_brm <- posterior_samples(occlusion_brm)
+
 ```
+```{r}
+#  Computing brm for Occlusion as factor condition
+occlusion_as_factor_fit<- brm(PCorotationAdj ~ Occlusion + (1|Participant),
+                    family=Beta(),
+                    data=occlusion_as_factor,
+                    prior=c(prior(normal(0,10), class="b")))
+samples_occlusion_as_factor_fit <- posterior_samples(occlusion_as_factor_fit)
+```
+
+```{r}
+pairwise_difference_occlusion <- bind_rows(
+  tibble(Difference = samples$b_Occlusion0,
+         Occlusion = "0"), # this is the part that doesnt work
+  tibble(Difference = samples$b_Occlusion8.13,
+         Occlusion = "8.13"),
+  tibble(Difference= samples$b_Occluion32.52,
+         Occlusion="32.52"),
+  tibble(Difference= samples$b_Occlusion65.04,
+         Occlusion="65.04")) %>%
+  mutate(Occlusion=factor(Occlusion, levels=c("0", "8.13", "32.52", "65.04")))
+
+difference_above_zero_occlusion <- 
+  pairwise_difference %>%
+  mutate(Occlusion = as.character(Occlusion)) %>%
+  group_by(occlusion) %>%
+  summarize(Pabove = round(100 * mean(Difference>0), 1)) %>%
+  mutate(Pabove = glue("{Occlusion}, P>0: {Pabove}%")) %>%
+  deframe()
+
+ggplot(pairwise_difference, aes(x= Difference)) + 
+  geom_histogram(bins=50) + 
+  geom_vline(xintercept = 0, color="red") + 
+  facet_grid(rows="Occlusion", labeller=labeller(Occlusion=difference_above_zero))
+
+```
+
 
 ## Ambiguity Condition
 ```{r}
@@ -196,7 +244,7 @@ ambiguity<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
   filter(Percept!="unclear")%>%
   
-  # 1. Display to factor
+  # 1. Display to factor                 ## isnt this part of preprossessing now?
   # 2. Rename levels using fct_recode
   # 3. Reorder Display
   
@@ -206,13 +254,32 @@ ambiguity<- reports%>%
   
   # if value in the brackets is true itll be considered if not it will not
   CorotateDur=sum(Duration[Percept=="Corotation"]),
-  Pcorotation=CorotateDur/TotalDuration)
+  Pcorotation=CorotateDur/TotalDuration)%>%
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
+
 
 
 #Plotting Ambiguity
-ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
-  geom_boxplot()+
-  geom_point()
+ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation, color=Participant) )+
+  geom_boxplot(outlier.shape = NA)+
+  geom_beeswarm()+
+  theme(legend.position="none")
+  
+
+```
+
+```{r}
+ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
+                                                 family= Beta(),
+                                                 data= ambiguity,
+                                                 prior=c(prior(normal(0,10), class="b")))
+```
+
+```{r}
+samples_ambiguity_brm<- sample(ambiguity_brm)
+```
+
+```{r}
 
 ```
 
