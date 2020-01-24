@@ -153,31 +153,12 @@ ggplot(data=distance_fit_predictions,
   theme(legend.position = "none") + 
   ylim(0, 1)
 ```
-
-```{r}
-pairwise_difference <- bind_rows(
-  tibble(Difference = samples$b_Distance0,
-         Distance = "0"),
-  tibble(Difference = samples$b_Distance8.13,
-         Distance = "8.13"),
-  tibble(Difference= samples$b_Distance32.52,
-         Distance="32.52"),
-  tibble(Difference= samples$b_Distance65.04,
-         Distance="65.04")) %>%
-  mutate(Distance=factor(Distance, levels=c("0", "8.13", "32.52", "65.04")))
-
-difference_above_zero <- 
-  pairwise_difference %>%
-  # mutate(Distance = as.character(Distance)) %>%
-  group_by(Distance) %>%
-  summarize(Pabove = round(100 * mean(Difference>0), 1)) %>%
-  mutate(Pabove = glue("{Distance}, P>0: {Pabove}%")) %>%
-  deframe()
-
-ggplot(pairwise_difference, aes(x= Difference)) + 
-  geom_histogram(bins=50) + 
-  geom_vline(xintercept = 0, color="red") + 
-  facet_grid(rows="Distance", labeller=labeller(Distance=difference_above_zero))
+```{r Plotting Distance Beta}
+posterior_samples(distance_fit)%>%
+  select(b_Distance)%>%
+  
+  ggplot(aes(x=b_Distance)) +
+  geom_histogram()
 ```
 
 
@@ -244,7 +225,7 @@ ggplot(data=occlusion_fit_predictions,
   ylim(0, 1)
 ```
 
-```{r}
+```{r Plot histogram one beta}
   posterior_samples(occlusion_fit) %>%
   select(b_Occlusion) %>%
 
@@ -285,16 +266,7 @@ ggplot(data=occlusion_levels,
   geom_histogram(alpha=0.5, position="identity", bins=100)
 ```
 
-```{r plotting histogram for one beta occlusion}
-occlusion_no_levels <-
-  occlusion_levels%>% 
-  select("8.13")
 
-ggplot(data=occlusion_no_levels,
-       aes(x= Beta, fill=Occlusion)) +
-  geaom_histogram(alpha0.5, position= "identity", bins=100)
-
-```
 
 
 ```{r}
