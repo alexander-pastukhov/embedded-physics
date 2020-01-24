@@ -268,35 +268,6 @@ ggplot(data=occlusion_levels,
 
 
 
-
-```{r}
-pairwise_difference_occlusion <- bind_rows(
-  tibble(Difference = samples$b_Occlusion0,
-         Occlusion = "0"), # this is the part that doesnt work
-  tibble(Difference = samples$b_Occlusion8.13,
-         Occlusion = "8.13"),
-  tibble(Difference= samples$b_Occluion32.52,
-         Occlusion="32.52"),
-  tibble(Difference= samples$b_Occlusion65.04,
-         Occlusion="65.04")) %>%
-  mutate(Occlusion=factor(Occlusion, levels=c("0", "8.13", "16.26", "32.52", "65.04")))
-
-difference_above_zero_occlusion <- 
-  pairwise_difference %>%
-  mutate(Occlusion = as.character(Occlusion)) %>%
-  group_by(occlusion) %>%
-  summarize(Pabove = round(100 * mean(Difference>0), 1)) %>%
-  mutate(Pabove = glue("{Occlusion}, P>0: {Pabove}%")) %>%
-  deframe()
-
-ggplot(pairwise_difference, aes(x= Difference)) + 
-  geom_histogram(bins=50) + 
-  geom_vline(xintercept = 0, color="red") + 
-  facet_grid(rows="Occlusion", labeller=labeller(Occlusion=difference_above_zero))
-
-```
-
-
 ## Ambiguity Condition
 ```{r}
 #Computing Ambiguity Duration
