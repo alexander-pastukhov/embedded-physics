@@ -158,7 +158,7 @@ distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant
                               prior=c(prior(normal(0,10), class="b")))
 ```
 
-```{r plotting pairwise comparisons for the individual levels of the occlusion}
+```{r plotting pairwise comparisons for the individual levels of Distance}
 samples_distance_as_factor_fit <- posterior_samples(distance_as_factor_fit)
 
 distance_levels <- 
@@ -257,6 +257,7 @@ ggplot(data=occlusion_fit_predictions,
 
 ```{r occlusion as factor fit}
 #  Computing brm for Occlusion as factor condition
+set.seed(89925355)
 occlusion_as_factor_fit <- brm(PCorotationAdj ~ OcclusionAsFactor + (1|Participant),
                                family=Beta(),
                                data=occlusion,
@@ -319,6 +320,7 @@ ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation, color=Partic
 ```
 
 ```{r}
+set.seed(99435)
 ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
                                                  family= Beta(),
                                                  data= ambiguity,
