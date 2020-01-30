@@ -5,6 +5,7 @@ date: "13 Dezember 2019"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(brms)
@@ -14,6 +15,8 @@ library(forcats)
 library(ggbeeswarm)
 library(glue)
 library(ggplot2)
+library(grid)
+library(plyr)
 library(readr)
 library(stringr)
 library(tibble)
@@ -141,6 +144,7 @@ ggplot(data=distance_fit_predictions,
   theme(legend.position = "none") + 
   ylim(0, 1)
 ```
+
 ```{r Plotting Distance Beta}
 posterior_samples(distance_fit)%>%
   select(b_Distance)%>%
@@ -148,6 +152,10 @@ posterior_samples(distance_fit)%>%
   ggplot(aes(x=b_Distance)) +
   geom_histogram()
 ```
+
+
+
+
 
 ## Distance as factor
 ```{r fitting distance as factor}
@@ -174,10 +182,22 @@ distance_levels <-
   mutate(Distance = str_remove_all(Distance, "b_DistanceAsFactor"), 
          Distance = as.factor(Distance),
          Distance = fct_relevel(Distance, "-8.13", "0", "8.13", "32.52", "65.04"))
-
+          
 ggplot(data=distance_levels, 
        aes(x = Beta, fill=Distance)) + 
   geom_histogram(alpha=0.5, position="identity", bins=100)
+```
+
+```{r Number of values above zero}
+distance_levels%>%
+  summarize(numAbove=sum(Beta > 0))%>%
+  mutate(TotalBeta=nrow(distance_levels),
+         Pbetaabove=numAbove/TotalBeta)
+```
+
+```{rcompining the plots for distance condition}
+pushViewport(viewport(layout= grid.layout(2,3)))
+
 ```
 
 
@@ -253,6 +273,8 @@ ggplot(data=occlusion_fit_predictions,
 
 
 ```
+
+
 
 
 ```{r occlusion as factor fit}
