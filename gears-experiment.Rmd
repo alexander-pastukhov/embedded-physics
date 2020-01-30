@@ -190,10 +190,19 @@ ggplot(data=distance_levels,
 
 ```{r Number of values above zero}
 distance_levels%>%
+  group_by(Distance, Beta)%>%
   summarize(numAbove=sum(Beta > 0))%>%
   mutate(TotalBeta=nrow(distance_levels),
          Pbetaabove=numAbove/TotalBeta)
 ```
+```{r computing no of values above zero for each condition}
+distance_levels%>%
+  select(Distance=="8.13")%>%
+  summarize(numAbove=sum(Beta > 0))%>%
+  mutate(TotalBeta=nrow(distance_levels),
+         Pbetaabove=numAbove/TotalBeta)
+```
+
 
 ```{rcompining the plots for distance condition}
 pushViewport(viewport(layout= grid.layout(2,3)))
