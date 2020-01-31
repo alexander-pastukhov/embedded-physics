@@ -131,13 +131,15 @@ distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
 # predict GROUP-LEVEL Pcorotation
 distance_fit_predictions <- predict(distance_fit,
                                     newdata = data.frame(Distance = seq(-10, 70, 1)),
+                                    probs = c(0.025, 0.25, 0.75, 0.975),
                                     re_formula = NA) %>%
   data.frame() %>%
   add_column(Distance = seq(-10, 70, 1))
 
-plot_distance_fit_predictions<- ggplot(data=distance_fit_predictions, 
+ggplot(data=distance_fit_predictions, 
       aes(x = Distance, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
   geom_beeswarm(data=distance, 
                 aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) + 
