@@ -110,7 +110,7 @@ distance <-
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
   
 #Plotting Distance
-ggplot(data=distance,
+plot_distance <- ggplot(data=distance,
        aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) +
   geom_boxplot(outlier.shape = NA) +
   geom_beeswarm() +
@@ -135,7 +135,7 @@ distance_fit_predictions <- predict(distance_fit,
   data.frame() %>%
   add_column(Distance = seq(-10, 70, 1))
 
-ggplot(data=distance_fit_predictions, 
+plot_distance_fit_predictions<- ggplot(data=distance_fit_predictions, 
       aes(x = Distance, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_line() + 
@@ -149,7 +149,7 @@ ggplot(data=distance_fit_predictions,
 posterior_samples(distance_fit)%>%
   select(b_Distance)%>%
   
-  ggplot(aes(x=b_Distance)) +
+ plot_posterior_samples_distance_beta <- ggplot(aes(x=b_Distance)) +
   geom_histogram()
 ```
 
@@ -183,7 +183,7 @@ distance_levels <-
          Distance = as.factor(Distance),
          Distance = fct_relevel(Distance, "-8.13", "0", "8.13", "32.52", "65.04"))
           
-ggplot(data=distance_levels, 
+plot_distance_pairwise_comparison<- ggplot(data=distance_levels, 
        aes(x = Beta, fill=Distance)) + 
   geom_histogram(alpha=0.5, position="identity", bins=100)
 ```
@@ -204,8 +204,14 @@ distance_levels%>%
 ```
 
 
-```{rcompining the plots for distance condition}
-pushViewport(viewport(layout= grid.layout(2,3)))
+```{r combining the plots for distance condition}
+pushViewport(viewport(layout= grid.layout(2,2)))
+print(plot_distance, vp= viewpoint(layout.pos.row= 1, layoutt.pos.col= 1))
+print(plot_distance_fit_predictions, vp= viewpoint(layout.pos.row= 1, layout.pos.col= 2))
+print(plot_distance_pairwise_comparison, vp= viewpoint(layout.pos.row =2, layout.pos.col= 1))
+print(plot_posterior_samples_distance_beta, vp= viewpoint(layout.pos.row =2, layout.pos.col= 2))
+## I know this is not what you meant but I failed at combining them otherwise
+
 
 ```
 
