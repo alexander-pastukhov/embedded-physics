@@ -131,7 +131,7 @@ distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
 # predict GROUP-LEVEL Pcorotation
 distance_fit_predictions <- predict(distance_fit,
                                     newdata = data.frame(Distance = seq(-10, 70, 1)),
-                                    re_formula = ~ NA) %>%
+                                    re_formula = NA) %>%
   data.frame() %>%
   add_column(Distance = seq(-10, 70, 1))
 
