@@ -10,9 +10,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(brms)
 library(dplyr)
+library(extrafont)
 library(fs)
 library(forcats)
 library(ggbeeswarm)
+library(ggpubr)
 library(glue)
 library(ggplot2)
 library(grid)
@@ -20,12 +22,26 @@ library(readr)
 library(stringr)
 library(tibble)
 library(tidyr)
+
+loadfonts(quiet = TRUE)
 ```
 
 ```{r Tabula rasa}
 rm(list=ls())
 ```
 
+```{r Custom plotting theme}
+plot_theme <- 
+  theme(text=element_text(family="Arial"),
+        axis.text.x = element_text(size = 8, colour = 'black'), 
+        axis.text.y = element_text(size = 8, colour = 'black'), 
+        axis.title.x = element_text(size = 10), 
+        axis.title.y = element_text(size = 10), 
+        panel.grid.minor.x = element_blank(), 
+        panel.grid.minor.y =  element_line(size = 0.24), 
+        axis.ticks = element_line(size = 0.24))
+                    
+```
 
 ## Importing data
 ```{r Import}
@@ -136,7 +152,8 @@ distance_fit_predictions <- predict(distance_fit,
   data.frame() %>%
   add_column(Distance = seq(-10, 70, 1))
 
-ggplot(data=distance_fit_predictions, 
+distancePlot_main <-
+  ggplot(data=distance_fit_predictions, 
       aes(x = Distance, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
@@ -144,15 +161,19 @@ ggplot(data=distance_fit_predictions,
   geom_beeswarm(data=distance, 
                 aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) + 
   theme(legend.position = "none") + 
-  ylim(0, 1)
+  scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance)) + 
+  # ylim(0, 1) + 
+  plot_theme
 ```
 
 ```{r Plotting Distance Beta}
-posterior_samples(distance_fit)%>%
-  select(b_Distance)%>%
-  
- plot_posterior_samples_distance_beta <- ggplot(aes(x=b_Distance)) +
-  geom_histogram()
+distancePlot_slope <- 
+  posterior_samples(distance_fit)%>%
+  select(b_Distance) %>%
+  ggplot(aes(x=b_Distance)) +
+  geom_histogram(bins=100) + 
+  plot_theme + 
+  scale_x_continuous(name = expression(beta[Distance]))
 ```
 
 ## Distance as factor
@@ -168,7 +189,7 @@ distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant
 samples_distance_as_factor_fit <- posterior_samples(distance_as_factor_fit)
 
 distance_levels <- 
-  samples_distance_as_factor_fit%>%
+  samples_distance_as_factor_fit %>%
   
   # only retain distacn levels
   select(starts_with("b_Distance")) %>%
@@ -181,18 +202,31 @@ distance_levels <-
          Distance = as.factor(Distance),
          Distance = fct_relevel(Distance, "-8.13", "0", "8.13", "32.52", "65.04"))
           
-plot_distance_pairwise_comparison<- ggplot(data=distance_levels, 
+distancePlot_asFactor <-
+ggplot(data=distance_levels, 
        aes(x = Beta, fill=Distance)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=100)
+  geom_histogram(alpha=0.5, position="identity", bins=100) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme + 
+   theme(
+    legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+distancePlot_asFactor
 ```
 
 ```{r Number of values above zero}
-distance_levels%>%
-  group_by(Distance, Beta)%>%
-  summarize(numAbove=sum(Beta > 0))%>%
-  mutate(TotalBeta=nrow(distance_levels),
-         Pbetaabove=numAbove/TotalBeta)
+distance_levels %>%
+  group_by(Distance) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
+
 ```{r computing no of values above zero for each condition}
 distance_levels%>%
   select(Distance=="8.13")%>%
@@ -203,11 +237,20 @@ distance_levels%>%
 
 
 ```{r combining the plots for distance condition}
-pushViewport(viewport(layout= grid.layout(2,2)))
-print(plot_distance, vp= viewpoint(layout.pos.row= 1, layoutt.pos.col= 1))
-print(plot_distance_fit_predictions, vp= viewpoint(layout.pos.row= 1, layout.pos.col= 2))
-print(plot_distance_pairwise_comparison, vp= viewpoint(layout.pos.row =2, layout.pos.col= 1))
-print(plot_posterior_samples_distance_beta, vp= viewpoint(layout.pos.row =2, layout.pos.col= 2))
+ggarrange(distancePlot_main, 
+  ggarrange(distancePlot_slope, distancePlot_asFactor, 
+            labels = c("B", "C")),
+  labels = c("A"),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
+
+ggsave("gears-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
+
+# pushViewport(viewport(layout= grid.layout(2,2)))
+# print(plot_distance, vp= viewpoint(layout.pos.row= 1, layoutt.pos.col= 1))
+# print(plot_distance_fit_predictions, vp= viewpoint(layout.pos.row= 1, layout.pos.col= 2))
+# print(plot_distance_pairwise_comparison, vp= viewpoint(layout.pos.row =2, layout.pos.col= 1))
+# print(plot_posterior_samples_distance_beta, vp= viewpoint(layout.pos.row =2, layout.pos.col= 2))
 ## I know this is not what you meant but I failed at combining them otherwise
 
 
