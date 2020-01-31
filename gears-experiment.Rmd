@@ -61,19 +61,20 @@ reports <-
   # 5. Renaming Displays
   mutate(Percept=as.factor(Percept),
          Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"),
-               DisplayLeft = fct_recode(DisplayLeft, "strong"="gear24-strong",
+         DisplayLeft=as.factor(DisplayLeft),
+         DisplayLeft = fct_recode(DisplayLeft, "strong"="gear24-strong",
                                                "medium"= "gear24-medium",
                                                "medium-strong"="gear24-medium-strong",
                                                "weak"="gear24-weak",
                                                "ambiguous"= "gear24"),
          DisplayLeft = fct_relevel(DisplayLeft, "ambiguous", "weak", "medium", "medium-strong", "strong" ),
-         
+         DisplayRight=as.factor(DisplayRight),
          DisplayRight=fct_recode(DisplayRight, "strong"="gear24-strong",
                                                "medium-strong"="gear24-medium-strong",
                                                "medium"="gear24-medium",
                                                "weak"="gear24-weak",
                                                "ambiguous"= "gear24"),
-        DisplayRight=fct_relevel(DisplayRight, "ambiguous", "weak", "medium", "medium-strong", "strong"))%>%
+        DisplayRight=fct_relevel(DisplayRight, "ambiguous", "weak", "medium", "medium-strong", "strong")) %>%
 
   
   # 5. Figuring out OTHER gear display. "gear24" for fully ambiguous, other image for disambiguated cases.
@@ -152,10 +153,6 @@ posterior_samples(distance_fit)%>%
  plot_posterior_samples_distance_beta <- ggplot(aes(x=b_Distance)) +
   geom_histogram()
 ```
-
-
-
-
 
 ## Distance as factor
 ```{r fitting distance as factor}
