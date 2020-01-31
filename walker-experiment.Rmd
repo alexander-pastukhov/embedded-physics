@@ -1,0 +1,73 @@
+---
+title: "Walker experiment"
+author: "Lisa Koßmann, Alexander (Sasha) Pastukhov"
+date: "31 1 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+extrafont::loadfonts(quiet = TRUE)
+```
+
+
+```{r Tabula rasa}
+rm(list=ls())
+```
+
+
+## Importing data
+
+# Importing data
+```{r Import}
+read_walker_csv <- function(filename){
+  read_csv(filename, 
+           col_types=cols(
+                .default = col_double(),
+                Participant = col_character(),
+                Session = col_character(),
+                Block = col_double(),
+                OnsetDelay = col_double(),
+                Condition = col_character(),
+                Percept = col_character(),
+                Time = col_double()
+              )) %>%
+    mutate(SessionTag = ifelse("Shift" %in% names(.), "Addendum", "Main"))
+}
+
+
+reports <- 
+  # 1. Figure out which files need to be loaded
+  tibble(filename = as.character(dir_ls(path = "Data", glob  = "*walker*.csv"))) %>%
+  
+  # 2. Load files on by one (hence rowwise())
+  rowwise() %>%
+  do(read_walker_csv(.$filename[1])) %>%
+  ungroup() %>%
+  
+  # 3. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
+  group_by(Participant, Session, Block) %>%
+  mutate(Duration = lead(Time) - Time) %>%
+  ungroup() %>%
+
+  # 4. Drop "end" Percept
+  filter(Percept != "end")
+
+vertical_distance <- 
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Distance"))
+
+horizontal_distance <- 
+  reports %>%
+  filter(SessionTag == "Addendum", Condition %in% c("Control", "Shift"))
+
+sphere_ambiguity <-
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))
+  
+walker_ambiguity <-
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Walker ambiguity"))
+
+```
