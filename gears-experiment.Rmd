@@ -16,7 +16,6 @@ library(ggbeeswarm)
 library(glue)
 library(ggplot2)
 library(grid)
-library(plyr)
 library(readr)
 library(stringr)
 library(tibble)
@@ -60,7 +59,7 @@ reports <-
   
   # 5. Renaming Displays
   mutate(Percept=as.factor(Percept),
-         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"),
+         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"))
          DisplayLeft=as.factor(DisplayLeft),
          DisplayLeft = fct_recode(DisplayLeft, "strong"="gear24-strong",
                                                "medium"= "gear24-medium",
@@ -94,24 +93,24 @@ reports <-
 ```{r}
 #Computing Distance Duration
 distance <-
-  reports%>%
-  filter(Condition=="Control"|Condition=="Separation") %>% 
-  filter(Percept!="unclear") %>%
+  reports %>%
+  dplyr::filter(Condition=="Control" | Condition=="Separation") %>% 
+  dplyr::filter(Percept != "unclear") %>%
 
   # distance as factor  
-  mutate(DistanceAsFactor=as.factor(Distance),
-         DistanceAsFactor=fct_relevel(DistanceAsFactor,"-8.13", "0", "8.13", "32.52", "65.04")) %>%
+  dplyr::mutate(DistanceAsFactor = as.factor(Distance),
+                DistanceAsFactor = fct_relevel(DistanceAsFactor,"-8.13", "0", "8.13", "32.52", "65.04")) %>%
 
   # each participant and Distance seperatly
-  group_by(Participant, Distance, DistanceAsFactor) %>% 
-  summarize(TotalDuration=sum(Duration),
-            # if value in the brackets is true itll be considered if not it will not
-            CorotateDur=sum(Duration[Percept=="Corotation"]),
-            Pcorotation=CorotateDur/TotalDuration) %>%
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
+  dplyr::group_by(Participant, Distance, DistanceAsFactor) 
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CorotateDur = sum(Duration[Percept=="Corotation"]))
+            Pcorotation = CorotateDur / TotalDuration) %>%
+  dplyr::mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
   
 #Plotting Distance
-plot_distance <- ggplot(data=distance,
+ggplot(data=distance,
        aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) +
   geom_boxplot(outlier.shape = NA) +
   geom_beeswarm() +
