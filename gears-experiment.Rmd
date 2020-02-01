@@ -525,7 +525,7 @@ ambiguity_fit_predictions <- predict(ambiguity_as_factor_fit,
   
 
 
-ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
+ambiguity_plot<- ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
   geom_violin(data = ambiguity_fit_predictions)+
   geom_beeswarm(aes(color=Participant))+
   theme(legend.position="none")
@@ -544,6 +544,16 @@ ambiguity_null_model <- add_criterion(ambiguity_null_model, "loo", reloo=TRUE)
 loo::loo_compare(list("Display" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
 
 loo::loo_model_weights(list("Display" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
+
+```
+```{r combining the plots for Ambiguity condition}
+ggarrange(ambiguityPlot_asFactor, 
+  ggarrange(ambiguity_plot, 
+            labels = c("A", "B")),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
+
+ggsave("gears-ambiguity.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
 
 ```
 
