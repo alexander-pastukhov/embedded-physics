@@ -361,17 +361,15 @@ occlusion_plot_main <-
   plot_theme
 ```
 
-```{r Plot histogram one beta}
+```{r Plotting occlusion Beta}
+  occlusionPlot_slope<-
   posterior_samples(occlusion_fit) %>%
   select(b_Occlusion) %>%
-
   ggplot(aes(x=b_Occlusion))+
-           geom_histogram()
-
-
+           geom_histogram(bins=100)+
+  plot_theme+
+  scale_x_continuous(name=expression(beta[Occlusion]))
 ```
-
-
 
 
 ```{r occlusion as factor fit}
