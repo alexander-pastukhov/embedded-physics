@@ -331,16 +331,17 @@ loo::loo_model_weights(list("Occlusion" = occlusion_fit$criteria$loo, "Intercept
 ```{r Plot occlusions as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 occlusion_fit_predictions <- predict(occlusion_fit,
-                                     newdata = data.frame(Occlusion = seq(0, 70, 1), Participant=NA),
-                                     re_formula = ~ (1 | Participant)) %>%
+                                     newdata = data.frame(Occlusion = seq(0, 70, 1)), 
+                                     probs=c(0.025, 0.25, 0.75, 0.975),
+                                     re_formula = NA) %>%
   data.frame() %>%
   add_column(Occlusion = seq(0, 70, 1))
 
-occlusion_plot_main <-
+occlusionPlot_main <-
   ggplot(data=occlusion_fit_predictions, 
       aes(x = Occlusion, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) +
-  geom_ribbon(aes(yminQ25, ymax= Q75), alpha= 0.25)+
+  geom_ribbon(aes(ymin= Q25, ymax= Q75), alpha= 0.25)+
   geom_line() + 
   geom_beeswarm(data=occlusion, 
                 aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant)) + 
@@ -348,6 +349,7 @@ occlusion_plot_main <-
    scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion))+
   plot_theme
 ```
+
 
 ```{r Plotting occlusion Beta}
   occlusionPlot_slope<-
@@ -408,15 +410,6 @@ occlusionPlot_asFactor<- ggplot(data=occlusion_levels,
 occlusionPlot_asFactor
 ```
 
-distancePlot_asFactor <-
-ggplot(data=distance_levels, 
-       aes(x = Beta, fill=Distance)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=100) + 
-  scale_x_continuous(expression(Beta[i])) +
-  plot_theme + 
-   theme(
-    
-distancePlot_asFactor
 
 ```{r computing values above 0 for Occlusion as factor}
 occlusion_levels %>%
@@ -427,14 +420,14 @@ occlusion_levels %>%
 ```
 
 ```{r combining the plots for occlusion condition}
-ggarrange(distancePlot_main, 
-  ggarrange(distancePlot_slope, distancePlot_asFactor, 
+ggarrange(occlusionPlot_main, 
+  ggarrange(occlusionPlot_slope, occlusionPlot_asFactor, 
             labels = c("B", "C")),
   labels = c("A"),
   font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
   ncol = 1)
 
-ggsave("gears-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
+ggsave("gears-occlusion.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
 
 ```
 
