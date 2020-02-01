@@ -541,9 +541,9 @@ ambiguity_null_model <- brm(PCorotationAdj ~ (1|Participant),
 ambiguity_as_factor_fit <- add_criterion(ambiguity_as_factor_fit, "loo", reloo=TRUE)
 ambiguity_null_model <- add_criterion(ambiguity_null_model, "loo", reloo=TRUE)
 
-loo::loo_compare(list("Ambiguity" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
+loo::loo_compare(list("Display" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
 
-loo::loo_model_weights(list("Ambiguity" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
+loo::loo_model_weights(list("Display" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
 
 ```
 
