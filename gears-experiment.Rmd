@@ -192,13 +192,16 @@ distancePlot_slope <-
   plot_theme + 
   scale_x_continuous(name = expression(beta[Distance]))
 
+## computing values above 0
 posterior_samples(distance_fit) %>%
   select(b_Distance) %>%
   summarise(PaboveZero = round(100 * mean(b_Distance>0), 1)) %>%
   pull(PaboveZero)
 
 distancePlot_slope
+
 ```
+
 
 ## Distance as factor
 ```{r fitting distance as factor}
@@ -369,6 +372,16 @@ occlusion_plot_main <-
            geom_histogram(bins=100)+
   plot_theme+
   scale_x_continuous(name=expression(beta[Occlusion]))
+
+## Computing No of values above 0
+posterior_samples(occlusion_fit) %>%
+  select(b_Occlusion) %>%
+  summarise(PaboveZero = round(100 * mean(b_Occlusion>0), 1)) %>%
+  pull(PaboveZero)
+```
+
+```{r}
+occlusionPlot_slope
 ```
 
 
