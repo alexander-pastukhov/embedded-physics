@@ -375,7 +375,7 @@ occlusion_as_factor_fit <- brm(PCorotationAdj ~ OcclusionAsFactor + (1|Participa
                                prior=c(prior(normal(0,10), class="b")))
 ```
 
-```{r plotting pairwise comparisons for the individual levels of the occlusion}
+```{r plotting pairwise comparisons for the individual levels of occlusion}
 samples_occlusion_as_factor_fit <- posterior_samples(occlusion_as_factor_fit)
 
 occlusion_levels <- 
@@ -392,10 +392,31 @@ occlusion_levels <-
          Occlusion = as.factor(Occlusion),
          Occlusion = fct_relevel(Occlusion, "8.13", "16.26", "32.52", "65.04"))
 
-ggplot(data=occlusion_levels, 
+occlusionPlot_asFactor<- ggplot(data=occlusion_levels, 
        aes(x = Beta, fill=Occlusion)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=100)
+  geom_histogram(alpha=0.5, position="identity", bins=100)+
+  scale_x_continuous(expression(Beta[i]))+
+  plot_theme+
+  theme(
+   legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+occlusionPlot_asFactor
 ```
+
+distancePlot_asFactor <-
+ggplot(data=distance_levels, 
+       aes(x = Beta, fill=Distance)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=100) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme + 
+   theme(
+    
+distancePlot_asFactor
 
 ```{r computing values above 0 for Occlusion as factor}
 occlusion_levels %>%
@@ -405,6 +426,17 @@ occlusion_levels %>%
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
 
+```{r combining the plots for occlusion condition}
+ggarrange(distancePlot_main, 
+  ggarrange(distancePlot_slope, distancePlot_asFactor, 
+            labels = c("B", "C")),
+  labels = c("A"),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
+
+ggsave("gears-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
+
+```
 
 ## Ambiguity Condition
 ```{r}
