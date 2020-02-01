@@ -191,17 +191,18 @@ distancePlot_slope <-
   geom_histogram(bins=100) + 
   plot_theme + 
   scale_x_continuous(name = expression(beta[Distance]))
+distancePlot_slope
 
+```
+
+```{r No of values above 0 distance slope}
 ## computing values above 0
 posterior_samples(distance_fit) %>%
   select(b_Distance) %>%
   summarise(PaboveZero = round(100 * mean(b_Distance>0), 1)) %>%
   pull(PaboveZero)
 
-distancePlot_slope
-
 ```
-
 
 ## Distance as factor
 ```{r fitting distance as factor}
@@ -246,20 +247,12 @@ ggplot(data=distance_levels,
 distancePlot_asFactor
 ```
 
-```{r Number of values above zero}
+```{r Number of values above zero distance as factor}
 distance_levels %>%
   group_by(Distance) %>%
   summarize(numAbove=sum(Beta > 0),
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
-```
-
-```{r computing no of values above zero for each condition}
-distance_levels%>%
-  select(Distance=="8.13")%>%
-  summarize(numAbove=sum(Beta > 0))%>%
-  mutate(TotalBeta=nrow(distance_levels),
-         Pbetaabove=numAbove/TotalBeta)
 ```
 
 
@@ -272,14 +265,6 @@ ggarrange(distancePlot_main,
   ncol = 1)
 
 ggsave("gears-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
-
-# pushViewport(viewport(layout= grid.layout(2,2)))
-# print(plot_distance, vp= viewpoint(layout.pos.row= 1, layoutt.pos.col= 1))
-# print(plot_distance_fit_predictions, vp= viewpoint(layout.pos.row= 1, layout.pos.col= 2))
-# print(plot_distance_pairwise_comparison, vp= viewpoint(layout.pos.row =2, layout.pos.col= 1))
-# print(plot_posterior_samples_distance_beta, vp= viewpoint(layout.pos.row =2, layout.pos.col= 2))
-## I know this is not what you meant but I failed at combining them otherwise
-
 
 ```
 
@@ -380,12 +365,8 @@ posterior_samples(occlusion_fit) %>%
   pull(PaboveZero)
 ```
 
-```{r}
-occlusionPlot_slope
-```
-
-
-```{r occlusion as factor fit}
+##Occlusion as factor
+```{r fitting occlusion as factor}
 #  Computing brm for Occlusion as factor condition
 set.seed(89925355)
 occlusion_as_factor_fit <- brm(PCorotationAdj ~ OcclusionAsFactor + (1|Participant),
