@@ -178,7 +178,7 @@ distancePlot_main <-
   geom_beeswarm(data=distance, 
                 aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance)) + 
+  scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance)) +
   # ylim(0, 1) + 
   plot_theme
 ```
@@ -348,14 +348,17 @@ occlusion_fit_predictions <- predict(occlusion_fit,
   data.frame() %>%
   add_column(Occlusion = seq(0, 70, 1))
 
-ggplot(data=occlusion_fit_predictions, 
+occlusion_plot_main <-
+  ggplot(data=occlusion_fit_predictions, 
       aes(x = Occlusion, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) +
+  geom_ribbon(aes(yminQ25, ymax= Q75), alpha= 0.25)+
   geom_line() + 
   geom_beeswarm(data=occlusion, 
                 aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant)) + 
   theme(legend.position = "none") + 
-  ylim(0, 1)
+   scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion))+
+  plot_theme
 ```
 
 ```{r Plot histogram one beta}
