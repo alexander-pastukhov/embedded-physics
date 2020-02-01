@@ -473,15 +473,14 @@ ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
 
 
 ```{r plotting pairwise comparisons for the individual levels of Ambiguity}
-samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_as_factor_fit)
+samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_brm)
 
 ambiguity_levels <- 
-  samples_ambiguity_as_factor_fit %>%
-  
-  select(starts_with("b_Ambiguity")) %>%
+  samples_ambiguity_as_factor_fit%>%
+  select(starts_with("b_Display")) %>%
   
   # wide to long
-  pivot_longer(cols=everything(), names_to = "Display", values_to = "Beta") %>%
+  pivot_longer(cols= everything(), names_to = "Display", values_to = "Beta") %>%
 
   # turn distance name into a factor
   mutate(Display = str_remove_all(Display, "b_Display"), 
@@ -504,8 +503,6 @@ ggplot(data=ambiguity_levels,
 
 ambiguityPlot_asFactor
 ```
-
-
 
 
 ```{r predicting and plotting ambiguity}
