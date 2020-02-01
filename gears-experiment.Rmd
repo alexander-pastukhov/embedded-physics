@@ -462,7 +462,7 @@ ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation, color=Partic
 
 ```
 
-```{r}
+```{r fitting ambiguity as factor}
 set.seed(99435)
 ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
                      family= Beta(),
@@ -471,7 +471,44 @@ ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
                      prior=c(prior(normal(0,10), class="b")))
 ```
 
-```{r}
+
+```{r plotting pairwise comparisons for the individual levels of Ambiguity}
+samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_as_factor_fit)
+
+ambiguity_levels <- 
+  samples_ambiguity_as_factor_fit %>%
+  
+  select(starts_with("b_Ambiguity")) %>%
+  
+  # wide to long
+  pivot_longer(cols=everything(), names_to = "Display", values_to = "Beta") %>%
+
+  # turn distance name into a factor
+  mutate(Display = str_remove_all(Display, "b_Display"), 
+         Display = as.factor(Display),
+         Display = fct_relevel(Display, "-ambiguous", "weak", "medium", "medium-strong", "Strong"))
+          
+ambiguityPlot_asFactor <-
+ggplot(data=ambiguity_levels, 
+       aes(x = Beta, fill=Display)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=100) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme + 
+   theme(
+    legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+ambiguityPlot_asFactor
+```
+
+
+
+
+```{r predicting and plotting ambiguity}
 samples_ambiguity_brm <- sample(ambiguity_brm)
 plot(ambiguity_brm)
 
