@@ -503,6 +503,14 @@ ggplot(data=ambiguity_levels,
 
 ambiguityPlot_asFactor
 ```
+```{r computing values above 0 for Ambiguity as factor}
+ambiguity_levels %>%
+  group_by(Display) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
+
+```
 
 
 ```{r predicting and plotting ambiguity}
