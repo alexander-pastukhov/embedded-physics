@@ -397,6 +397,13 @@ ggplot(data=occlusion_levels,
   geom_histogram(alpha=0.5, position="identity", bins=100)
 ```
 
+```{r computing values above 0 for Occlusion as factor}
+occlusion_levels %>%
+  group_by(Occlusion) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
+```
 
 
 ## Ambiguity Condition
