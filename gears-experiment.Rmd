@@ -464,7 +464,7 @@ ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation, color=Partic
 
 ```{r fitting ambiguity as factor}
 set.seed(99435)
-ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
+ambiguity_as_factor_fit <- brm(PCorotationAdj ~ Display +(1|Participant),
                      family= Beta(),
                      data= ambiguity,
                      cores=future::availableCores(),
@@ -473,7 +473,7 @@ ambiguity_brm <- brm(PCorotationAdj ~ Display +(1|Participant),
 
 
 ```{r plotting pairwise comparisons for the individual levels of Ambiguity}
-samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_brm)
+samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_as_factor_fit)
 
 ambiguity_levels <- 
   samples_ambiguity_as_factor_fit%>%
@@ -513,12 +513,9 @@ ambiguity_levels %>%
 ```
 
 
+
 ```{r predicting and plotting ambiguity}
-samples_ambiguity_brm <- sample(ambiguity_brm)
-plot(ambiguity_brm)
-
-
-ambiguity_fit_predictions <- predict(ambiguity_brm,
+ambiguity_fit_predictions <- predict(ambiguity_as_factor_fit,
                                      newdata = data.frame(Display = levels(ambiguity$Display)),
                                      summary = FALSE,
                                       re_formula = NA) %>%
@@ -535,7 +532,18 @@ ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
   
 ```
 
-```{r}
+```{r Ambiguity importance via loo}
+ambiguity_null_model <- brm(PCorotationAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           data=ambiguity)
+
+ambiguity_as_factor_fit <- add_criterion(ambiguity_as_factor_fit, "loo", reloo=TRUE)
+ambiguity_null_model <- add_criterion(ambiguity_null_model, "loo", reloo=TRUE)
+
+loo::loo_compare(list("Ambiguity" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
+
+loo::loo_model_weights(list("Ambiguity" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
 
 ```
 
