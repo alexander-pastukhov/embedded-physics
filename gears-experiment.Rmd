@@ -154,9 +154,9 @@ distance_null_model <- brm(PCorotationAdj ~ (1|Participant),
 distance_fit <- add_criterion(distance_fit, "loo", reloo=TRUE)
 distance_null_model <- add_criterion(distance_null_model, "loo", reloo=TRUE)
 
-loo_compare(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
+loo::loo_compare(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
 
-loo_model_weights(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
+loo::loo_model_weights(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
 ```
 
 
@@ -325,6 +325,20 @@ occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
                      prior=c(prior(normal(0,10), class="b")))
 ```
 
+```{r Occlusion importance via loo}
+occlusion_null_model <- brm(PCorotationAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           data=occlusion)
+
+occlusion_fit <- add_criterion(occlusion_fit, "loo", reloo=TRUE)
+occlusion_null_model <- add_criterion(occlusion_null_model, "loo", reloo=TRUE)
+
+loo::loo_compare(list("Occlusion" = occlusion_fit$criteria$loo, "Intercept" = occlusion_null_model$criteria$loo))
+
+loo::loo_model_weights(list("Occlusion" = occlusion_fit$criteria$loo, "Intercept" = occlusion_null_model$criteria$loo))
+
+```
 
 ```{r Plot occlusions as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
