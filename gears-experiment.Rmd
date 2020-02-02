@@ -342,12 +342,17 @@ occlusionPlot_main <-
       aes(x = Occlusion, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) +
   geom_ribbon(aes(ymin= Q25, ymax= Q75), alpha= 0.25)+
-  geom_line() + 
+  geom_smooth(color="black", size=1.5) + 
+  geom_hline(yintercept = 0.5, color="white") +
+  # geom_line(data=occlusion, 
+  #               aes(x=Occlusion, group=Participant, y=Pcorotation), color="gray64") + 
   geom_beeswarm(data=occlusion, 
-                aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant)) + 
+                aes(x=Occlusion, group=Occlusion, y=Pcorotation)) + 
   theme(legend.position = "none") + 
-   scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion))+
+  scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion))+
   plot_theme
+
+occlusionPlot_main
 ```
 
 
@@ -367,7 +372,8 @@ posterior_samples(occlusion_fit) %>%
   pull(PaboveZero)
 ```
 
-##Occlusion as factor
+## Occlusion as factor
+
 ```{r fitting occlusion as factor}
 #  Computing brm for Occlusion as factor condition
 set.seed(89925355)
