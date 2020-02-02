@@ -546,6 +546,7 @@ loo::loo_compare(list("Display" = ambiguity_as_factor_fit$criteria$loo, "Interce
 loo::loo_model_weights(list("Display" = ambiguity_as_factor_fit$criteria$loo, "Intercept" = ambiguity_null_model$criteria$loo))
 
 ```
+
 ```{r combining the plots for Ambiguity condition}
 ggarrange(ambiguityPlot_asFactor, 
   ggarrange(ambiguity_plot, 
