@@ -428,6 +428,22 @@ ggplot(data=sphere_ambiguity,
          theme(legend.position = "none") + 
          scale_x_continuous(name= "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguation))
 ```
+```{r sphere ambiguation importance via loo}
+sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           data=sphere_ambiguity)
+
+sphere_ambiguity_fit <- add_criterion(sphere_ambiguity_fit, "loo", reloo=TRUE)
+sphere_ambiguity_null_model <- add_criterion(sphere_ambiguity_null_model, "loo", reloo=TRUE)
+
+loo::loo_compare(list("SphereDisambiguation" = sphere_ambiguity_fit$criteria$loo, "Intercept" = sphere_ambiguity_null_model$criteria$loo))
+
+loo::loo_model_weights(list("SphereDisambiguation" = sphere_ambiguity_fit$criteria$loo, "Intercept" = sphere_ambiguity_null_model$criteria$loo))
+```
+```
+
+
 
 ## Ambiguity Walker condtiotn
 
