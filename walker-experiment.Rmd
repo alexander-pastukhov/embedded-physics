@@ -201,6 +201,39 @@ vertical_distance_as_factor_fit <- brm(PcongruentAdj ~ DistanceAsFactor + (1|Par
                               data=vertical_distance,
                               prior=c(prior(normal(0,10), class="b")))
 ```
+```{r plotting pariwise comparisons for individual levels of vertical distance}
+samples_vertical_distance_as_factor_fit <- posterior_samples(vertical_distance_as_factor_fit)
+
+vertical_distance_levels <- 
+  samples_vertical_distance_as_factor_fit %>%
+  
+  # only retain distace levels
+  select(starts_with("b_Distance")) %>%
+  
+  # wide to long
+  pivot_longer(cols=everything(), names_to = "Distance", values_to = "Beta") %>%
+
+  # turn distance name into a factor
+  mutate(Distance = str_remove_all(Distance, "b_DistanceAsFactor"), 
+         Distance = as.factor(Distance),
+         Distance = fct_relevel(Distance, "1", "2", "3", "4"))
+          
+verticaldistancePlot_asFactor <-
+ggplot(data=vertical_distance_levels, 
+       aes(x = Beta, fill=Distance)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=150) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme + 
+   theme(
+    legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+verticaldistancePlot_asFactor
+```
 
 
 ## Distance horizontal condition
