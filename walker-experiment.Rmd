@@ -406,7 +406,7 @@ ggarrange(horizontal_distance_plot_main,
 
 ## Ambiguity sphere condition
 ```{r}
-sphere_ambiguity <-
+sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as levels of ambiguiation?
   reports %>%
   filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))%>%
   dplyr::mutate(SphereDisambiguationAsFactor = as.factor(SphereDisambiguation),
@@ -533,6 +533,45 @@ ggplot(data=sphere_ambiguity_levels,
 
 sphere_ambiguity_plot_asFactor
 ```
+
+```{r computing values above 0 for sphere Ambiguity as factor}
+sphere_ambiguity_levels %>%
+  group_by(SphereDisambiguation) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
+```
+
+```{r predicting and plotting sphere ambiguity}
+## tried to copy what you did for gears ambiguity
+sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_as_factor_fit,
+                                     newdata = data.frame(SphereDisambiguation = levels(sphere_ambiguity$SphereDisambiguation)),
+                                     summary = FALSE,
+                                     re_formula = NA) %>%
+  data.frame() %>%
+  pivot_longer(everything(), names_to = "SphereDisambiguation", values_to = "Pcorotation") %>%
+  mutate(SphereDisambiguation = factor(SphereDisambiguation, levels = sort(unique(SphereDisambiguation)), labels = levels(sphere_ambiguity$SphereDisambiguation)))
+  
+
+sphere_ambiguity_fit_moments <-
+  sphere_ambiguity_fit_predictions %>%
+  group_by(SphereDisambiguation) %>%
+  summarise(meanP = mean(Pcorotation),
+            medianP= median(Pcorotation))
+
+
+sphere_ambiguity_plot_main <- 
+  ggplot(data=sphere_ambiguity, aes(x=SphereDisambiguation, group=SphereDisambiguation, y=Pcorotation) )+
+  geom_violin(data = sphere_ambiguity_fit_predictions, fill="gray64", color="white", draw_quantiles = c(0.5)) +
+  # geom_boxplot(data = sphere_ambiguity_fit_predictions) +
+  geom_quasirandom(width=0.15, method="tukeyDense")+
+  plot_theme +
+  theme(legend.position="none")
+  
+
+sphere_ambiguity_plot_main
+```
+
 
 
 
