@@ -47,9 +47,6 @@ plot_theme <-
         axis.ticks = element_line(size = 0.24))
 ```
 
-
-## Importing data
-
 # Importing data
 ```{r Import}
 read_walker_csv <- function(filename){
@@ -89,12 +86,6 @@ reports <-
   mutate(Percept=as.factor(Percept),
          Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))
          
-
-
-
-sphere_ambiguity <-
-  reports %>%
-  filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))
   
 walker_ambiguity <-
   reports %>%
@@ -137,6 +128,7 @@ vertical_distance_fit <- brm(PcongruentAdj ~ Distance + (1|Participant),
                     prior=c(prior(normal(0,10), class="b")))
 
 ```
+
 ```{r vertical distance importance via loo}
 vertical_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
@@ -185,6 +177,7 @@ vertical_distance_plot_slope <-
 
 vertical_distance_plot_slope
 ```
+
 ```{r number of values above zero vertical distance slope}
 posterior_samples(vertical_distance_fit) %>%
   select(b_Distance) %>%
@@ -198,6 +191,7 @@ vertical_distance_as_factor_fit <- brm(PcongruentAdj ~ DistanceAsFactor + (1|Par
                               data=vertical_distance,
                               prior=c(prior(normal(0,10), class="b")))
 ```
+
 ```{r plotting pariwise comparisons for individual levels of vertical distance}
 samples_vertical_distance_as_factor_fit <- posterior_samples(vertical_distance_as_factor_fit)
 
@@ -231,6 +225,7 @@ ggplot(data=vertical_distance_levels,
 
 verticaldistancePlot_asFactor
 ```
+
 ```{r Number of values above zero for vertical distance as factor}
 vertical_distance_levels %>%
   group_by(Distance) %>%
@@ -238,6 +233,7 @@ vertical_distance_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
+
 ```{r combining the plots for vertical distance condition}
 ggarrange(vertical_distance_plot_main, 
   ggarrange(vertical_distance_plot_slope, verticaldistancePlot_asFactor, 
@@ -335,6 +331,8 @@ horizontal_distance_plot_slope <-
 
 horizontal_distance_plot_slope
 ```
+
+
 ```{r number if values above zero horizontal distance slope}
 posterior_samples(horizontal_distance_fit) %>%
   select(b_Shift) %>%
@@ -403,13 +401,32 @@ ggarrange(horizontal_distance_plot_main,
 
 #ggsave("walker-horizontal-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
 ```
-```
 
 
 
 ## Ambiguity sphere condition
 ```{r}
+sphere_ambiguity <-
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))%>%
+  dplyr::mutate(SphereDisambiguationAsFactor = as.factor(SphereDisambiguation),
+                SphereDisambiguationAsFactor = fct_relevel(SphereDisambiguationAsFactor,"-1", "-0.25", "0", "0.25", "1")) %>%
+  
+  ## computing Pcongurent for each participant and disambiguation seperatly
+  dplyr::group_by(Participant, SphereDisambiguation, SphereDisambiguationAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CongruentDur = sum(Duration[Percept=="congruent"]),
+            Pcongruent = CongruentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)              
 
+# plotting SphereDisambiguation 
+ggplot(data=sphere_ambiguity,
+       aes(x=SphereDisambiguation, group=SphereDisambiguation, y=Pcongruent, color=Participant))+  ## something is really wrong ith ambiguity of -0.25
+         geom_boxplot(outlier.shape = NA) +
+         geom_beeswarm() +
+         theme(legend.position = "none") + 
+         scale_x_continuous(name= "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguation))
 ```
 
 ## Ambiguity Walker condtiotn
