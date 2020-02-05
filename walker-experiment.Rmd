@@ -190,8 +190,7 @@ vertical_distance_plot_slope
 ```{r number of values above zero vertical distance slope}
 posterior_samples(vertical_distance_fit) %>%
   select(b_Distance) %>%
-  summarise(PaboveZero = round(100 * mean(b_Distance>0), 1)) %>%
-  pull(PaboveZero)
+  summarise(PaboveZero = round(100 * mean(b_Distance>0), 1))
 ```
 ## Vertical distance as factor
 ```{r fitting vertical distance as factor}
@@ -233,6 +232,13 @@ ggplot(data=vertical_distance_levels,
     legend.margin = margin(6, 6, 6, 6))
 
 verticaldistancePlot_asFactor
+```
+```{r Number of values above zero for vertical distance as factor}
+vertical_distance_levels %>%
+  group_by(Distance) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
 
 
