@@ -476,7 +476,32 @@ sphere_ambguity_plot_main <-
 sphere_ambguity_plot_main
 ```
 
+```{r plotting spehre ambiguity slope}
+sphere_ambiguity_plot_slope <- 
+  posterior_samples(sphere_ambiguity_fit)%>%
+  select(b_SphereDisambiguation) %>%
+  ggplot(aes(x=b_SphereDisambiguation)) +
+  geom_histogram(bins=150) + 
+  plot_theme + 
+  scale_x_continuous(name = expression(beta[SphereDisambiguation]))
 
+sphere_ambiguity_plot_slope
+```
+
+
+```{r number if values above zero sphere ambiguity slope}
+posterior_samples(sphere_ambiguity_fit) %>%
+  select(b_SphereDisambiguation) %>%
+  summarise(PaboveZero = round(100 * mean(b_SphereDisambiguation>0), 1))
+```
+## Ambiguity sphere as factor
+```{r fitting horizontal distance as factor}
+set.seed(1495785)
+sphere_ambiguity_as_factor_fit <- brm(PcongruentAdj ~ SphereDisambiguationAsFactor + (1|Participant),
+                              family=Beta(), 
+                              data=sphere_ambiguity,
+                              prior=c(prior(normal(0,10), class="b")))
+```
 
 
 ## Ambiguity Walker condtiotn
