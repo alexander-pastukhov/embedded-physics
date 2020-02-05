@@ -428,6 +428,17 @@ ggplot(data=sphere_ambiguity,
          theme(legend.position = "none") + 
          scale_x_continuous(name= "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguation))
 ```
+```{r fitting sphere ambiguity as a contiuous variable}
+set.seed(44279)
+sphere_ambiguity_fit <- brm(PcongruentAdj ~ Shift + (1|Participant),
+                    family=Beta(),
+                    data=sphere_ambiguity,
+                    cores=future::availableCores(),
+                    prior=c(prior(normal(0,10), class="b")))
+
+```
+
+
 ```{r sphere ambiguation importance via loo}
 sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
