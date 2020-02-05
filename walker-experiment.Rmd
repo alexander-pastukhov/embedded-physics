@@ -90,9 +90,7 @@ reports <-
          Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))
          
 
-horizontal_distance <- 
-  reports %>%
-  filter(SessionTag == "Addendum", Condition %in% c("Control", "Shift"))
+
 
 sphere_ambiguity <-
   reports %>%
@@ -255,8 +253,34 @@ ggsave("walker-vertical-distance.pdf", width = 12, height=8, units="cm", device=
 ## Distance horizontal condition
 
 ```{r}
+horizontal_distance <- 
+  reports %>%
+  filter(SessionTag == "Addendum", Condition %in% c("Control", "Shift"))%>%
+  dplyr::mutate(ShiftAsFactor = as.factor(Shift),
+                ShiftAsFactor = fct_relevel(ShiftAsFactor,"-4", "-3", "-2", "-1", "0", "1", "2", "3", "4")) %>%
+  ## computing Pcongurent for each participant and distance seperatly
+  dplyr::group_by(Participant, Shift, ShiftAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CongruentDur = sum(Duration[Percept=="congruent"]),
+            Pcongruent = CongruentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
+
+# plotting horizontal distance
+ggplot(data=horizontal_distance,
+       aes(x=Shift, group=Shift, y=Pcongruent, color=Participant))+
+         geom_boxplot(outlier.shape = NA) +
+         geom_beeswarm() +
+         theme(legend.position = "none") + 
+         scale_x_continuous(name= "Shift", breaks = unique(horizontal_distance$Shift))
+  
+  
+```
+
+```{r}
 
 ```
+
 
 ## Ambiguity sphere condition
 ```{r}
