@@ -87,10 +87,8 @@ reports <-
   
   #5. Renaming Percepts
   mutate(Percept=as.factor(Percept),
-         Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down")
-vertical_distance <- 
-  reports %>%
-  filter(SessionTag == "Main", Condition %in% c("Control", "Distance"))
+         Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))
+         
 
 horizontal_distance <- 
   reports %>%
@@ -106,9 +104,30 @@ walker_ambiguity <-
 
 ```
 
+
 ## Distance vertical condition
 ```{r}
+vertical_distance <- 
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Distance"))%>%
+  dplyr::mutate(DistanceAsFactor = as.factor(Distance),
+                DistanceAsFactor = fct_relevel(DistanceAsFactor,"0", "1", "2", "3", "4")) %>%
+  
+  ## computing Pcongurent for each participant and distance seperatly
+  dplyr::group_by(Participant, Distance, DistanceAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CongruentDur = sum(Duration[Percept=="congruent"]),
+            Pcongruent = CongruentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
 
+# plotting vertical distance
+ggplot(data=vertical_distance,
+       aes(x=Distance, group=Distance, y=Pcongruent, color=Participant))+
+         geom_boxplot(outlier.shape = NA) +
+         geom_beeswarm() +
+         theme(legend.position = "none") + 
+         xlab("Distance [%]")
 ```
 
 ## Distance horizontal condition
