@@ -310,7 +310,7 @@ horizontal_distance_fit_predictions <- predict(horizontal_distance_fit,
   add_column(Shift= seq( -6, 6, 1))
 
 horizontal_distance_plot_main <-
-  ggplot(data=horizontal_distance_fit_predictions, # lisa, come back here and figure out why you get an error message
+  ggplot(data=horizontal_distance_fit_predictions,
       aes(x = Shift, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
@@ -323,6 +323,19 @@ horizontal_distance_plot_main <-
 
 horizontal_distance_plot_main
 ```
+
+```{r plotting horizontal distance slope}
+horizontal_distance_plot_slope <- 
+  posterior_samples(horizontal_distance_fit) %>%
+  select(b_Shift) %>%
+  ggplot(aes(x=b_Shift)) +
+  geom_histogram(bins=150) + 
+  plot_theme + 
+  scale_x_continuous(name = expression(beta[Shift]))
+
+horizontal_distance_plot_slope
+```
+
 
 
 ## Ambiguity sphere condition
