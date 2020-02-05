@@ -350,6 +350,40 @@ horizontal_distance_as_factor_fit <- brm(PcongruentAdj ~ ShiftAsFactor + (1|Part
                               prior=c(prior(normal(0,10), class="b")))
 ```
 
+```{r plotting pariwise comparisons for individual levels of horizontal distance}
+samples_horizontal_distance_as_factor_fit <- posterior_samples(horizontal_distance_as_factor_fit)
+
+horizontal_distance_levels <- 
+  samples_horizontal_distance_as_factor_fit %>%
+  
+  # only retain shift levels
+  select(starts_with("b_Shift")) %>%
+  
+  # wide to long
+  pivot_longer(cols=everything(), names_to = "Shift", values_to = "Beta") %>%
+
+  # turn distance name into a factor
+  mutate(Shift = str_remove_all(Shift, "b_ShiftAsFactor"),
+         Shift = as.factor(Shift),
+         Shift = fct_relevel(Shift, "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4")) ## what goes wrong here with the negative values? also maybe a histogram is not the best choice for so many conditions
+          
+        
+horizontal_distance_plot_asFactor <-
+ggplot(data=horizontal_distance_levels, 
+       aes(x = Beta, fill=Shift)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=150) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme + 
+   theme(
+    legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+horizontal_distance_plot_asFactor
+```
 
 
 ## Ambiguity sphere condition
