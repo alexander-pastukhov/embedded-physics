@@ -11,9 +11,40 @@ knitr::opts_chunk$set(echo = TRUE)
 extrafont::loadfonts(quiet = TRUE)
 ```
 
+```{r}
+library(brms)
+library(dplyr)
+library(extrafont)
+library(fs)
+library(forcats)
+library(ggbeeswarm)
+library(ggpubr)
+library(glue)
+library(ggplot2)
+library(grid)
+library(readr)
+library(stringr)
+library(tibble)
+library(tidyr)
+```
+
+
 
 ```{r Tabula rasa}
 rm(list=ls())
+```
+
+
+```{r Custom plotting theme}
+plot_theme <- 
+  theme(text=element_text(family="Arial"),
+        axis.text.x = element_text(size = 8, colour = 'black'), 
+        axis.text.y = element_text(size = 8, colour = 'black'), 
+        axis.title.x = element_text(size = 10), 
+        axis.title.y = element_text(size = 10), 
+        panel.grid.minor.x = element_blank(), 
+        panel.grid.minor.y =  element_line(size = 0.24), 
+        axis.ticks = element_line(size = 0.24))
 ```
 
 
@@ -71,3 +102,27 @@ walker_ambiguity <-
   filter(SessionTag == "Main", Condition %in% c("Control", "Walker ambiguity"))
 
 ```
+
+## Distance vertical condition
+```{r}
+
+```
+
+## Distance horizontal condition
+
+```{r}
+
+```
+
+## Ambiguity sphere condition
+```{r}
+
+```
+
+## Ambiguity Walker condtiotn
+
+```{r}
+
+```
+
+
