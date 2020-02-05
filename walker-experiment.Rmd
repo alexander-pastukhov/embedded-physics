@@ -341,6 +341,15 @@ posterior_samples(horizontal_distance_fit) %>%
   summarise(PaboveZero = round(100 * mean(b_Shift>0), 1))
 ```
 
+## Horizontal Distance as factor
+```{r fitting horizontal distance as factor}
+set.seed(878929)
+horizontal_distance_as_factor_fit <- brm(PcongruentAdj ~ ShiftAsFactor + (1|Participant),
+                              family=Beta(), 
+                              data=horizontal_distance,
+                              prior=c(prior(normal(0,10), class="b")))
+```
+
 
 
 ## Ambiguity sphere condition
