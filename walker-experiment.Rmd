@@ -139,6 +139,19 @@ vertical_distance_fit <- brm(PcongruentAdj ~ Distance + (1|Participant),
                     prior=c(prior(normal(0,10), class="b")))
 
 ```
+```{r vertical distance importance via loo}
+vertical_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           data=vertical_distance)
+
+vertical_distance_fit <- add_criterion(vertical_distance_fit, "loo", reloo=TRUE)
+vertical_distance_null_model <- add_criterion(vertical_distance_null_model, "loo", reloo=TRUE)
+
+loo::loo_compare(list("Distance" = vertical_distance_fit$criteria$loo, "Intercept" = vertical_distance_null_model$criteria$loo))
+
+loo::loo_model_weights(list("Distance" = vertical_distance_fit$criteria$loo, "Intercept" = vertical_distance_null_model$criteria$loo))
+```
 
 
 ## Distance horizontal condition
