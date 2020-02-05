@@ -385,6 +385,27 @@ ggplot(data=horizontal_distance_levels,
 horizontal_distance_plot_asFactor
 ```
 
+```{r Number of values above zero for horizontal distance as factor}
+horizontal_distance_levels %>%
+  group_by(Shift) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
+```
+
+```{r combining the plots for horizontal distance condition}
+ggarrange(horizontal_distance_plot_main, 
+  ggarrange(horizontal_distance_plot_slope, horizontal_distance_plot_asFactor, 
+            labels = c("B", "C")),
+  labels = c("A"),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
+
+#ggsave("walker-horizontal-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
+```
+```
+
+
 
 ## Ambiguity sphere condition
 ```{r}
