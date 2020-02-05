@@ -476,7 +476,7 @@ sphere_ambguity_plot_main <-
 sphere_ambguity_plot_main
 ```
 
-```{r plotting spehre ambiguity slope}
+```{r plotting sphere ambiguity slope}
 sphere_ambiguity_plot_slope <- 
   posterior_samples(sphere_ambiguity_fit)%>%
   select(b_SphereDisambiguation) %>%
@@ -502,6 +502,38 @@ sphere_ambiguity_as_factor_fit <- brm(PcongruentAdj ~ SphereDisambiguationAsFact
                               data=sphere_ambiguity,
                               prior=c(prior(normal(0,10), class="b")))
 ```
+```{r plotting pairwise comparisons for the individual levels of sphere Ambiguity}
+samples_sphere_ambiguity_as_factor_fit <- posterior_samples(sphere_ambiguity_as_factor_fit)
+
+sphere_ambiguity_levels <- 
+  samples_sphere_ambiguity_as_factor_fit%>%
+  select(starts_with("b_SphereDisambiguationAsFactor")) %>%
+  
+  # wide to long
+  pivot_longer(cols= everything(), names_to = "SphereDisambiguation", values_to = "Beta") %>%
+
+  # turn distance name into a factor
+  mutate(SphereDisambiguation = str_remove_all(SphereDisambiguation, "b_SphereDisambiguationAsFactor"),
+         SphereDisambiguation = as.factor(SphereDisambiguation),
+         SphereDisambiguation = fct_relevel(SphereDisambiguation, "-1", "-0.25", "0", "0.25", "1"))
+          
+sphere_ambiguity_plot_asFactor <-
+ggplot(data=sphere_ambiguity_levels, 
+       aes(x = Beta, fill=SphereDisambiguation)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=150) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme + 
+   theme(
+    legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+sphere_ambiguity_plot_asFactor
+```
+
 
 
 ## Ambiguity Walker condtiotn
