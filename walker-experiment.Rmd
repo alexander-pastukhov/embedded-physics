@@ -240,6 +240,16 @@ vertical_distance_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
+```{r combining the plots for vertical distance condition}
+ggarrange(vertical_distance_plot_main, 
+  ggarrange(vertical_distance_plot_slope, verticaldistancePlot_asFactor, 
+            labels = c("B", "C")),
+  labels = c("A"),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
+
+ggsave("walker-vertical-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
+```
 
 
 ## Distance horizontal condition
