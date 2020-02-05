@@ -176,6 +176,18 @@ vertical_distance_plot_main <-
 vertical_distance_plot_main
 ```
 
+```{r plotting vertical distance slope}
+vertical_distance_plot_slope <- 
+  posterior_samples(vertical_distance_fit) %>%
+  select(b_Distance) %>%
+  ggplot(aes(x=b_Distance)) +
+  geom_histogram(bins=150) + 
+  plot_theme + 
+  scale_x_continuous(name = expression(beta[Distance]))
+
+vertical_distance_plot_slope
+```
+
 
 ## Distance horizontal condition
 
