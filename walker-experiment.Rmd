@@ -277,10 +277,30 @@ ggplot(data=horizontal_distance,
   
 ```
 
-```{r}
+```{r fitting horizontal distance as a contiuous variable}
+set.seed(723211)
+horizontal_distance_fit <- brm(PcongruentAdj ~ Shift + (1|Participant),
+                    family=Beta(),
+                    data=horizontal_distance,
+                    cores=future::availableCores(),
+                    prior=c(prior(normal(0,10), class="b")))
 
 ```
 
+```{r horizontal distance importance via loo}
+horizontal_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           data=horizontal_distance)
+
+horizontal_distance_fit <- add_criterion(horizontal_distance_fit, "loo", reloo=TRUE)
+horizontal_distance_null_model <- add_criterion(horizontal_distance_null_model, "loo", reloo=TRUE)
+
+loo::loo_compare(list("Shift" = horizontal_distance_fit$criteria$loo, "Intercept" = horizontal_distance_null_model$criteria$loo))
+
+loo::loo_model_weights(list("Shift" = horizontal_distance_fit$criteria$loo, "Intercept" = horizontal_distance_null_model$criteria$loo))
+```
+```
 
 ## Ambiguity sphere condition
 ```{r}
