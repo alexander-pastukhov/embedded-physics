@@ -83,8 +83,11 @@ reports <-
   ungroup() %>%
 
   # 4. Drop "end" Percept
-  filter(Percept != "end")
-
+  filter(Percept != "end")%>%
+  
+  #5. Renaming Percepts
+  mutate(Percept=as.factor(Percept),
+         Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down")
 vertical_distance <- 
   reports %>%
   filter(SessionTag == "Main", Condition %in% c("Control", "Distance"))
