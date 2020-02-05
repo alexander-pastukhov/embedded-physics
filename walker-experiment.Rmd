@@ -300,7 +300,30 @@ loo::loo_compare(list("Shift" = horizontal_distance_fit$criteria$loo, "Intercept
 
 loo::loo_model_weights(list("Shift" = horizontal_distance_fit$criteria$loo, "Intercept" = horizontal_distance_null_model$criteria$loo))
 ```
+
+```{r plot horizontal distance continous predictions}
+horizontal_distance_fit_predictions <- predict(horizontal_distance_fit,
+                                             newdata = data.frame(Shift= seq( -6, 6, 1)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+  data.frame()%>%
+  add_column(Shift= seq( -6, 6, 1))
+
+horizontal_distance_plot_main <-
+  ggplot(data=horizontal_distance_fit_predictions, # lisa, come back here and figure out why you get an error message
+      aes(x = Shift, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() + 
+  geom_quasirandom(data=horizontal_distance, method="tukeyDense", width=2,
+                aes(x=Shift, group=Shift, y=Pcongruent)) + 
+  theme(legend.position = "none") + 
+  scale_x_continuous(name = "Shift [%]", breaks = unique(horizontal_distance$Shift)) +
+  plot_theme
+
+horizontal_distance_plot_main
 ```
+
 
 ## Ambiguity sphere condition
 ```{r}
