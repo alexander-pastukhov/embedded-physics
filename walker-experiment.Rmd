@@ -452,7 +452,30 @@ loo::loo_compare(list("SphereDisambiguation" = sphere_ambiguity_fit$criteria$loo
 
 loo::loo_model_weights(list("SphereDisambiguation" = sphere_ambiguity_fit$criteria$loo, "Intercept" = sphere_ambiguity_null_model$criteria$loo))
 ```
+
+```{r plot sphere ambiguity continous predictions}
+sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_fit,
+                                             newdata = data.frame(Shift= seq( -1, 1, 0,25)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+  data.frame()%>%
+  add_column(Shift= seq( -1, 1, 0,25))
+
+sphere_ambguity_plot_main <-
+  ggplot(data=sphere_ambiguity_fit_predictions,
+      aes(x = Shift, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() + 
+  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=2,
+                aes(x=Shift, group=Shift, y=Pcongruent)) + 
+  theme(legend.position = "none") + 
+  scale_x_continuous(name = "Sphere Disambiguation [%]", breaks = unique(sphere_ambiguity$SphereDisambiguation)) +
+  plot_theme
+
+sphere_ambiguity_plot_main
 ```
+
 
 
 
