@@ -335,6 +335,11 @@ horizontal_distance_plot_slope <-
 
 horizontal_distance_plot_slope
 ```
+```{r number if values above zero horizontal distance slope}
+posterior_samples(horizontal_distance_fit) %>%
+  select(b_Shift) %>%
+  summarise(PaboveZero = round(100 * mean(b_Shift>0), 1))
+```
 
 
 
