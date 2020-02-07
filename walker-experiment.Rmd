@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 extrafont::loadfonts(quiet = TRUE)
 ```
 
-```{r}
+```{r libraries}
 library(brms)
 library(dplyr)
 library(extrafont)
@@ -138,18 +138,17 @@ vertical_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
 vertical_distance_fit <- add_criterion(vertical_distance_fit, "loo", reloo=TRUE)
 vertical_distance_null_model <- add_criterion(vertical_distance_null_model, "loo", reloo=TRUE)
 
-loo::loo_compare(list("Distance" = vertical_distance_fit$criteria$loo, "Intercept" = vertical_distance_null_model$criteria$loo))
-
-loo::loo_model_weights(list("Distance" = vertical_distance_fit$criteria$loo, "Intercept" = vertical_distance_null_model$criteria$loo))
+loo_compare(vertical_distance_null_model, vertical_distance_fit, criterion = "loo", model_names = c("intercept", "Distance"))
+loo_model_weights(vertical_distance_null_model, vertical_distance_fit, model_names = c("intercept", "Distance"))
 ```
 
 ```{r plot vertical distance continuous predictions}
 vertical_distance_fit_predictions <- predict(vertical_distance_fit,
-                                             newdata = data.frame(Distance= seq( 1, 4, 1)),
+                                             newdata = data.frame(Distance= seq(0, 4.2, length.out = 100)),
                                              probs = c(0.025, 0.25, 0.75, 0.975),
                                              re_formula = NA) %>%
   data.frame()%>%
-  add_column(Distance= seq( 1, 4, 1))
+  add_column(Distance= seq(0, 4.2, length.out = 100))
 
 vertical_distance_plot_main <-
   ggplot(data=vertical_distance_fit_predictions, # lisa, come back here and figure out why you get an error message
@@ -157,11 +156,11 @@ vertical_distance_plot_main <-
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
-  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=2,
+  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.1,
                 aes(x=Distance, group=Distance, y=Pcongruent)) + 
   theme(legend.position = "none") + 
   scale_x_continuous(name = "Distance [%]", breaks = unique(vertical_distance$Distance)) +
-  plot_theme()
+  plot_theme
 
 vertical_distance_plot_main
 ```
@@ -251,11 +250,12 @@ ggsave("walker-vertical-distance.pdf", width = 12, height=8, units="cm", device=
 ```{r}
 horizontal_distance <- 
   reports %>%
-  filter(SessionTag == "Addendum", Condition %in% c("Control", "Shift"))%>%
-  dplyr::mutate(ShiftAsFactor = as.factor(Shift),
-                ShiftAsFactor = fct_relevel(ShiftAsFactor,"-4", "-3", "-2", "-1", "0", "1", "2", "3", "4")) %>%
+  filter(SessionTag == "Addendum", Condition %in% c("Control", "Shift")) %>%
+  dplyr::mutate(ShiftAbs = abs(Shift),
+                ShiftAsFactor = as.factor(ShiftAbs),
+                ShiftAsFactor = fct_relevel(ShiftAsFactor, "0", "1", "2", "3", "4")) %>%
   ## computing Pcongurent for each participant and distance seperatly
-  dplyr::group_by(Participant, Shift, ShiftAsFactor) %>%
+  dplyr::group_by(Participant, ShiftAbs, ShiftAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
@@ -264,18 +264,18 @@ horizontal_distance <-
 
 # plotting horizontal distance
 ggplot(data=horizontal_distance,
-       aes(x=Shift, group=Shift, y=Pcongruent, color=Participant))+
+       aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent, color=Participant))+
          geom_boxplot(outlier.shape = NA) +
          geom_beeswarm() +
          theme(legend.position = "none") + 
-         scale_x_continuous(name= "Shift", breaks = unique(horizontal_distance$Shift))
+         scale_x_continuous(name= "Shift", breaks = unique(horizontal_distance$ShiftAbs))
   
   
 ```
 
 ```{r fitting horizontal distance as a contiuous variable}
 set.seed(723211)
-horizontal_distance_fit <- brm(PcongruentAdj ~ Shift + (1|Participant),
+horizontal_distance_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
                     family=Beta(),
                     data=horizontal_distance,
                     cores=future::availableCores(),
@@ -292,29 +292,28 @@ horizontal_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
 horizontal_distance_fit <- add_criterion(horizontal_distance_fit, "loo", reloo=TRUE)
 horizontal_distance_null_model <- add_criterion(horizontal_distance_null_model, "loo", reloo=TRUE)
 
-loo::loo_compare(list("Shift" = horizontal_distance_fit$criteria$loo, "Intercept" = horizontal_distance_null_model$criteria$loo))
-
-loo::loo_model_weights(list("Shift" = horizontal_distance_fit$criteria$loo, "Intercept" = horizontal_distance_null_model$criteria$loo))
+loo_compare(horizontal_distance_null_model, horizontal_distance_fit, criterion = "loo", model_names = c("intercept", "Distance"))
+loo_model_weights(horizontal_distance_null_model, horizontal_distance_fit, model_names = c("intercept", "Distance"))
 ```
 
 ```{r plot horizontal distance continous predictions}
 horizontal_distance_fit_predictions <- predict(horizontal_distance_fit,
-                                             newdata = data.frame(Shift= seq( -6, 6, 1)),
+                                             newdata = data.frame(ShiftAbs= seq(0, 4.2, length.out = 100)),
                                              probs = c(0.025, 0.25, 0.75, 0.975),
                                              re_formula = NA) %>%
   data.frame()%>%
-  add_column(Shift= seq( -6, 6, 1))
+  add_column(ShiftAbs = seq(0, 4.2, length.out = 100))
 
 horizontal_distance_plot_main <-
   ggplot(data=horizontal_distance_fit_predictions,
-      aes(x = Shift, y=Estimate)) + 
+      aes(x = ShiftAbs, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
-  geom_quasirandom(data=horizontal_distance, method="tukeyDense", width=2,
-                aes(x=Shift, group=Shift, y=Pcongruent)) + 
+  geom_quasirandom(data=horizontal_distance, method="tukeyDense", width=0.2,
+                aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Shift [%]", breaks = unique(horizontal_distance$Shift)) +
+  scale_x_continuous(name = "Shift [%]", breaks = unique(horizontal_distance$ShiftAbs)) +
   plot_theme
 
 horizontal_distance_plot_main
@@ -323,8 +322,8 @@ horizontal_distance_plot_main
 ```{r plotting horizontal distance slope}
 horizontal_distance_plot_slope <- 
   posterior_samples(horizontal_distance_fit) %>%
-  select(b_Shift) %>%
-  ggplot(aes(x=b_Shift)) +
+  select(b_ShiftAbs) %>%
+  ggplot(aes(x=b_ShiftAbs)) +
   geom_histogram(bins=150) + 
   plot_theme + 
   scale_x_continuous(name = expression(beta[Shift]))
@@ -335,8 +334,8 @@ horizontal_distance_plot_slope
 
 ```{r number if values above zero horizontal distance slope}
 posterior_samples(horizontal_distance_fit) %>%
-  select(b_Shift) %>%
-  summarise(PaboveZero = round(100 * mean(b_Shift>0), 1))
+  select(b_ShiftAbs) %>%
+  summarise(PaboveZero = round(100 * mean(b_ShiftAbs>0), 1))
 ```
 
 ## Horizontal Distance as factor
@@ -344,6 +343,7 @@ posterior_samples(horizontal_distance_fit) %>%
 set.seed(878929)
 horizontal_distance_as_factor_fit <- brm(PcongruentAdj ~ ShiftAsFactor + (1|Participant),
                               family=Beta(), 
+                              cores = future::availableCores(),
                               data=horizontal_distance,
                               prior=c(prior(normal(0,10), class="b")))
 ```
@@ -363,7 +363,7 @@ horizontal_distance_levels <-
   # turn distance name into a factor
   mutate(Shift = str_remove_all(Shift, "b_ShiftAsFactor"),
          Shift = as.factor(Shift),
-         Shift = fct_relevel(Shift, "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4")) ## what goes wrong here with the negative values? also maybe a histogram is not the best choice for so many conditions
+         Shift = fct_relevel(Shift, "0", "1", "2", "3", "4")) ## what goes wrong here with the negative values? also maybe a histogram is not the best choice for so many conditions
           
         
 horizontal_distance_plot_asFactor <-
@@ -409,11 +409,12 @@ ggarrange(horizontal_distance_plot_main,
 sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as levels of ambiguiation?
   reports %>%
   filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))%>%
-  dplyr::mutate(SphereDisambiguationAsFactor = as.factor(SphereDisambiguation),
-                SphereDisambiguationAsFactor = fct_relevel(SphereDisambiguationAsFactor,"-1", "-0.25", "0", "0.25", "1")) %>%
+  dplyr::mutate(SphereDisambiguationAbs = abs(SphereDisambiguation), 
+                SphereDisambiguationAsFactor = as.factor(SphereDisambiguationAbs),
+                SphereDisambiguationAsFactor = fct_relevel(SphereDisambiguationAsFactor, "0", "0.25", "1")) %>%
   
   ## computing Pcongurent for each participant and disambiguation seperatly
-  dplyr::group_by(Participant, SphereDisambiguation, SphereDisambiguationAsFactor) %>%
+  dplyr::group_by(Participant, SphereDisambiguationAbs, SphereDisambiguationAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
@@ -422,15 +423,17 @@ sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
 
 # plotting SphereDisambiguation 
 ggplot(data=sphere_ambiguity,
-       aes(x=SphereDisambiguation, group=SphereDisambiguation, y=Pcongruent, color=Participant))+  ## something is really wrong ith ambiguity of -0.25
+       aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent, color=Participant)) + 
          geom_boxplot(outlier.shape = NA) +
          geom_beeswarm() +
          theme(legend.position = "none") + 
-         scale_x_continuous(name= "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguation))
+         scale_x_continuous(name= "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs))
 ```
+
+
 ```{r fitting sphere ambiguity as a contiuous variable}
 set.seed(44279)
-sphere_ambiguity_fit <- brm(PcongruentAdj ~ SphereDisambiguation + (1|Participant),
+sphere_ambiguity_fit <- brm(PcongruentAdj ~ SphereDisambiguationAbs + (1|Participant),
                     family=Beta(),
                     data=sphere_ambiguity,
                     cores=future::availableCores(),
@@ -448,9 +451,8 @@ sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
 sphere_ambiguity_fit <- add_criterion(sphere_ambiguity_fit, "loo", reloo=TRUE)
 sphere_ambiguity_null_model <- add_criterion(sphere_ambiguity_null_model, "loo", reloo=TRUE)
 
-loo::loo_compare(list("SphereDisambiguation" = sphere_ambiguity_fit$criteria$loo, "Intercept" = sphere_ambiguity_null_model$criteria$loo))
-
-loo::loo_model_weights(list("SphereDisambiguation" = sphere_ambiguity_fit$criteria$loo, "Intercept" = sphere_ambiguity_null_model$criteria$loo))
+loo_compare(sphere_ambiguity_null_model, sphere_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Sphere disambiguation"))
+loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names = c("intercept", "Sphere disambiguation"))
 ```
 
 ```{r plot sphere ambiguity continous predictions}
@@ -494,13 +496,14 @@ posterior_samples(sphere_ambiguity_fit) %>%
   select(b_SphereDisambiguation) %>%
   summarise(PaboveZero = round(100 * mean(b_SphereDisambiguation>0), 1))
 ```
+
 ## Ambiguity sphere as factor
 ```{r fitting horizontal distance as factor}
 set.seed(1495785)
 sphere_ambiguity_as_factor_fit <- brm(PcongruentAdj ~ SphereDisambiguationAsFactor + (1|Participant),
-                              family=Beta(), 
-                              data=sphere_ambiguity,
-                              prior=c(prior(normal(0,10), class="b")))
+                                      family=Beta(), 
+                                      data=sphere_ambiguity,
+                                      prior=c(prior(normal(0,10), class="b")))
 ```
 ```{r plotting pairwise comparisons for the individual levels of sphere Ambiguity}
 samples_sphere_ambiguity_as_factor_fit <- posterior_samples(sphere_ambiguity_as_factor_fit)
