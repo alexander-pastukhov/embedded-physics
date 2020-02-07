@@ -457,22 +457,22 @@ loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names
 
 ```{r plot sphere ambiguity continous predictions}
 sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_fit,
-                                             newdata = data.frame(SphereDisambiguation= seq( -2, 2, 0.25)),
+                                             newdata = data.frame(SphereDisambiguationAbs= seq(0, 1, length.out = 100)),
                                              probs = c(0.025, 0.25, 0.75, 0.975),
                                              re_formula = NA) %>%
   data.frame()%>%
-  add_column(SphereDisambiguation= seq( -2, 2, 0.25))
+  add_column(SphereDisambiguationAbs= seq( 0, 1, length.out= 100))
 
 sphere_ambguity_plot_main <-
   ggplot(data=sphere_ambiguity_fit_predictions,
-      aes(x = SphereDisambiguation, y=Estimate)) + 
+      aes(x = SphereDisambiguationAbs, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
-  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=2,
-                aes(x=SphereDisambiguation, group=SphereDisambiguation, y=Pcongruent)) + 
+  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width= 0.2,
+                aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Sphere Disambiguation [%]", breaks = unique(sphere_ambiguity$SphereDisambiguation)) +
+  scale_x_continuous(name = "Sphere Disambiguation [%]", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs)) +
   plot_theme
 
 sphere_ambguity_plot_main
