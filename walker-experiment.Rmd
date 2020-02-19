@@ -581,7 +581,7 @@ sphere_ambiguity_plot_main
 
 ## Ambiguity Walker condtiotn
 
-```{r}
+```{r preprocessing}
 walker_ambiguity <-
   reports %>%
   filter(SessionTag == "Main", Condition %in% c("Control", "Walker ambiguity"))%>%
@@ -607,4 +607,12 @@ ggplot(data=walker_ambiguity,
          scale_x_continuous(name= "Walker Disambiguation", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs))
 ```
 
+```{r fitting sphere ambiguity as a contiuous variable}
+set.seed(44279)
+walker_ambiguity_fit <- brm(PcongruentAdj ~ WalkerDisambiguationAbs + (1|Participant),
+                    family=Beta(),
+                    data=walker_ambiguity,
+                    cores=future::availableCores(),
+                    prior=c(prior(normal(0,10), class="b")))
+```
 
