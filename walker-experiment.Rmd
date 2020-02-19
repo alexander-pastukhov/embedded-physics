@@ -697,7 +697,7 @@ walker_ambiguity_levels %>%
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
 
-```{r combining the plots for sphere ambiguity condition}
+```{r combining the plots for walker ambiguity condition}
 ggarrange(walker_ambguity_plot_main, 
   ggarrange(walker_ambiguity_plot_slope, walker_ambiguity_plot_asFactor, 
             labels = c("B", "C")),
