@@ -628,7 +628,26 @@ loo_compare(walker_ambiguity_null_model, walker_ambiguity_fit, criterion = "loo"
 loo_model_weights(walker_ambiguity_null_model, walker_ambiguity_fit, model_names = c("intercept", "Walker disambiguation"))
 ```
 
-```{r}
+```{r plot walker ambiguity continous predictions}
+walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
+                                             newdata = data.frame(WalkerDisambiguationAbs= seq(0, 1, length.out = 100)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+  data.frame()%>%
+  add_column(WalkerDisambiguationAbs= seq( 0, 1, length.out= 100))
 
+walker_ambguity_plot_main <-
+  ggplot(data=walker_ambiguity_fit_predictions,
+      aes(x = WalkerDisambiguationAbs, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() + 
+  geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width= 0.2,
+                aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) + 
+  theme(legend.position = "none") + 
+  scale_x_continuous(name = "Walker Disambiguation [%]", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs)) +
+  plot_theme
+
+walker_ambguity_plot_main
 ```
 
