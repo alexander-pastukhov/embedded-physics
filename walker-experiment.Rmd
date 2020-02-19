@@ -86,10 +86,6 @@ reports <-
   mutate(Percept=as.factor(Percept),
          Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))
          
-  
-walker_ambiguity <-
-  reports %>%
-  filter(SessionTag == "Main", Condition %in% c("Control", "Walker ambiguity"))
 
 ```
 
@@ -586,7 +582,29 @@ sphere_ambiguity_plot_main
 ## Ambiguity Walker condtiotn
 
 ```{r}
+walker_ambiguity <-
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Walker ambiguity"))%>%
 
+  dplyr::mutate(WalkerDisambiguationAbs = abs(WalkerDisambiguation), 
+                WalkerDisambiguationAsFactor = as.factor(WalkerDisambiguationAbs),
+                WalkerDisambiguationAsFactor = fct_relevel(WalkerDisambiguationAsFactor, "0", "0.25", "1")) %>%
+  
+  ## computing Pcongurent for each participant and disambiguation seperatly
+  dplyr::group_by(Participant, WalkerDisambiguationAbs, WalkerDisambiguationAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CongruentDur = sum(Duration[Percept=="congruent"]),
+            Pcongruent = CongruentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)              
+
+# plotting WalkerDisambiguation 
+ggplot(data=walker_ambiguity,
+       aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent, color=Participant)) + 
+         geom_boxplot(outlier.shape = NA) +
+         geom_beeswarm() +
+         theme(legend.position = "none") + 
+         scale_x_continuous(name= "Walker Disambiguation", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs))
 ```
 
 
