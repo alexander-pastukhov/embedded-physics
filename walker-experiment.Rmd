@@ -477,8 +477,8 @@ sphere_ambguity_plot_main
 ```{r plotting sphere ambiguity slope}
 sphere_ambiguity_plot_slope <- 
   posterior_samples(sphere_ambiguity_fit)%>%
-  select(b_SphereDisambiguation) %>%
-  ggplot(aes(x=b_SphereDisambiguation)) +
+  select(b_SphereDisambiguationAbs) %>%
+  ggplot(aes(x=b_SphereDisambiguationAbs)) +
   geom_histogram(bins=150) + 
   plot_theme + 
   scale_x_continuous(name = expression(beta[SphereDisambiguation]))
@@ -649,5 +649,17 @@ walker_ambguity_plot_main <-
   plot_theme
 
 walker_ambguity_plot_main
+```
+
+```{r plotting walker ambiguity slope}
+walker_ambiguity_plot_slope <- 
+  posterior_samples(walker_ambiguity_fit)%>%
+  select(b_WalkerDisambiguationAbs) %>%
+  ggplot(aes(x=b_WalkerDisambiguationAbs)) +
+  geom_histogram(bins=150) + 
+  plot_theme + 
+  scale_x_continuous(name = expression(beta[WalkerDisambiguation]))
+
+walker_ambiguity_plot_slope
 ```
 
