@@ -579,7 +579,7 @@ sphere_ambiguity_plot_main
 
 
 
-## Ambiguity Walker condtiotn
+## Ambiguity Walker condtion
 
 ```{r preprocessing}
 walker_ambiguity <-
@@ -661,5 +661,10 @@ walker_ambiguity_plot_slope <-
   scale_x_continuous(name = expression(beta[WalkerDisambiguation]))
 
 walker_ambiguity_plot_slope
+```
+```{r number of values above zero walker ambiguity slope}
+posterior_samples(walker_ambiguity_fit) %>%
+  select(b_WalkerDisambiguationAbs) %>%
+  summarise(PaboveZero = round(100 * mean(b_WalkerDisambiguationAbs>0), 1))
 ```
 
