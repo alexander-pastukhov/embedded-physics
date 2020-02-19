@@ -489,8 +489,8 @@ sphere_ambiguity_plot_slope
 
 ```{r number if values above zero sphere ambiguity slope}
 posterior_samples(sphere_ambiguity_fit) %>%
-  select(b_SphereDisambiguation) %>%
-  summarise(PaboveZero = round(100 * mean(b_SphereDisambiguation>0), 1))
+  select(b_SphereDisambiguationAbs) %>%
+  summarise(PaboveZero = round(100 * mean(b_SphereDisambiguationAbs>0), 1))
 ```
 
 ## Ambiguity sphere as factor
@@ -532,6 +532,7 @@ ggplot(data=sphere_ambiguity_levels,
     legend.margin = margin(6, 6, 6, 6))
 
 sphere_ambiguity_plot_asFactor
+# what happened to ambiguity of 0
 ```
 
 ```{r computing values above 0 for sphere Ambiguity as factor}
@@ -542,9 +543,15 @@ sphere_ambiguity_levels %>%
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
 
-```{r combining plots for sphere ambiguity}
+```{r combining the plots for sphere ambiguity condition}
+ggarrange(sphere_ambguity_plot_main, 
+  ggarrange(sphere_ambiguity_plot_slope, sphere_ambiguity_plot_asFactor, 
+            labels = c("B", "C")),
+  labels = c("A"),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
 
-# not really any succesfull plots to combine yet :(
+ggsave("walker-sphere-ambiguity", width = 12, height=8, units="cm", device=cairo_pdf)
 
 ```
 
@@ -587,6 +594,7 @@ walker_ambiguity_fit <- brm(PcongruentAdj ~ WalkerDisambiguationAbs + (1|Partici
                     cores=future::availableCores(),
                     prior=c(prior(normal(0,10), class="b")))
 ```
+
 ```{r walker ambiguation importance via loo}
 walker_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
@@ -689,7 +697,14 @@ walker_ambiguity_levels %>%
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
 
-```{r}
+```{r combining the plots for sphere ambiguity condition}
+ggarrange(walker_ambguity_plot_main, 
+  ggarrange(walker_ambiguity_plot_slope, walker_ambiguity_plot_asFactor, 
+            labels = c("B", "C")),
+  labels = c("A"),
+  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
+  ncol = 1)
 
+ggsave("walker-walker-ambiguity", width = 12, height=8, units="cm", device=cairo_pdf)
 ```
 
