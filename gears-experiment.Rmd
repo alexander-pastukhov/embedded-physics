@@ -8,6 +8,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(bayestestR)
 library(brms)
 library(dplyr)
 library(extrafont)
@@ -18,6 +20,7 @@ library(ggpubr)
 library(glue)
 library(ggplot2)
 library(grid)
+library(patchwork)
 library(readr)
 library(stringr)
 library(tibble)
@@ -40,7 +43,9 @@ plot_theme <-
         panel.grid.minor.x = element_blank(), 
         panel.grid.minor.y =  element_line(size = 0.24), 
         axis.ticks = element_line(size = 0.24))
-                    
+   
+
+four_colors <- c("#F8766D", "#7CAE00", "#00BFC4", "#C77CFF")                 
 ```
 
 ## Importing data
@@ -140,6 +145,7 @@ set.seed(9578175)
 distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
                     family=Beta(),
                     data=distance,
+                    refresh=0,
                     cores=future::availableCores(),
                     prior=c(prior(normal(0,10), class="b")))
 ```
@@ -148,6 +154,7 @@ distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
 ```{r Distance importance via loo}
 distance_null_model <- brm(PCorotationAdj ~ (1|Participant),
                            family=Beta(),
+                           refresh=0,
                            cores=future::availableCores(),
                            data=distance)
 
@@ -176,9 +183,10 @@ distancePlot_main <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
-                aes(x=Distance, group=Distance, y=Pcorotation)) + 
+                aes(x=Distance, group=Distance, y=Pcorotation, color=as.factor(Distance))) + 
   theme(legend.position = "none") + 
   scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance)) +
+  scale_color_manual(values = c("#000000", four_colors)) +
   # ylim(0, 1) + 
   plot_theme
 
@@ -210,8 +218,9 @@ posterior_samples(distance_fit) %>%
 ```{r fitting distance as factor}
 set.seed(9847899)
 distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
-                              family=Beta(), 
+                              family=Beta(),
                               data=distance,
+                              refresh=0,
                               prior=c(prior(normal(0,10), class="b")))
 ```
 
@@ -231,20 +240,24 @@ distance_levels <-
   mutate(Distance = str_remove_all(Distance, "b_DistanceAsFactor"), 
          Distance = as.factor(Distance),
          Distance = fct_relevel(Distance, "-8.13", "0", "8.13", "32.52", "65.04"))
+
+distance_means <- 
+  distance_levels %>%
+  group_by(Distance) %>%
+  summarise(Beta = round(median(Beta), 2))
           
 distancePlot_asFactor <-
-ggplot(data=distance_levels, 
+  ggplot(data=distance_levels, 
        aes(x = Beta, fill=Distance)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=150) + 
-  scale_x_continuous(expression(Beta[i])) +
+  geom_histogram(position="identity", alpha=0.5, bins=200) + 
+  scale_x_continuous(expression(Beta[i]),
+                     sec.axis = dup_axis(name = element_blank(),
+                    breaks = distance_means$Beta,
+                    labels = glue("{distance_means$Distance}%"))) +
   plot_theme + 
-   theme(
-    legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
+  theme(legend.position = "none",
+        axis.ticks.x.top = element_line(color=four_colors),
+        axis.text.x.top = element_text(color=four_colors))
 
 distancePlot_asFactor
 ```
@@ -266,7 +279,14 @@ ggarrange(distancePlot_main,
   font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
   ncol = 1)
 
-ggsave("gears-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
+distancePatch <- distancePlot_main + (distancePlot_slope / distancePlot_asFactor) 
+occlusionPatch <- occlusionPlot_main + (occlusionPlot_slope / occlusionPlot_asFactor)
+distancePatch / occlusionPatch + plot_annotation(tag_levels = 'A')
+
+  
+     
+ggsave("gears-distance.png", width = 18, height=14, units="cm")
+ggsave("gears-distance.pdf", width = 18, height=14, units="cm", device=cairo_pdf)
 
 ```
 
@@ -312,6 +332,7 @@ set.seed(9789931)
 occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
                      family=Beta(),
                      data=occlusion,
+                     refresh = 0,
                      prior=c(prior(normal(0,10), class="b")))
 ```
 
@@ -319,6 +340,7 @@ occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
 occlusion_null_model <- brm(PCorotationAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
+                           resfresh=0,
                            data=occlusion)
 
 occlusion_fit <- add_criterion(occlusion_fit, "loo", reloo=TRUE)
@@ -344,14 +366,15 @@ occlusionPlot_main <-
       aes(x = Occlusion, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) +
   geom_ribbon(aes(ymin= Q25, ymax= Q75), alpha= 0.25)+
-  geom_smooth(color="black", size=1.5) + 
+  geom_smooth(method="loess", color="black", size=1.5) + 
   geom_hline(yintercept = 0.5, color="white") +
   # geom_line(data=occlusion, 
   #               aes(x=Occlusion, group=Participant, y=Pcorotation), color="gray64") + 
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
-                aes(x=Occlusion, group=Occlusion, y=Pcorotation)) + 
+                aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=as.factor(Occlusion))) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion))+
+  scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion)) +
+  scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme
 
 occlusionPlot_main
@@ -384,6 +407,7 @@ set.seed(89925355)
 occlusion_as_factor_fit <- brm(PCorotationAdj ~ OcclusionAsFactor + (1|Participant),
                                family=Beta(),
                                data=occlusion,
+                               refresh=0,
                                prior=c(prior(normal(0,10), class="b")))
 ```
 
@@ -404,18 +428,23 @@ occlusion_levels <-
          Occlusion = as.factor(Occlusion),
          Occlusion = fct_relevel(Occlusion, "8.13", "16.26", "32.52", "65.04"))
 
-occlusionPlot_asFactor<- ggplot(data=occlusion_levels, 
+occlusion_means <- 
+  occlusion_levels %>%
+  group_by(Occlusion) %>%
+  summarise(Beta = round(median(Beta), 2))
+
+occlusionPlot_asFactor<- 
+  ggplot(data=occlusion_levels, 
        aes(x = Beta, fill=Occlusion)) + 
   geom_histogram(alpha=0.75, position="identity", bins=150)+
-  scale_x_continuous(expression(Beta[i]))+
+  scale_x_continuous(expression(Beta[i]), 
+                    sec.axis = dup_axis(name = element_blank(),
+                    breaks = occlusion_means$Beta,
+                    labels = glue("{occlusion_means$Occlusion}%")))+
   plot_theme+
-  theme(
-   legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
+  theme(legend.position = "none",
+        axis.text.x.top = element_text(color=four_colors),
+        axis.ticks.x.top = element_line(color=four_colors))
 
 occlusionPlot_asFactor
 ```
@@ -477,6 +506,7 @@ set.seed(99435)
 ambiguity_as_factor_fit <- brm(PCorotationAdj ~ Display +(1|Participant),
                      family= Beta(),
                      data= ambiguity,
+                     refresh=0,
                      cores=future::availableCores(),
                      prior=c(prior(normal(0,10), class="b")))
 ```
@@ -545,9 +575,12 @@ ambiguity_fit_moments <-
 
 ambiguityPlot_main <- 
   ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
-  geom_violin(data = ambiguity_fit_predictions, fill="gray64", color="white", draw_quantiles = c(0.5)) +
+  geom_boxplot(data = ambiguity_fit_predictions, outlier.shape = NA, aes(fill=Display)) +
+  # geom_violin(data = ambiguity_fit_predictions, fill="gray64", color="white", draw_quantiles = c(0.5)) +
   # geom_boxplot(data = ambiguity_fit_predictions) +
-  geom_quasirandom(width=0.15, method="tukeyDense")+
+  geom_quasirandom(width=0.15, method="tukeyDense", aes(color=Display))+
+  scale_color_manual(values = c("gray64", "black", "black", "black", "black")) +
+  scale_fill_manual(values = c("#000000", four_colors)) +
   plot_theme +
   theme(legend.position="none")
   
@@ -558,6 +591,7 @@ ambiguityPlot_main
 ```{r Ambiguity importance via loo}
 ambiguity_null_model <- brm(PCorotationAdj ~ (1|Participant),
                            family=Beta(),
+                           refresh=0,
                            cores=future::availableCores(),
                            data=ambiguity)
 
