@@ -10,13 +10,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(bayestestR)
+library(betareg)
 library(brms)
 library(dplyr)
 library(extrafont)
 library(fs)
 library(forcats)
 library(ggbeeswarm)
-library(ggpubr)
+library(ggpmisc)
 library(glue)
 library(ggplot2)
 library(grid)
@@ -111,8 +112,7 @@ reports <-
 
 ## Distance condition
 
-```{r}
-#Computing Distance Duration
+```{r distance-data}
 distance <-
   reports %>%
   dplyr::filter(Condition=="Control" | Condition=="Separation") %>% 
@@ -129,17 +129,10 @@ distance <-
             CorotateDur = sum(Duration[Percept=="Corotation"]),
             Pcorotation = CorotateDur / TotalDuration) %>%
   dplyr::mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
-  
-#Plotting Distance
-ggplot(data=distance,
-       aes(x=Distance, group=Distance, y=Pcorotation, color=Participant)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_beeswarm() +
-  theme(legend.position = "none") + 
-  xlab("Distance [%]")
 ```
 
-```{r Fitting distance as a continuous variable}
+
+```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
 set.seed(9578175)
 distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
@@ -148,6 +141,8 @@ distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
                     refresh=0,
                     cores=future::availableCores(),
                     prior=c(prior(normal(0,10), class="b")))
+
+lmerDistance <- betamix(PCorotationAdj ~  Distance|Participant, data=distance, k=1)
 ```
 
 
@@ -161,9 +156,69 @@ distance_null_model <- brm(PCorotationAdj ~ (1|Participant),
 distance_fit <- add_criterion(distance_fit, "loo", reloo=TRUE)
 distance_null_model <- add_criterion(distance_null_model, "loo", reloo=TRUE)
 
-loo::loo_compare(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
+distance_compare <- loo::loo_compare(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
 
-loo::loo_model_weights(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
+distance_weight <- loo::loo_model_weights(list("Distance" = distance_fit$criteria$loo, "Intercept" = distance_null_model$criteria$loo))
+```
+
+```{r distance models summary, include=FALSE}
+distance_info_lmer <-
+  summary(lmerDistance)@components[[1]]$Comp.1$mean@.Data %>% 
+  data.frame() %>%
+  slice(n()) %>%
+  rename(Z = z.value) %>%
+  mutate(Z = round(Z, 1),
+         p = ifelse(Pr...z..<0.0001, "<.0001", 
+                    as.character(round(Pr...z.., 4)) %>% str_replace("^0*(\\d+)", "") %>% str_c("=", .))) %>%
+  select(Z, p)
+
+distance_summary <-
+  fixef(distance_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  bind_cols(distance_info_lmer) %>%
+  select(`β`, CI, Z, p) %>%
+  mutate("ΔELPD" = round(distance_compare[2, 1], 1),
+         Weight = round(c(distance_weight)["Distance"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
+
+## Distance as factor
+```{r fitting distance as factor}
+set.seed(9847899)
+distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
+                              family=Beta(),
+                              data=distance,
+                              refresh=0,
+                              prior=c(prior(normal(0,10), class="b")))
+
+
+lmerDistanceAsFactor <- betamix(PCorotationAdj ~  DistanceAsFactor|Participant, data=distance, k=1)
+
+distance_comparison_lmer <-
+  summary(lmerDistanceAsFactor)@components[[1]]$Comp.1$mean@.Data %>% 
+  data.frame() %>%
+  rownames_to_column("Factor") %>%
+  mutate(Factor = str_replace_all(Factor, "\\(Intercept\\)", "Intercept")) %>%
+  mutate(p = ifelse(Pr...z..<0.0001, "<.0001", 
+                    as.character(round(Pr...z.., 4)) %>% str_replace("^0*(\\d+)", "") %>% str_c("=", .)
+                    )) %>%
+  mutate(Label = ifelse(Factor == "Intercept", "", glue("Z={round(z.value, 1)}\np{p}")))
+
+
+distance_comparison <- 
+  distance_comparison_lmer %>%
+  left_join(fixef(distance_as_factor_fit) %>%
+              data.frame() %>%
+              rownames_to_column("Factor") %>%
+              mutate(Est = ifelse(Factor == "Intercept", 
+                                  "", 
+                                  glue("β={round(Estimate, 2)}\nCI={round(Q2.5, 1)}..{round(Q97.5, 1)}"))),
+            by="Factor") %>%
+  mutate(Label = str_c(Est, Label, sep="\n"))
 ```
 
 
@@ -176,21 +231,28 @@ distance_fit_predictions <- predict(distance_fit,
   data.frame() %>%
   add_column(Distance = seq(-10, 70, 1))
 
+distance_inset <-
+  tibble(x=0.01, y=0.92, tb=list(distance_summary))
+
 distancePlot_main <-
   ggplot(data=distance_fit_predictions, 
       aes(x = Distance, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
-  geom_line() + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
                 aes(x=Distance, group=Distance, y=Pcorotation, color=as.factor(Distance))) + 
-  theme(legend.position = "none") + 
-  scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance)) +
+  scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance),
+                     sec.axis =  dup_axis(name=NULL, labels=distance_comparison$Label)) +
+  scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
-  # ylim(0, 1) + 
-  plot_theme
-
+  plot_theme + 
+  geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb)) +
+  theme(legend.position = "none", axis.text.x = element_text(color=c("#000000", four_colors))) 
 distancePlot_main
+
+ggsave(distancePlot_main, filename = "gears-distance.png", units="cm", width=14, height=8)
 ```
 
 ```{r Plotting Distance Beta}
@@ -214,15 +276,6 @@ posterior_samples(distance_fit) %>%
 
 ```
 
-## Distance as factor
-```{r fitting distance as factor}
-set.seed(9847899)
-distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
-                              family=Beta(),
-                              data=distance,
-                              refresh=0,
-                              prior=c(prior(normal(0,10), class="b")))
-```
 
 ```{r plotting pairwise comparisons for the individual levels of Distance}
 samples_distance_as_factor_fit <- posterior_samples(distance_as_factor_fit)
