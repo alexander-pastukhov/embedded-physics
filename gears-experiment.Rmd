@@ -35,7 +35,7 @@ rm(list=ls())
 ```
 
 ```{r Custom plotting theme}
-plot_theme <- 
+plot_theme <- function(){
   theme(text=element_text(family="Arial"),
         axis.text.x = element_text(size = 8, colour = 'black'), 
         axis.text.y = element_text(size = 8, colour = 'black'), 
@@ -44,7 +44,7 @@ plot_theme <-
         panel.grid.minor.x = element_blank(), 
         panel.grid.minor.y =  element_line(size = 0.24), 
         axis.ticks = element_line(size = 0.24))
-   
+} 
 
 four_colors <- c("#F8766D", "#7CAE00", "#00BFC4", "#C77CFF")                 
 ```
@@ -128,9 +128,11 @@ distance <-
             # if value in the brackets is true it'll be considered if not it will not
             CorotateDur = sum(Duration[Percept=="Corotation"]),
             Pcorotation = CorotateDur / TotalDuration) %>%
-  dplyr::mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
+  # beta distribution does not like 0 and 1
+  dplyr::mutate(PCorotationAdj = Pcorotation * 0.999 + 0.0005)
 ```
 
+Fitting distance condition via brms 
 
 ```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
@@ -140,9 +142,14 @@ distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
                     data=distance,
                     refresh=0,
                     cores=future::availableCores(),
-                    prior=c(prior(normal(0,10), class="b")))
+                    prior=c(prior(normal(0, 1), class="b")))
 
-lmerDistance <- betamix(PCorotationAdj ~  Distance|Participant, data=distance, k=1)
+distance_intercept_fit <- brm(PCorotationAdj ~ (1|Participant),
+                    family=Beta(),
+                    data=distance,
+                    refresh=0,
+                    cores=future::availableCores())
+
 ```
 
 
