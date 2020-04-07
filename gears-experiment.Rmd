@@ -360,20 +360,31 @@ occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
 ```
 
 ```{r Occlusion importance via loo}
-occlusion_null_model <- brm(PCorotationAdj ~ (1|Participant),
-                           family=Beta(),
-                           cores=future::availableCores(),
-                           resfresh=0,
-                           data=occlusion)
 
 occlusion_fit <- add_criterion(occlusion_fit, "loo", reloo=TRUE)
 occlusion_null_model <- add_criterion(occlusion_null_model, "loo", reloo=TRUE)
 
-loo::loo_compare(list("Occlusion" = occlusion_fit$criteria$loo, "Intercept" = occlusion_null_model$criteria$loo))
+occlusion_compare <- loo::loo_compare(list("Occlusion" = occlusion_fit$criteria$loo,
+                                          "Intercept" = occlusion_null_model$criteria$loo))
 
-loo::loo_model_weights(list("Occlusion" = occlusion_fit$criteria$loo, "Intercept" = occlusion_null_model$criteria$loo))
-
+occlusion_weight <- loo::loo_model_weights(list("Occlusion" = occlusion_fit$criteria$loo,
+                                               "Intercept" = occlusion_null_model$criteria$loo))
 ```
+
+```{r creating occlusion summary}
+occlusion_summary <-
+  fixef(occlusion_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = round(occlusion_compare[2, 1], 1),
+         Weight = round(c(docclusion_weight)["Occlusion"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
+
 
 ```{r Plot occlusions as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
