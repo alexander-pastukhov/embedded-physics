@@ -360,6 +360,11 @@ occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
 ```
 
 ```{r Occlusion importance via loo}
+occlusion_null_model <- brm(PCorotationAdj ~ (1|Participant),
+                           family=Beta(),
+                           refresh=0,
+                           cores=future::availableCores(),
+                           data=occlusion)
 
 occlusion_fit <- add_criterion(occlusion_fit, "loo", reloo=TRUE)
 occlusion_null_model <- add_criterion(occlusion_null_model, "loo", reloo=TRUE)
