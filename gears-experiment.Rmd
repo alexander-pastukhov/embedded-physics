@@ -320,9 +320,7 @@ ggarrange(distancePlot_main,
   font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
   ncol = 1)
 
-distancePatch <- distancePlot_main + (distancePlot_slope / distancePlot_asFactor) 
-occlusionPatch <- occlusionPlot_main + (occlusionPlot_slope / occlusionPlot_asFactor)
-distancePatch / occlusionPatch + plot_annotation(tag_levels = 'A')
+
 
   
      
@@ -653,5 +651,11 @@ ggarrange(ambiguityPlot_main, ambiguityPlot_asFactor,
 
 ggsave("gears-ambiguity.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
 
+```
+
+```{r combining all plots}
+distancePatch <- distancePlot_main + (distancePlot_slope / distancePlot_asFactor) 
+occlusionPatch <- occlusionPlot_main + (occlusionPlot_slope / occlusionPlot_asFactor)
+distancePatch / occlusionPatch + plot_annotation(tag_levels = 'A')
 ```
 
