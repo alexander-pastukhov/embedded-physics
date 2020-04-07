@@ -385,7 +385,7 @@ occlusion_summary <-
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
   select(`β`, CI) %>%
   mutate("ΔELPD" = round(occlusion_compare[2, 1], 1),
-         Weight = round(c(docclusion_weight)["Occlusion"], 2)) %>%
+         Weight = round(c(occlusion_weight)["Occlusion"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
 ```
