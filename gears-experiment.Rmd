@@ -398,7 +398,7 @@ occlusionPlot_main <-
   theme(legend.position = "none") + 
   scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion)) +
   scale_color_manual(values = c("#000000", four_colors)) +
-  plot_theme
+  plot_theme()
 
 occlusionPlot_main
 ```
@@ -416,7 +416,7 @@ occlusionPlot_slope <-
   select(b_Occlusion) %>%
   ggplot(aes(x=b_Occlusion))+
            geom_histogram(bins=150)+
-  plot_theme+
+  plot_theme()+
   scale_x_continuous(name=expression(beta[Occlusion]))
 
 occlusionPlot_slope
@@ -464,7 +464,7 @@ occlusionPlot_asFactor<-
                     sec.axis = dup_axis(name = element_blank(),
                     breaks = occlusion_means$Beta,
                     labels = glue("{occlusion_means$Occlusion}%")))+
-  plot_theme+
+  plot_theme()+
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors),
         axis.ticks.x.top = element_line(color=four_colors))
@@ -555,7 +555,7 @@ ggplot(data=ambiguity_levels,
        aes(x = Beta, fill=Display)) + 
   geom_histogram(alpha=0.5, position="identity", bins=150) + 
   scale_x_continuous(expression(Beta[i])) +
-  plot_theme + 
+  plot_theme() + 
    theme(
     legend.position = c(.05, 0.95),
     legend.justification = c("left", "top"),
@@ -604,7 +604,7 @@ ambiguityPlot_main <-
   geom_quasirandom(width=0.15, method="tukeyDense", aes(color=Display))+
   scale_color_manual(values = c("gray64", "black", "black", "black", "black")) +
   scale_fill_manual(values = c("#000000", four_colors)) +
-  plot_theme +
+  plot_theme ()+
   theme(legend.position="none")
   
 
