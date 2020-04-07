@@ -312,22 +312,6 @@ distance_levels %>%
 ```
 
 
-```{r combining the plots for distance condition}
-ggarrange(distancePlot_main, 
-  ggarrange(distancePlot_slope, distancePlot_asFactor, 
-            labels = c("B", "C")),
-  labels = c("A"),
-  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
-  ncol = 1)
-
-
-
-  
-     
-ggsave("gears-distance.png", width = 18, height=14, units="cm")
-ggsave("gears-distance.pdf", width = 18, height=14, units="cm", device=cairo_pdf)
-
-```
 
 
 ## Occlusion Condition
