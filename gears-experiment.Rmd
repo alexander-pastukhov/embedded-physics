@@ -164,15 +164,15 @@ distance_weight <- loo::loo_model_weights(list("Distance" = distance_fit$criteri
 ```
 
 ```{r distance models summary, include=FALSE}
-distance_info_lmer <-
-  summary(lmerDistance)@components[[1]]$Comp.1$mean@.Data %>% 
-  data.frame() %>%
-  slice(n()) %>%
-  rename(Z = z.value) %>%
-  mutate(Z = round(Z, 1),
-         p = ifelse(Pr...z..<0.0001, "<.0001", 
-                    as.character(round(Pr...z.., 4)) %>% str_replace("^0*(\\d+)", "") %>% str_c("=", .))) %>%
-  select(Z, p)
+#distance_info_lmer <-
+ # summary(lmerDistance)@components[[1]]$Comp.1$mean@.Data %>% 
+  #data.frame() %>%
+  #slice(n()) %>%
+  #rename(Z = z.value) %>%
+  #mutate(Z = round(Z, 1),
+   #      p = ifelse(Pr...z..<0.0001, "<.0001", 
+    #                as.character(round(Pr...z.., 4)) %>% str_replace("^0*(\\d+)", "") %>% str_c("=", .))) %>%
+#  select(Z, p)
 
 distance_summary <-
   fixef(distance_fit) %>%
@@ -249,7 +249,7 @@ distancePlot_slope <-
   select(b_Distance) %>%
   ggplot(aes(x=b_Distance)) +
   geom_histogram(bins=150) + 
-  plot_theme + 
+  plot_theme() + 
   scale_x_continuous(name = expression(beta[Distance]))
 
 distancePlot_slope
@@ -295,7 +295,7 @@ distancePlot_asFactor <-
                      sec.axis = dup_axis(name = element_blank(),
                     breaks = distance_means$Beta,
                     labels = glue("{distance_means$Distance}%"))) +
-  plot_theme + 
+  plot_theme ()+ 
   theme(legend.position = "none",
         axis.ticks.x.top = element_line(color=four_colors),
         axis.text.x.top = element_text(color=four_colors))
