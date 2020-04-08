@@ -671,19 +671,19 @@ ambiguity_fit_moments <-
             medianP= median(Pcorotation))
 
 
-ambiguityPlot_main <- 
- ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
- geom_boxplot(data = ambiguity_fit_predictions, outlier.shape = NA, aes(fill=Display)) +
+#ambiguityPlot_main <- 
+ #ggplot(data=ambiguity, aes(x=Display, group=Display, y=Pcorotation) )+
+ #geom_boxplot(data = ambiguity_fit_predictions, outlier.shape = NA, aes(fill=Display)) +
   # geom_violin(data = ambiguity_fit_predictions, fill="gray64", color="white", draw_quantiles = c(0.5)) +
   # geom_boxplot(data = ambiguity_fit_predictions) +
- geom_quasirandom(width=0.15, method="tukeyDense", aes(color=Display))+
- scale_color_manual(values = c("gray64", "black", "black", "black", "black")) +
- scale_fill_manual(values = c("#000000", four_colors)) +
+ #geom_quasirandom(width=0.15, method="tukeyDense", aes(color=Display))+
+ #scale_color_manual(values = c("gray64", "black", "black", "black", "black")) +
+ #scale_fill_manual(values = c("#000000", four_colors)) +
 # plot_theme ()+
-theme(legend.position="none")
+#theme(legend.position="none")
   
 
-ambiguityPlot_main
+#ambiguityPlot_main
 ```
 
 ```{r Ambiguity importance via loo}
@@ -709,6 +709,47 @@ ambiguity_compare <- loo::loo_compare(list("Display" = ambiguity_as_factor_fit$c
 ambiguity_weight <- loo::loo_model_weights(list("Display" = ambiguity_as_factor_fit$criteria$loo,
                                                "Intercept" = ambiguity_null_model$criteria$loo))
 ```
+```{r ambiguity summary}
+ambiguity_summary <-
+  fixef(ambiguity_as_factor_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = round(ambiguity_compare[2, 1], 1),
+         Weight = round(c(ambiguity_weight)["Display"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
+
+```{r}
+ambiguity_inset <-
+  tibble(x=0.01, y=0.92, tb=list(ambiguity_summary))
+
+ambiguityPlot_main <-
+  ggplot(data=ambiguity_fit_predictions, 
+      aes(x = Display,group=Display, y=Pcorotation)) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_quasirandom(data=ambiguity, method="tukeyDense", width=2,
+                aes(x=Display, group=Display, y=Pcorotation)) +
+  geom_violin(data = ambiguity_fit_predictions, fill="gray64", color="white", draw_quantiles = c(0.5)) +
+  scale_x_discrete("Display", labels = c("ambiguous","weak", "medium","medium-strong","strong"))+
+ #sec.axis =  sec_axis(name=NULL, labels=ambiguity_comparison$Label)+
+  scale_y_continuous(name="Pcorotation") +
+  scale_color_manual(values = c("#000000", four_colors)) +
+  plot_theme() + 
+  geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  theme(legend.position = "none",
+        axis.text.x.top = element_text(color=four_colors))
+ambiguityPlot_main
+
+ggsave(ambiguityPlot_main, filename = "gears-ambiguity.png", units="cm", width=14, height=8)
+ggsave(distancePlot_main, filename = "gears-ambiguity.pdf", units="cm", width=14, height=8, device=cairo_pdf)
+```
+
+
 
 ```{r combining the plots for Ambiguity condition}
 ggarrange(ambiguityPlot_main, ambiguityPlot_asFactor, 
