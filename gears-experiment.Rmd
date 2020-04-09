@@ -422,7 +422,14 @@ occlusionPlot_main
 ggsave(occlusionPlot_main, filename = "gears-occlusion.png", units="cm", width=14, height=8)
 ggsave(occlusionPlot_main, filename = "gears-occlusion.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
+```{r No of values above 0 occlusion slope}
+## computing values above 0
+posterior_samples(occlusion_fit) %>%
+  select(b_Occlusion) %>%
+  summarise(PaboveZero = round(100 * mean(b_Occlusion>0), 1)) %>%
+  pull(PaboveZero)
 
+```
 
 ```{r plotting pairwise comparisons for the individual levels of occlusion}
 samples_occlusion_as_factor_fit <- posterior_samples(occlusion_as_factor_fit)
@@ -462,7 +469,6 @@ occlusionPlot_asFactor<-
 occlusionPlot_asFactor
 ```
 
-
 ```{r computing values above 0 for Occlusion as factor}
 occlusion_levels %>%
   group_by(Occlusion) %>%
@@ -470,11 +476,13 @@ occlusion_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
+```
+
 
 
 ## Ambiguity Condition
 ```{r}
-#Computing Ambiguity Duration
+##Computing Ambiguity Duration
 ambiguity<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
   filter(Percept!="unclear")%>%
@@ -514,36 +522,6 @@ ambiguity_comparison <-
   rename(Label = Est)
 ```
 
-
-
-```{r plotting pairwise comparisons for the individual levels of Ambiguity}
-samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_as_factor_fit)
-
-ambiguity_levels <- 
-  samples_ambiguity_as_factor_fit%>%
-  select(starts_with("b_Display")) %>%
-  
-  # wide to long
-  pivot_longer(cols= everything(), names_to = "Display", values_to = "Beta") %>%
-
-  # turn distance name into a factor
-  mutate(Display = str_remove_all(Display, "b_Display"),
-         Display = as.factor(Display),
-         Display = fct_relevel(Display, "-ambiguous", "weak", "medium", "medium-strong", "Strong"))
-```
-
-
-```{r computing values above 0 for Ambiguity as factor}
-ambiguity_levels %>%
-  group_by(Display) %>%
-  summarize(numAbove=sum(Beta > 0),
-            TotalBeta=n(),
-            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
-
-```
-
-
-
 ```{r predicting and plotting ambiguity}
 ambiguity_fit_predictions <- predict(ambiguity_as_factor_fit,
                                      newdata = data.frame(Display = levels(ambiguity$Display)),
@@ -559,6 +537,8 @@ ambiguity_fit_moments <-
   group_by(Display) %>%
   summarise(meanP = mean(Pcorotation),
             medianP= median(Pcorotation))
+
+
 ```
 
 ```{r Ambiguity importance via loo}
@@ -622,4 +602,42 @@ ggsave(ambiguityPlot_main, filename = "gears-ambiguity.png", units="cm", width=1
 ggsave(ambiguityPlot_main, filename = "gears-ambiguity.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
 
+```{r plotting pairwise comparisons for the individual levels of Ambiguity}
+samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_as_factor_fit)
 
+ambiguity_levels <- 
+  samples_ambiguity_as_factor_fit%>%
+  select(starts_with("b_Display")) %>%
+  
+  # wide to long
+  pivot_longer(cols= everything(), names_to = "Display", values_to = "Beta") %>%
+
+  # turn distance name into a factor
+  mutate(Display = str_remove_all(Display, "b_Display"),
+         Display = as.factor(Display),
+         Display = fct_relevel(Display, "ambiguous", "weak", "medium", "medium-strong", "Strong"))
+ambiguityPlot_asFactor <-
+ggplot(data=ambiguity_levels, 
+       aes(x = Beta, fill=Display)) + 
+  geom_histogram(alpha=0.5, position="identity", bins=150) + 
+  scale_x_continuous(expression(Beta[i])) +
+  plot_theme() + 
+   theme(
+    legend.position = c(.05, 0.95),
+    legend.justification = c("left", "top"),
+    legend.box.just = "left",
+    legend.text=element_text(size=8, family="Arial"),
+    legend.title = element_text(size=10, family="Arial"),
+    legend.margin = margin(6, 6, 6, 6))
+
+ambiguityPlot_asFactor
+```
+
+```{r computing values above 0 for Ambiguity as factor}
+ambiguity_levels %>%
+  group_by(Display) %>%
+  summarize(numAbove=sum(Beta > 0),
+            TotalBeta=n(),
+            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
+
+```
