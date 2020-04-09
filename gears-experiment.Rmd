@@ -296,38 +296,31 @@ distance_levels %>%
 
 
 ## Occlusion Condition
-```{r}
+```{r occlusion data}
 #Computing Occlusion Duration
 occlusion<- reports%>%
-  filter(Condition=="Control"|Condition=="Occlusion") %>%
-  filter(Percept!="unclear") %>%
+  dplyr::filter(Condition=="Control"|Condition=="Occlusion") %>%
+  dplyr::filter(Percept!="unclear") %>%
   
   # replace "None" with "0" and then turn Occlusion to a numeric variable
-  mutate(Occlusion = ifelse(Occlusion == "None", "0", Occlusion), 
+ dplyr:: mutate(Occlusion = ifelse(Occlusion == "None", "0", Occlusion), 
          Occlusion = as.numeric(Occlusion)) %>%
   
   # reorder Occlusion to factor
   # 1. Display to factor
-  mutate(Display=as.factor(Display),
+ dplyr:: mutate(Display=as.factor(Display),
          OcclusionAsFactor=as.factor(Occlusion),
          OcclusionAsFactor=fct_relevel(OcclusionAsFactor, "0","8.13", "16.26", "32.52", "65.04")) %>%
   
   # 2. Use fct_relevel function, which goes Var = fct_relevel(Var, "first level", "second level", ...)
   # each participant and Occlusion seperatly
-  group_by(Participant, Occlusion, OcclusionAsFactor) %>% 
-  summarize(TotalDuration = sum(Duration),
+  dplyr::group_by(Participant, Occlusion, OcclusionAsFactor) %>% 
+  dplyr::summarize(TotalDuration = sum(Duration),
            #if value in the brackets is true itll be considered if not it will not
             CorotateDur = sum(Duration[Percept == "Corotation"]),
             Pcorotation = CorotateDur / TotalDuration)%>%
   
-  mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
-
-#Plotting Occlusion
-ggplot(data=occlusion, aes(x=Occlusion, group=Occlusion, y=Pcorotation, color=Participant))+
-  geom_boxplot(outlier.shape = NA)+
-  geom_beeswarm()+
-  # geom_quasirandom()+
-  theme(legend.position = "none")
+ dplyr:: mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
 ```
 
 ```{r Fitting occlusion as a continuous variable}
