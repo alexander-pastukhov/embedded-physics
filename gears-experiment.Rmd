@@ -173,7 +173,7 @@ distance_summary <-
   mutate(`β` = round(Estimate, 4), 
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
   select(`β`, CI) %>%
-  mutate("ΔELPD" = round(distance_compare[2, 1], 1),
+  mutate("ΔELPD" = stringr::str_c(round(-distance_compare[2, 1], 1), "±", round(-distance_compare[2, 2], 2)),
          Weight = round(c(distance_weight)["Distance"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
