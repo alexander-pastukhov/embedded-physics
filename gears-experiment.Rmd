@@ -476,7 +476,7 @@ occlusion_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
-```
+
 
 
 
@@ -559,7 +559,7 @@ ambiguity_weight <- loo::loo_model_weights(list("Display" = ambiguity_as_factor_
 ```
 
 ```{r ambiguity summary}
-ambiguity_summary <-
+ambiguity_summary1 <-
   fixef(ambiguity_as_factor_fit) %>%
   data.frame() %>%
   slice(n()) %>% 
@@ -570,6 +570,9 @@ ambiguity_summary <-
          Weight = round(c(ambiguity_weight)["Display"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+
+ambiguity_summary<- 
+  subset(ambiguity_summary1, Stat!="β" & Stat!="CI")
 ```
 
 ```{r plotting ambiguity}
