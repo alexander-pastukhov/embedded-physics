@@ -360,7 +360,7 @@ occlusion_summary <-
   mutate(`β` = round(Estimate, 4), 
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
   select(`β`, CI) %>%
-  mutate("ΔELPD" = stringr::str_c(round(-occlusion_compare[2, 1], 1), "±",  round(-distance_compare[2, 2], 2)),
+  mutate("ΔELPD" = stringr::str_c(round(-occlusion_compare[2, 1], 1), "±",  round(-occlusion_compare[2, 2], 2)),
          Weight = round(c(occlusion_weight)["Occlusion"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
@@ -568,7 +568,7 @@ ambiguity_summary1 <-
   mutate(`β` = round(Estimate, 4), 
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
   select(`β`, CI) %>%
-  mutate("ΔELPD" = round(ambiguity_compare[2, 1], 1),
+  mutate("ΔELPD" = stringr::str_c(round(-ambiguity_compare[2, 1], 1), "±",  round(-ambiguity_compare[2, 2], 2)),
          Weight = round(c(ambiguity_weight)["Display"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
@@ -576,6 +576,8 @@ ambiguity_summary1 <-
 ambiguity_summary<- 
   subset(ambiguity_summary1, Stat!="β" & Stat!="CI")
 ```
+
+ 
 
 ```{r plotting ambiguity}
 ambiguity_inset <-
