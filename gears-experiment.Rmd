@@ -242,6 +242,7 @@ p_significance(
   effects = c("all"),
   component = c("all"),
 )
+#p_significance(distance_fit_predictions, threshold = "default")
 ```
 
 ```{r No of values above 0 distance slope}
