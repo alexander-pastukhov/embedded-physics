@@ -357,8 +357,11 @@ horizontal_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
 horizontal_distance_fit <- add_criterion(horizontal_distance_fit, "loo", reloo=TRUE)
 horizontal_distance_null_model <- add_criterion(horizontal_distance_null_model, "loo", reloo=TRUE)
 
-loo_compare(horizontal_distance_null_model, horizontal_distance_fit, criterion = "loo", model_names = c("intercept", "Distance"))
-loo_model_weights(horizontal_distance_null_model, horizontal_distance_fit, model_names = c("intercept", "Distance"))
+horizontal_distance_compare <- loo::loo_compare(list("Distance" = horizontal_distance_fit$criteria$loo,
+                                          "Intercept" = horizontal_distance_null_model$criteria$loo))
+
+horizontal_distance_weight <- loo::loo_model_weights(list("Distance" = horizontal_distance_fit$criteria$loo,
+                                               "Intercept" = horizontal_distance_null_model$criteria$loo))
 ```
 
 ```{r plot horizontal distance continous predictions}
@@ -477,6 +480,8 @@ horizontal_distance_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
+
+
 
 ```{r combining the plots for horizontal distance condition}
 ggarrange(horizontal_distance_plot_main, 
