@@ -449,6 +449,15 @@ horizontal_distance_as_factor_fit <- brm(PcongruentAdj ~ ShiftAsFactor + (1|Part
                               cores = future::availableCores(),
                               data=horizontal_distance,
                               prior=c(prior(normal(0,10), class="b")))
+horizontal_distance_comparison <-
+  fixef(horizontal_distance_as_factor_fit) %>%
+              data.frame() %>%
+              rownames_to_column("Factor") %>%
+              mutate(Est = ifelse(Factor == "Intercept", 
+                                  "Control\ncondition", 
+                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
+  select(Est) %>%
+  rename(Label = Est)
 ```
 
 ```{r plotting pariwise comparisons for individual levels of horizontal distance}
