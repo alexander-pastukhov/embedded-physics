@@ -363,6 +363,19 @@ horizontal_distance_compare <- loo::loo_compare(list("Distance" = horizontal_dis
 horizontal_distance_weight <- loo::loo_model_weights(list("Distance" = horizontal_distance_fit$criteria$loo,
                                                "Intercept" = horizontal_distance_null_model$criteria$loo))
 ```
+```{r horizontal distance summary}
+horizontal_distance_summary <-
+  fixef(horizontal_distance_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = stringr::str_c(round(-horizontal_distance_compare[2, 1], 1), "±", round(-horizontal_distance_compare[2, 2], 2)),
+         Weight = round(c(horizontal_distance_weight)["Distance"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
 
 ```{r plot horizontal distance continous predictions}
 horizontal_distance_fit_predictions <- predict(horizontal_distance_fit,
