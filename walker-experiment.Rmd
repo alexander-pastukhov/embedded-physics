@@ -242,7 +242,7 @@ ggplot(data=vertical_distance_levels,
        aes(x = Beta, fill=Distance)) + 
   geom_histogram(alpha=0.5, position="identity", bins=150) + 
   scale_x_continuous(expression(Beta[i])) +
-  plot_theme + 
+  plot_theme +
    theme(
     legend.position = c(.05, 0.95),
     legend.justification = c("left", "top"),
@@ -285,10 +285,10 @@ vertical_distancePlot_main <-
                      sec.axis =  dup_axis(name=NULL, labels=vertical_distance_comparison$Label)) +
   scale_y_continuous(name="Pcongruent") +
   scale_color_manual(values = c("#000000")) +
-  plot_theme() + 
+  plot_theme + 
   geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
-        axis.text.x.top = element_text()
+        axis.text.x.top = element_text())
 
 vertical_distancePlot_main
 
