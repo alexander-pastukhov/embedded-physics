@@ -263,11 +263,11 @@ vertical_distance_levels %>%
 ```
 ```{r vertical distance continuous predictions}
 vertical_distance_fit_predictions <- predict(vertical_distance_fit,
-                                    newdata = data.frame(Distance = seq(-10, 70, 1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
-                                    re_formula = NA) %>%
-  data.frame() %>%
-  add_column(Distance = seq(-10, 70, 1))
+                                            newdata = data.frame(Distance= seq(0, 4.2, length.out = 100)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+data.frame()%>%
+  add_column(Distance= seq(0, 4.2, length.out = 100))
 
 vertical_distance_inset <-
   tibble(x=0.01, y=0.92, tb=list(vertical_distance_summary))
@@ -281,7 +281,7 @@ vertical_distancePlot_main <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=vertical_distance, method="tukeyDense", width=2,
                 aes(x=Distance, group=Distance, y=Pcongruent)) + 
-  scale_x_continuous(name = "Distance [%]", limits=c(-1,5), breaks=unique(vertical_distance$Distance),
+  scale_x_continuous(name = "Distance [%]",limits=c(-1,5),breaks=unique(vertical_distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=vertical_distance_comparison$Label)) +
   scale_y_continuous(name="Pcongruent") +
   scale_color_manual(values = c("#000000")) +
