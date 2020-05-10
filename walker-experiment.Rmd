@@ -427,6 +427,9 @@ horizontal_distance_fit_predictions <- predict(horizontal_distance_fit,
   data.frame()%>%
   add_column(ShiftAbs = seq(0, 4.2, length.out = 100))
 
+horizontal_distance_inset <-
+  tibble(x=0.01, y=0.92, tb=list(horizontal_distance_summary))
+
 horizontal_distance_plot_main <-
   ggplot(data=horizontal_distance_fit_predictions,
       aes(x = ShiftAbs, y=Estimate)) + 
@@ -440,7 +443,7 @@ horizontal_distance_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(horizontal_distance_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  geom_table_npc(data=horizontal_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text())
 
