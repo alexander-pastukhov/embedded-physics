@@ -555,16 +555,6 @@ sphere_ambiguity_comparison <-
   rename(Label = Est)
 
 ```
-```{r predicting sphere ambiguity}
-sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_fit,
-                                             newdata = data.frame(SphereDisambiguationAbs= seq(0, 1, length.out = 100)),
-                                             probs = c(0.025, 0.25, 0.75, 0.975),
-                                             re_formula = NA) %>%
-  data.frame()%>%
-  add_column(SphereDisambiguationAbs= seq( 0, 1, length.out= 100))
-
-```
-
 
 ```{r sphere ambiguation importance via loo}
 sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
@@ -575,14 +565,30 @@ sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
 sphere_ambiguity_fit <- add_criterion(sphere_ambiguity_fit, "loo", reloo=TRUE)
 sphere_ambiguity_null_model <- add_criterion(sphere_ambiguity_null_model, "loo", reloo=TRUE)
 
-sphere_ambiguity_compare <- loo::loo_compare(list("Sphere Disambiguation" = sphere_ambiguity_as_factor_fit$criteria$loo,
+sphere_ambiguity_compare <- loo::loo_compare(list("Sphere Disambiguation" = sphere_ambiguityr_fit$criteria$loo,
                                           "Intercept" = sphere_ambiguity_null_model$criteria$loo))
 
-sphere_ambiguity_weight <- loo::loo_model_weights(list("Sphere Disambiguation" = sphere_ambiguity_as_factor_fit$criteria$loo,
+sphere_ambiguity_weight <- loo::loo_model_weights(list("Sphere Disambiguation" = sphere_ambiguity_fit$criteria$loo,
                                                "Intercept" = sphere_ambiguity_null_model$criteria$loo))
 
 #loo_compare(sphere_ambiguity_null_model, sphere_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Sphere disambiguation"))
 #loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names = c("intercept", "Sphere disambiguation"))
+```
+```{r sphere ambiguity summary}
+sphere_ambiguity_summary <-
+  fixef(sphere_ambiguity_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = stringr::str_c(round(-sphere_ambiguity_compare[2, 1], 1), "±",  round(-sphere_ambiguity_compare[2, 2], 2)),
+         Weight = round(c(sphere_ambiguity_weight)["Sphere Disambiguation"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+
+ambiguity_summary<- 
+  subset(ambiguity_summary1, Stat!="β" & Stat!="CI")
 ```
 
 ```{r plot sphere ambiguity continous predictions}
