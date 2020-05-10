@@ -545,7 +545,7 @@ sphere_ambiguity_fit <- brm(PcongruentAdj ~ SphereDisambiguationAbs + (1|Partici
                     cores=future::availableCores(),
                     prior=c(prior(normal(0,10), class="b")))
 sphere_ambiguity_comparison <-
-  fixef(sphere_ambiguity_as_factor_fit) %>%
+  fixef(sphere_ambiguity_fit) %>%
               data.frame() %>%
               rownames_to_column("Factor") %>%
               mutate(Est = ifelse(Factor == "Intercept", 
@@ -553,6 +553,15 @@ sphere_ambiguity_comparison <-
                                   glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
   select(Est) %>%
   rename(Label = Est)
+
+```
+```{r predicting sphere ambiguity}
+sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_fit,
+                                             newdata = data.frame(SphereDisambiguationAbs= seq(0, 1, length.out = 100)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+  data.frame()%>%
+  add_column(SphereDisambiguationAbs= seq( 0, 1, length.out= 100))
 
 ```
 
@@ -566,8 +575,14 @@ sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
 sphere_ambiguity_fit <- add_criterion(sphere_ambiguity_fit, "loo", reloo=TRUE)
 sphere_ambiguity_null_model <- add_criterion(sphere_ambiguity_null_model, "loo", reloo=TRUE)
 
-loo_compare(sphere_ambiguity_null_model, sphere_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Sphere disambiguation"))
-loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names = c("intercept", "Sphere disambiguation"))
+sphere_ambiguity_compare <- loo::loo_compare(list("Sphere Disambiguation" = sphere_ambiguity_as_factor_fit$criteria$loo,
+                                          "Intercept" = sphere_ambiguity_null_model$criteria$loo))
+
+sphere_ambiguity_weight <- loo::loo_model_weights(list("Sphere Disambiguation" = sphere_ambiguity_as_factor_fit$criteria$loo,
+                                               "Intercept" = sphere_ambiguity_null_model$criteria$loo))
+
+#loo_compare(sphere_ambiguity_null_model, sphere_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Sphere disambiguation"))
+#loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names = c("intercept", "Sphere disambiguation"))
 ```
 
 ```{r plot sphere ambiguity continous predictions}
