@@ -806,7 +806,7 @@ walker_ambiguity_weight <- loo::loo_model_weights(list("Walker Disambiguation" =
 #loo_compare(walker_ambiguity_null_model, walker_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Walker disambiguation"))
 #loo_model_weights(walker_ambiguity_null_model, walker_ambiguity_fit, model_names = c("intercept", "Walker disambiguation"))
 ```
-```{r}
+```{r walker ambiguity summary}
 walker_ambiguity_summary <-
   fixef(walker_ambiguity_fit) %>%
   data.frame() %>%
@@ -815,33 +815,33 @@ walker_ambiguity_summary <-
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
   select(`β`, CI) %>%
   mutate("ΔELPD" = stringr::str_c(round(-walker_ambiguity_compare[2, 1], 1), "±", round(-walker_ambiguity_compare[2, 2], 2)),
-         Weight = round(c(walker_ambiguity_weight)["Distance"], 2)) %>%
+         Weight = round(c(walker_ambiguity_weight)["Walker Disambiguation"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
 ```
 
 
 ```{r plot walker ambiguity continous predictions}
-walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
-                                             newdata = data.frame(WalkerDisambiguationAbs= seq(0, 1, length.out = 100)),
-                                             probs = c(0.025, 0.25, 0.75, 0.975),
-                                             re_formula = NA) %>%
-  data.frame()%>%
-  add_column(WalkerDisambiguationAbs= seq( 0, 1, length.out= 100))
+#walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
+  ##                                           newdata = data.frame(WalkerDisambiguationAbs= seq(0, 1, length.out = 100)),
+#                                             probs = c(0.025, 0.25, 0.75, 0.975),
+#                                             re_formula = NA) %>%
+ ## data.frame()%>%
+ # add_column(WalkerDisambiguationAbs= seq( 0, 1, length.out= 100))
 
-walker_ambguity_plot_main <-
-  ggplot(data=walker_ambiguity_fit_predictions,
-      aes(x = WalkerDisambiguationAbs, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
-  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
-  geom_line() + 
-  geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width= 0.2,
-                aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) + 
-  theme(legend.position = "none") + 
-  scale_x_continuous(name = "Walker Disambiguation [%]", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs)) +
-  plot_theme
+#walker_ambguity_plot_main <-
+#  ggplot(data=walker_ambiguity_fit_predictions,
+#      aes(x = WalkerDisambiguationAbs, y=Estimate)) + 
+ # geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+ # geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+ # geom_line() + 
+ # geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width= 0.2,
+ #               aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) + 
+  #theme(legend.position = "none") + 
+  #scale_x_continuous(name = "Walker Disambiguation [%]", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs)) +
+ # plot_theme
 
-walker_ambguity_plot_main
+#walker_ambguity_plot_main
 ```
 
 ```{r plotting walker ambiguity slope}
@@ -855,6 +855,7 @@ walker_ambiguity_plot_slope <-
 
 walker_ambiguity_plot_slope
 ```
+
 ```{r number of values above zero walker ambiguity slope}
 posterior_samples(walker_ambiguity_fit) %>%
   select(b_WalkerDisambiguationAbs) %>%
@@ -880,7 +881,17 @@ walker_ambiguity_comparison <-
   select(Est) %>%
   rename(Label = Est)
 ```
-```{r}
+```{r predictions and MAIN PLOT}
+walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
+                                             newdata = data.frame(WalkerDisambiguationAbs= seq(0, 1, length.out = 100)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+  data.frame()%>%
+  add_column(WalkerDisambiguationAbs= seq( 0, 1, length.out= 100))
+
+walker_ambiguity_inset <-
+  tibble(x=0.01, y=0.92, tb=list(walker_ambiguity_summary))
+
 walker_ambiguity_plot_main <-
   ggplot(data=walker_ambiguity_fit_predictions,
      aes(x = WalkerDisambiguationAbs, y=Estimate)) + 
@@ -935,6 +946,8 @@ ggplot(data=walker_ambiguity_levels,
 
 walker_ambiguity_plot_asFactor
 ```
+
+
 ```{r computing values above 0 for walker Ambiguity as factor}
 walker_ambiguity_levels %>%
   group_by(WalkerDisambiguation) %>%
