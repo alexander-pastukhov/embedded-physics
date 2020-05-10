@@ -806,6 +806,20 @@ walker_ambiguity_weight <- loo::loo_model_weights(list("Walker Disambiguation" =
 #loo_compare(walker_ambiguity_null_model, walker_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Walker disambiguation"))
 #loo_model_weights(walker_ambiguity_null_model, walker_ambiguity_fit, model_names = c("intercept", "Walker disambiguation"))
 ```
+```{r}
+walker_ambiguity_summary <-
+  fixef(walker_ambiguity_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = stringr::str_c(round(-walker_ambiguity_compare[2, 1], 1), "±", round(-walker_ambiguity_compare[2, 2], 2)),
+         Weight = round(c(walker_ambiguity_weight)["Distance"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
+
 
 ```{r plot walker ambiguity continous predictions}
 walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
@@ -866,6 +880,29 @@ walker_ambiguity_comparison <-
   select(Est) %>%
   rename(Label = Est)
 ```
+```{r}
+walker_ambiguity_plot_main <-
+  ggplot(data=walker_ambiguity_fit_predictions,
+     aes(x = WalkerDisambiguationAbs, y=Estimate)) + 
+ geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+ geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+ geom_line() + 
+ geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width= 0.1,
+              aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) + 
+ theme(legend.position = "none") + 
+ scale_x_continuous(name = "Walker Disambiguation", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs), 
+                     sec.axis=dup_axis(name=NULL, labels=(walker_ambiguity_comparison$Label))) +
+  scale_y_continuous(name="Pcongruent") +
+  plot_theme +
+  geom_table_npc(data=walker_ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  theme(legend.position = "none",
+        axis.text.x.top = element_text())
+walker_ambiguity_plot_main
+
+ggsave(walker_ambiguity_plot_main, filename = "walker_ambiguity.png", units="cm", width=14, height=8)
+ggsave(walker_ambiguity_plot_main, filename = "walker-ambiguity.pdf", units="cm", width=14, height=8, device=cairo_pdf)
+```
+
 
 ```{r plotting pairwise comparisons for the individual levels of walker Ambiguity}
 samples_walker_ambiguity_as_factor_fit <- posterior_samples(walker_ambiguity_as_factor_fit)
