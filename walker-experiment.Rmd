@@ -797,7 +797,7 @@ walker_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
 walker_ambiguity_fit <- add_criterion(walker_ambiguity_fit, "loo", reloo=TRUE)
 walker_ambiguity_null_model <- add_criterion(walker_ambiguity_null_model, "loo", reloo=TRUE)
 
-walker_ambiguity_compare <- loo::loo_compare(list("Walker Disambiguation" = walker_abmiguity_fit$criteria$loo,
+walker_ambiguity_compare <- loo::loo_compare(list("Walker Disambiguation" = walker_ambiguity_fit$criteria$loo,
                                           "Intercept" = walker_ambiguity_null_model$criteria$loo))
 
 walker_ambiguity_weight <- loo::loo_model_weights(list("Walker Disambiguation" = walker_ambiguity_fit$criteria$loo,
@@ -854,7 +854,17 @@ set.seed(582961)
 walker_ambiguity_as_factor_fit <- brm(PcongruentAdj ~ WalkerDisambiguationAsFactor + (1|Participant),
                                       family=Beta(), 
                                       data=walker_ambiguity,
+                                      cores=future::availableCores(),
                                       prior=c(prior(normal(0,10), class="b")))
+walker_ambiguity_comparison <-
+  fixef(walker_ambiguity_as_factor_fit) %>%
+              data.frame() %>%
+              rownames_to_column("Factor") %>%
+              mutate(Est = ifelse(Factor == "Intercept", 
+                                  "Control\ncondition", 
+                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
+  select(Est) %>%
+  rename(Label = Est)
 ```
 
 ```{r plotting pairwise comparisons for the individual levels of walker Ambiguity}
