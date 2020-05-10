@@ -545,16 +545,6 @@ sphere_ambiguity_fit <- brm(PcongruentAdj ~ SphereDisambiguationAbs + (1|Partici
                     cores=future::availableCores(),
                     prior=c(prior(normal(0,10), class="b")))
 
-sphere_ambiguity_comparison <-
-  fixef(sphere_ambiguity_fit) %>%
-              data.frame() %>%
-              rownames_to_column("Factor") %>%
-              mutate(Est = ifelse(Factor == "Intercept", 
-                                  "Control\ncondition", 
-                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
-  select(Est) %>%
-  rename(Label = Est)
-
 ```
 
 ```{r sphere ambiguation importance via loo}
@@ -575,6 +565,7 @@ sphere_ambiguity_weight <- loo::loo_model_weights(list("Sphere Disambiguation" =
 #loo_compare(sphere_ambiguity_null_model, sphere_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Sphere disambiguation"))
 #loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names = c("intercept", "Sphere disambiguation"))
 ```
+
 ```{r sphere ambiguity summary}
 sphere_ambiguity_summary <-
   fixef(sphere_ambiguity_fit) %>%
@@ -588,8 +579,8 @@ sphere_ambiguity_summary <-
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
 
-ambiguity_summary<- 
-  subset(sphere_ambiguity_summary, Stat!="β" & Stat!="CI")
+#sphere_ambiguity_summary<- 
+ # subset(sphere_ambiguity_summary, Stat!="β" & Stat!="CI")
 ```
 
 ## Ambiguity sphere as factor
@@ -806,6 +797,8 @@ walker_ambiguity_weight <- loo::loo_model_weights(list("Walker Disambiguation" =
 #loo_compare(walker_ambiguity_null_model, walker_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Walker disambiguation"))
 #loo_model_weights(walker_ambiguity_null_model, walker_ambiguity_fit, model_names = c("intercept", "Walker disambiguation"))
 ```
+
+
 ```{r walker ambiguity summary}
 walker_ambiguity_summary <-
   fixef(walker_ambiguity_fit) %>%
@@ -818,6 +811,8 @@ walker_ambiguity_summary <-
          Weight = round(c(walker_ambiguity_weight)["Walker Disambiguation"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+#walker_ambiguity_summary<- 
+ # subset(walker_ambiguity_summary, Stat!="β" & Stat!="CI")
 ```
 
 
@@ -881,6 +876,7 @@ walker_ambiguity_comparison <-
   select(Est) %>%
   rename(Label = Est)
 ```
+
 ```{r predictions and MAIN PLOT}
 walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
                                              newdata = data.frame(WalkerDisambiguationAbs= seq(0, 1, length.out = 100)),
