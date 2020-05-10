@@ -279,12 +279,12 @@ vertical_distancePlot_main <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=2,
+  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.2,
                 aes(x=Distance, group=Distance, y=Pcongruent)) + 
-  scale_x_continuous(name = "Distance [%]",limits=c(-1,5),breaks=unique(vertical_distance$Distance),
+  scale_x_continuous(name = "Distance [%]",breaks=unique(vertical_distance$Distance), #limits=c(-1,5),
                      sec.axis =  dup_axis(name=NULL, labels=vertical_distance_comparison$Label)) +
   scale_y_continuous(name="Pcongruent") +
-  scale_color_manual(values = c("#000000")) +
+  #scale_color_manual(values = c("#000000")) +
   plot_theme + 
   geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
@@ -377,10 +377,7 @@ horizontal_distance_summary <-
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
 ```
 
-```{r}
-horizontal_distance_plot_main
 
-```
 
 ```{r plotting horizontal distance slope}
 horizontal_distance_plot_slope <- 
@@ -462,16 +459,18 @@ horizontal_distance_plot_main <-
                 aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) + 
   theme(legend.position = "none") + 
   scale_x_continuous(name = "Shift [%]", breaks = unique(horizontal_distance$ShiftAbs),
-                     sec.axis=dup_axis(name=NULL, labels=(horizontal_distance_comparison$Label)) +
+                     sec.axis=dup_axis(name=NULL, labels=(horizontal_distance_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
-  plot_theme() +
-  geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  plot_theme +
+  geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
+        axis.text.x.top = element_text())
+
+horizontal_distance_plot_main
 
 
-#ggsave(horizontal_distancePlot_main, filename = "walker-horizontal-distance.png", units="cm", width=14, height=8)
-#ggsave(horizontal_distancePlot_main, filename = "walker-horizontal-distance.pdf", units="cm", width=14, height=8, device=cairo_pdf)
+ggsave(horizontal_distance_plot_main, filename = "walker-horizontal-distance.png", units="cm", width=14, height=8)
+ggsave(horizontal_distance_plot_main, filename = "walker-horizontal-distance.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
 
 
