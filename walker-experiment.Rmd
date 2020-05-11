@@ -618,8 +618,8 @@ sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_fit,
   data.frame()%>%
   add_column(SphereDisambiguationAbs= seq( 0, 1, length.out= 100))
 
-sphere_ambiguity_summary %>% 
-   pivot_wider(names_from = Stat, values_from = Value) 
+#sphere_ambiguity_summary %>% 
+ #  pivot_wider(names_from = Stat, values_from = Value) 
 
 sphere_ambiguity_inset <-
   tibble(x=0.01, y=0.92, tb=list(sphere_ambiguity_summary))
@@ -662,10 +662,8 @@ sphere_ambiguity_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(sphere_ambiguity_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  labs(subtitle= "ß=-0.0348 CI=-0.31..0.23  ΔELPD=1.5±-0.43 Weight=0")
-  #labs(subtitle = (sphere_ambiguity_summary$Stat), (sphere_ambiguity_summary$Value))+
- # geom_table_npc(data=sphere_ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none",
+  labs(subtitle=glue("β = {sphere_ambiguity_summary$Value[1]}, CI={sphere_ambiguity_summary$Value[2]}, ΔELPD={sphere_ambiguity_summary$Value[3]} , Weight={sphere_ambiguity_summary$Value[4]}"))+
+    theme(legend.position = "none",
         axis.text.x.top = element_text())
 sphere_ambiguity_plot_main
 
