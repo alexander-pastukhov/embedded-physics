@@ -662,7 +662,8 @@ sphere_ambiguity_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(sphere_ambiguity_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  labs(subtitle = (sphere_ambiguity_summary$Stat), (sphere_ambiguity_summary$Value))+
+  labs(subtitle= "ß=-0.0348 CI=-0.31..0.23  ΔELPD=1.5±-0.43 Weight=0")
+  #labs(subtitle = (sphere_ambiguity_summary$Stat), (sphere_ambiguity_summary$Value))+
  # geom_table_npc(data=sphere_ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text())
