@@ -144,10 +144,6 @@ vertical_distance_weight <- loo::loo_model_weights(list("Distance" = vertical_di
 BF_vertical_distance
 ```
 
-```{r computing Bayes factor vertical distance}
-BF_vertical_distance = brms::bayes_factor(vertical_distance_fit, vertical_distance_null_model)
-```
-
 
 ```{r vertical distance model summary}
 vertical_distance_summary <-
@@ -276,6 +272,7 @@ horizontal_distance_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
                     family=Beta(),
                     data=horizontal_distance,
                     cores=future::availableCores(),
+                    save_all_pars = TRUE,
                     prior=c(prior(normal(0,10), class="b")))
 
 ```
@@ -284,7 +281,11 @@ horizontal_distance_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
 horizontal_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
+                           save_all_pars = TRUE,
                            data=horizontal_distance)
+
+BF_horizontal_distance = brms::bayes_factor(horizontal_distance_fit, horizontal_distance_null_model)
+
 
 horizontal_distance_fit <- add_criterion(horizontal_distance_fit, "loo", reloo=TRUE)
 horizontal_distance_null_model <- add_criterion(horizontal_distance_null_model, "loo", reloo=TRUE)
@@ -294,6 +295,7 @@ horizontal_distance_compare <- loo::loo_compare(list("Distance" = horizontal_dis
 
 horizontal_distance_weight <- loo::loo_model_weights(list("Distance" = horizontal_distance_fit$criteria$loo,
                                                "Intercept" = horizontal_distance_null_model$criteria$loo))
+BF_horizontal_distance
 ```
 ```{r horizontal distance summary}
 horizontal_distance_summary <-
@@ -361,7 +363,7 @@ horizontal_distance_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(horizontal_distance_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-   labs(subtitle=glue("β = {horizontal_distance_summary$Value[1]}, CI={horizontal_distance_summary$Value[2]}, ΔELPD={horizontal_distance_summary$Value[3]} , Weight={horizontal_distance_summary$Value[4]}"))+
+   labs(subtitle=glue("β = {horizontal_distance_summary$Value[1]}, CI={horizontal_distance_summary$Value[2]}, ΔELPD={horizontal_distance_summary$Value[3]} , Weight={horizontal_distance_summary$Value[4]}, Bayes factor= {BF_horizontal_distance}"))+
   #geom_table_npc(data=horizontal_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text())
