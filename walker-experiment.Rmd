@@ -209,6 +209,7 @@ set.seed(96251)
 vertical_distance_as_factor_fit <- brm(PcongruentAdj ~ DistanceAsFactor + (1|Participant),
                               family=Beta(), 
                               data=vertical_distance,
+                              cores=future::availableCores()
                               prior=c(prior(normal(0,10), class="b")))
 vertical_distance_comparison <-
   fixef(vertical_distance_as_factor_fit) %>%
@@ -598,6 +599,7 @@ set.seed(1495785)
 sphere_ambiguity_as_factor_fit <- brm(PcongruentAdj ~ SphereDisambiguationAsFactor + (1|Participant),
                                       family=Beta(), 
                                       data=sphere_ambiguity,
+                                      cores=future::availableCores(),
                                       prior=c(prior(normal(0,10), class="b")))
 
 sphere_ambiguity_comparison <-
