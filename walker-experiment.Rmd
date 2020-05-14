@@ -429,6 +429,7 @@ sphere_ambiguity_fit <- brm(PcongruentAdj ~ SphereDisambiguationAbs + (1|Partici
                     family=Beta(),
                     data=sphere_ambiguity,
                     cores=future::availableCores(),
+                    save_all_pars = TRUE,
                     prior=c(prior(normal(0,10), class="b")))
 
 ```
@@ -437,7 +438,11 @@ sphere_ambiguity_fit <- brm(PcongruentAdj ~ SphereDisambiguationAbs + (1|Partici
 sphere_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
+                           save_all_pars = TRUE,
                            data=sphere_ambiguity)
+
+BF_sphere_ambiguity = brms::bayes_factor(sphere_ambiguity_fit, sphere_ambiguity_null_model)
+
 
 sphere_ambiguity_fit <- add_criterion(sphere_ambiguity_fit, "loo", reloo=TRUE)
 sphere_ambiguity_null_model <- add_criterion(sphere_ambiguity_null_model, "loo", reloo=TRUE)
@@ -520,7 +525,7 @@ sphere_ambiguity_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(sphere_ambiguity_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  labs(subtitle=glue("β = {sphere_ambiguity_summary$Value[1]}, CI={sphere_ambiguity_summary$Value[2]}, ΔELPD={sphere_ambiguity_summary$Value[3]} , Weight={sphere_ambiguity_summary$Value[4]}"))+
+  labs(subtitle=glue("β = {sphere_ambiguity_summary$Value[1]}, CI={sphere_ambiguity_summary$Value[2]}, ΔELPD={sphere_ambiguity_summary$Value[3]} , Weight={sphere_ambiguity_summary$Value[4]}, Bayes factor= {BF_sphere_ambiguity}"))+
     theme(legend.position = "none",
         axis.text.x.top = element_text())
 sphere_ambiguity_plot_main
@@ -600,6 +605,7 @@ walker_ambiguity_fit <- brm(PcongruentAdj ~ WalkerDisambiguationAbs + (1|Partici
                     family=Beta(),
                     data=walker_ambiguity,
                     cores=future::availableCores(),
+                    save_all_pars = TRUE,
                     prior=c(prior(normal(0,10), class="b")))
 
 ```
@@ -608,7 +614,11 @@ walker_ambiguity_fit <- brm(PcongruentAdj ~ WalkerDisambiguationAbs + (1|Partici
 walker_ambiguity_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
+                           save_all_pars = TRUE,
                            data=walker_ambiguity)
+
+BF_walker_ambiguity = brms::bayes_factor(walker_ambiguity_fit, walker_ambiguity_null_model)
+
 
 walker_ambiguity_fit <- add_criterion(walker_ambiguity_fit, "loo", reloo=TRUE)
 walker_ambiguity_null_model <- add_criterion(walker_ambiguity_null_model, "loo", reloo=TRUE)
@@ -689,7 +699,7 @@ walker_ambiguity_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(walker_ambiguity_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  labs(subtitle=glue("β = {walker_ambiguity_summary$Value[1]}, CI={walker_ambiguity_summary$Value[2]}, ΔELPD={walker_ambiguity_summary$Value[3]} , Weight={walker_ambiguity_summary$Value[4]}"))+
+  labs(subtitle=glue("β = {walker_ambiguity_summary$Value[1]}, CI={walker_ambiguity_summary$Value[2]}, ΔELPD={walker_ambiguity_summary$Value[3]} , Weight={walker_ambiguity_summary$Value[4]}, Bayes Factor= {BF_walker_ambiguity}"))+
   #geom_table_npc(data=walker_ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text())
