@@ -139,9 +139,6 @@ vertical_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
 vertical_distance_fit <- add_criterion(vertical_distance_fit, "loo", reloo=TRUE)
 vertical_distance_null_model <- add_criterion(vertical_distance_null_model, "loo", reloo=TRUE)
 
-#loo_compare(vertical_distance_null_model, vertical_distance_fit, criterion = "loo", model_names = c("intercept", "Distance"))
-#loo_model_weights(vertical_distance_null_model, vertical_distance_fit, model_names = c("intercept", "Distance"))
-
 vertical_distance_compare <- loo::loo_compare(list("Distance" = vertical_distance_fit$criteria$loo,
                                           "Intercept" = vertical_distance_null_model$criteria$loo))
 
@@ -186,17 +183,7 @@ vertical_distance_summary <-
 #vertical_distance_plot_main
 ```
 
-```{r plotting vertical distance slope}
-vertical_distance_plot_slope <- 
-  posterior_samples(vertical_distance_fit) %>%
-  select(b_Distance) %>%
-  ggplot(aes(x=b_Distance)) +
-  geom_histogram(bins=150) + 
-  plot_theme + 
-  scale_x_continuous(name = expression(beta[Distance]))
 
-vertical_distance_plot_slope
-```
 
 ```{r number of values above zero vertical distance slope}
 posterior_samples(vertical_distance_fit) %>%
@@ -239,21 +226,6 @@ vertical_distance_levels <-
          Distance = as.factor(Distance),
          Distance = fct_relevel(Distance, "1", "2", "3", "4"))
           
-verticaldistancePlot_asFactor <-
-ggplot(data=vertical_distance_levels, 
-       aes(x = Beta, fill=Distance)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=150) + 
-  scale_x_continuous(expression(Beta[i])) +
-  plot_theme +
-   theme(
-    legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
-
-verticaldistancePlot_asFactor
 ```
 
 ```{r Number of values above zero for vertical distance as factor}
@@ -330,15 +302,7 @@ horizontal_distance <-
             Pcongruent = CongruentDur / TotalDuration) %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
 
-# plotting horizontal distance
-ggplot(data=horizontal_distance,
-       aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent, color=Participant))+
-         geom_boxplot(outlier.shape = NA) +
-         geom_beeswarm() +
-         theme(legend.position = "none") + 
-         scale_x_continuous(name= "Shift", breaks = unique(horizontal_distance$ShiftAbs))
-  
-  
+
 ```
 
 ```{r fitting horizontal distance as a contiuous variable}
@@ -378,20 +342,6 @@ horizontal_distance_summary <-
          Weight = round(c(horizontal_distance_weight)["Distance"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
-```
-
-
-
-```{r plotting horizontal distance slope}
-horizontal_distance_plot_slope <- 
-  posterior_samples(horizontal_distance_fit) %>%
-  select(b_ShiftAbs) %>%
-  ggplot(aes(x=b_ShiftAbs)) +
-  geom_histogram(bins=150) + 
-  plot_theme + 
-  scale_x_continuous(name = expression(beta[Shift]))
-
-horizontal_distance_plot_slope
 ```
 
 
@@ -475,23 +425,6 @@ horizontal_distance_levels <-
   mutate(Shift = str_remove_all(Shift, "b_ShiftAsFactor"),
          Shift = as.factor(Shift),
          Shift = fct_relevel(Shift, "0", "1", "2", "3", "4")) ## what goes wrong here with the negative values? also maybe a histogram is not the best choice for so many conditions
-          
-        
-horizontal_distance_plot_asFactor <-
-ggplot(data=horizontal_distance_levels, 
-       aes(x = Beta, fill=Shift)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=150) + 
-  scale_x_continuous(expression(Beta[i])) +
-  plot_theme + 
-   theme(
-    legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
-
-horizontal_distance_plot_asFactor
 ```
 
 ```{r Number of values above zero for horizontal distance as factor}
@@ -500,19 +433,6 @@ horizontal_distance_levels %>%
   summarize(numAbove=sum(Beta > 0),
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
-```
-
-
-
-```{r combining the plots for horizontal distance condition}
-ggarrange(horizontal_distance_plot_main, 
-  ggarrange(horizontal_distance_plot_slope, horizontal_distance_plot_asFactor, 
-            labels = c("B", "C")),
-  labels = c("A"),
-  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
-  ncol = 1)
-
-#ggsave("walker-horizontal-distance.pdf", width = 12, height=8, units="cm", device=cairo_pdf)
 ```
 
 
@@ -533,14 +453,6 @@ sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
             CongruentDur = sum(Duration[Percept=="congruent"]),
             Pcongruent = CongruentDur / TotalDuration) %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)              
-
-# plotting SphereDisambiguation 
-ggplot(data=sphere_ambiguity,
-       aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent, color=Participant)) + 
-         geom_boxplot(outlier.shape = NA) +
-         geom_beeswarm() +
-         theme(legend.position = "none") + 
-         scale_x_continuous(name= "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs))
 ```
 
 
@@ -569,8 +481,6 @@ sphere_ambiguity_compare <- loo::loo_compare(list("Sphere Disambiguation" = sphe
 sphere_ambiguity_weight <- loo::loo_model_weights(list("Sphere Disambiguation" = sphere_ambiguity_fit$criteria$loo,
                                                "Intercept" = sphere_ambiguity_null_model$criteria$loo))
 
-#loo_compare(sphere_ambiguity_null_model, sphere_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Sphere disambiguation"))
-#loo_model_weights(sphere_ambiguity_null_model, sphere_ambiguity_fit, model_names = c("intercept", "Sphere disambiguation"))
 ```
 
 ```{r sphere ambiguity summary}
@@ -629,29 +539,6 @@ sphere_ambiguity_inset <-
   tibble(x=0.01, y=0.92, tb=list(sphere_ambiguity_summary))
 
 
-#sphere_ambiguity_plot_main <-
- # ggplot(data=sphere_ambiguity_fit_predictions, 
- #     aes(x = SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Estimate)) + 
- # geom_line() +
- # geom_hline(yintercept = 0.5, color="white", size= 1) +
- # geom_violin(data = sphere_ambiguity_fit_predictions, aes(x=SphereDisambiguationAbs), 
- #             fill="gray64", color="white", draw_quantiles = c(0.5)) +
- # geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=0.1,
- ##               aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) +
- # theme(legend.position = "none")+ 
- # scale_x_continuous(name="Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
-    #                                sec.axis =  dup_axis(name = NULL, labels=(sphere_ambiguity_comparison$Label))) +
-#scale_y_continuous(name="Pcongruent") +
-  #scale_color_manual(values = c()) +
- # plot_theme +
- # geom_table_npc(data=sphere_ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
- # theme(legend.position = "none",
-   #     axis.text.x.top = element_text())
-  
-#sphere_ambiguity_plot_main
-
-#ggsave(ambiguityPlot_main, filename = "gears-ambiguity.png", units="cm", width=14, height=8)
-#ggsave(ambiguityPlot_main, filename = "gears-ambiguity.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 
 sphere_ambiguity_plot_main <-
   ggplot(data=sphere_ambiguity_fit_predictions,
@@ -679,17 +566,6 @@ ggsave(sphere_ambiguity_plot_main, filename = "sphere-ambiguity.pdf", units="cm"
 ```
 
 
-```{r plotting sphere ambiguity slope}
-sphere_ambiguity_plot_slope <- 
-  posterior_samples(sphere_ambiguity_fit)%>%
-  select(b_SphereDisambiguationAbs) %>%
-  ggplot(aes(x=b_SphereDisambiguationAbs)) +
-  geom_histogram(bins=150) + 
-  plot_theme + 
-  scale_x_continuous(name = expression(beta[SphereDisambiguation]))
-
-sphere_ambiguity_plot_slope
-```
 
 
 ```{r number if values above zero sphere ambiguity slope}
@@ -715,22 +591,6 @@ sphere_ambiguity_levels <-
          SphereDisambiguation = as.factor(SphereDisambiguation),
          SphereDisambiguation = fct_relevel(SphereDisambiguation, "-1", "-0.25", "0", "0.25", "1"))
           
-sphere_ambiguity_plot_asFactor <-
-ggplot(data=sphere_ambiguity_levels, 
-       aes(x = Beta, fill=SphereDisambiguation)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=150) + 
-  scale_x_continuous(expression(Beta[i])) +
-  plot_theme + 
-   theme(
-    legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
-
-sphere_ambiguity_plot_asFactor
-# what happened to ambiguity of 0
 ```
 
 ```{r computing values above 0 for sphere Ambiguity as factor}
@@ -741,17 +601,6 @@ sphere_ambiguity_levels %>%
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
 
-```{r combining the plots for sphere ambiguity condition}
-ggarrange(sphere_ambguity_plot_main, 
-  ggarrange(sphere_ambiguity_plot_slope, sphere_ambiguity_plot_asFactor, 
-            labels = c("B", "C")),
-  labels = c("A"),
-  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
-  ncol = 1)
-
-ggsave("walker-sphere-ambiguity", width = 12, height=8, units="cm", device=cairo_pdf)
-
-```
 
 
 
@@ -775,13 +624,7 @@ walker_ambiguity <-
             Pcongruent = CongruentDur / TotalDuration) %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)              
 
-# plotting WalkerDisambiguation 
-ggplot(data=walker_ambiguity,
-       aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent, color=Participant)) + 
-         geom_boxplot(outlier.shape = NA) +
-         geom_beeswarm() +
-         theme(legend.position = "none") + 
-         scale_x_continuous(name= "Walker Disambiguation", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs))
+
 ```
 
 ```{r fitting walker ambiguity as a contiuous variable}
@@ -809,8 +652,6 @@ walker_ambiguity_compare <- loo::loo_compare(list("Walker Disambiguation" = walk
 walker_ambiguity_weight <- loo::loo_model_weights(list("Walker Disambiguation" = walker_ambiguity_fit$criteria$loo,
                                                "Intercept" = walker_ambiguity_null_model$criteria$loo))
 
-#loo_compare(walker_ambiguity_null_model, walker_ambiguity_fit, criterion = "loo", model_names = c("intercept", "Walker disambiguation"))
-#loo_model_weights(walker_ambiguity_null_model, walker_ambiguity_fit, model_names = c("intercept", "Walker disambiguation"))
 ```
 
 
@@ -830,41 +671,6 @@ walker_ambiguity_summary <-
  # subset(walker_ambiguity_summary, Stat!="β" & Stat!="CI")
 ```
 
-
-```{r plot walker ambiguity continous predictions}
-#walker_ambiguity_fit_predictions <- predict(walker_ambiguity_fit,
-  ##                                           newdata = data.frame(WalkerDisambiguationAbs= seq(0, 1, length.out = 100)),
-#                                             probs = c(0.025, 0.25, 0.75, 0.975),
-#                                             re_formula = NA) %>%
- ## data.frame()%>%
- # add_column(WalkerDisambiguationAbs= seq( 0, 1, length.out= 100))
-
-#walker_ambguity_plot_main <-
-#  ggplot(data=walker_ambiguity_fit_predictions,
-#      aes(x = WalkerDisambiguationAbs, y=Estimate)) + 
- # geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
- # geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
- # geom_line() + 
- # geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width= 0.2,
- #               aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) + 
-  #theme(legend.position = "none") + 
-  #scale_x_continuous(name = "Walker Disambiguation [%]", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs)) +
- # plot_theme
-
-#walker_ambguity_plot_main
-```
-
-```{r plotting walker ambiguity slope}
-walker_ambiguity_plot_slope <- 
-  posterior_samples(walker_ambiguity_fit)%>%
-  select(b_WalkerDisambiguationAbs) %>%
-  ggplot(aes(x=b_WalkerDisambiguationAbs)) +
-  geom_histogram(bins=150) + 
-  plot_theme + 
-  scale_x_continuous(name = expression(beta[WalkerDisambiguation]))
-
-walker_ambiguity_plot_slope
-```
 
 ```{r number of values above zero walker ambiguity slope}
 posterior_samples(walker_ambiguity_fit) %>%
@@ -942,21 +748,6 @@ walker_ambiguity_levels <-
         WalkerDisambiguation = as.factor(WalkerDisambiguation),
          WalkerDisambiguation = fct_relevel(WalkerDisambiguation, "-1", "-0.25", "0", "0.25", "1"))
           
-walker_ambiguity_plot_asFactor <-
-ggplot(data=walker_ambiguity_levels, 
-       aes(x = Beta, fill=WalkerDisambiguation)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=150) + 
-  scale_x_continuous(expression(Beta[i])) +
-  plot_theme + 
-   theme(
-    legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
-
-walker_ambiguity_plot_asFactor
 ```
 
 
@@ -966,16 +757,5 @@ walker_ambiguity_levels %>%
   summarize(numAbove=sum(Beta > 0),
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
-```
-
-```{r combining the plots for walker ambiguity condition}
-ggarrange(walker_ambguity_plot_main, 
-  ggarrange(walker_ambiguity_plot_slope, walker_ambiguity_plot_asFactor, 
-            labels = c("B", "C")),
-  labels = c("A"),
-  font.label = list(size = 12, color = "black", face =  "bold", family = "Arial"),
-  ncol = 1)
-
-ggsave("walker-walker-ambiguity", width = 12, height=8, units="cm", device=cairo_pdf)
 ```
 
