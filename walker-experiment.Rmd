@@ -118,6 +118,7 @@ vertical_distance_fit <- brm(PcongruentAdj ~ Distance + (1|Participant),
                     family=Beta(),
                     data=vertical_distance,
                     cores=future::availableCores(),
+                    save_all_pars = TRUE,
                     prior=c(prior(normal(0,10), class="b")))
 
 ```
@@ -126,7 +127,10 @@ vertical_distance_fit <- brm(PcongruentAdj ~ Distance + (1|Participant),
 vertical_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
+                           save_all_pars = TRUE,
                            data=vertical_distance)
+
+BF_vertical_distance = brms::bayes_factor(vertical_distance_fit, vertical_distance_null_model)
 
 vertical_distance_fit <- add_criterion(vertical_distance_fit, "loo", reloo=TRUE)
 vertical_distance_null_model <- add_criterion(vertical_distance_null_model, "loo", reloo=TRUE)
@@ -136,7 +140,15 @@ vertical_distance_compare <- loo::loo_compare(list("Distance" = vertical_distanc
 
 vertical_distance_weight <- loo::loo_model_weights(list("Distance" = vertical_distance_fit$criteria$loo,
                                                "Intercept" = vertical_distance_null_model$criteria$loo))
+
+BF_vertical_distance
 ```
+
+```{r computing Bayes factor vertical distance}
+BF_vertical_distance = brms::bayes_factor(vertical_distance_fit, vertical_distance_null_model)
+```
+
+
 ```{r vertical distance model summary}
 vertical_distance_summary <-
   fixef(vertical_distance_fit) %>%
@@ -227,8 +239,8 @@ vertical_distancePlot_main <-
   scale_y_continuous(name="Pcongruent") +
   #scale_color_manual(values = c("#000000")) +
   plot_theme + 
-   labs(subtitle=glue("β = {vertical_distance_summary$Value[1]}, CI={vertical_distance_summary$Value[2]}, ΔELPD={vertical_distance_summary$Value[3]} , Weight={vertical_distance_summary$Value[4]}"))+
-  #geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+   labs(subtitle=glue("β = {vertical_distance_summary$Value[1]}, CI={vertical_distance_summary$Value[2]}, ΔELPD={vertical_distance_summary$Value[3]} , Weight={vertical_distance_summary$Value[4]}, Bayes factor = {BF_vertical_distance}"))+
+  #geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) + 
   theme(legend.position = "none",
         axis.text.x.top = element_text())
 
@@ -377,7 +389,7 @@ horizontal_distance_levels <-
   # turn distance name into a factor
   mutate(Shift = str_remove_all(Shift, "b_ShiftAsFactor"),
          Shift = as.factor(Shift),
-         Shift = fct_relevel(Shift, "0", "1", "2", "3", "4")) ## what goes wrong here with the negative values? also maybe a histogram is not the best choice for so many conditions
+         Shift = fct_relevel(Shift, "0", "1", "2", "3", "4"))
 ```
 
 ```{r Number of values above zero for horizontal distance as factor}
