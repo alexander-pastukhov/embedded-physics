@@ -110,14 +110,6 @@ vertical_distance <-
             CongruentDur = sum(Duration[Percept=="congruent"]),
             Pcongruent = CongruentDur / TotalDuration) %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
-
-# plotting vertical distance
-ggplot(data=vertical_distance,
-       aes(x=Distance, group=Distance, y=Pcongruent, color=Participant))+
-         geom_boxplot(outlier.shape = NA) +
-         geom_beeswarm() +
-         theme(legend.position = "none") + 
-         xlab("Distance [%]")
 ```
 
 ```{r fitting vertical distance as a continous variable}
