@@ -764,7 +764,7 @@ walker_ambiguity_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 ```
-## Single object response condition walker
+## Single object report condition walker
 
 ```{r}
 SOR_walker<- 
@@ -786,8 +786,22 @@ SOR_walker<-
    
 ```
 
+```{r fitting SOR walker as a contiuous variable}
+set.seed(11914)
+SOR_walker_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
+                    family=Beta(),
+                    data=SOR_walker,
+                    cores=future::availableCores(),
+                    save_all_pars = TRUE,
+                    prior=c(prior(normal(0,10), class="b")))
 
-## Single object response condition sphere
+```
+
+```{r}
+
+```
+
+## Single object report condition sphere
 ```{r}
 SOR_sphere<- 
   reports %>%
