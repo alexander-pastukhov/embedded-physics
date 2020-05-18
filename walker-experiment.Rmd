@@ -144,11 +144,8 @@ vertical_distance_weight <- loo::loo_model_weights(list("Distance" = vertical_di
 BF_vertical_distance
 ```
 ```{r rounding bayes factor}
-#BF_vertical_distance%>%
- # dplyr::mutate(BF_vertical_distanceNumeric= as.numeric(BF_vertical_distance))
-#BF_vertical_distance_rounded <- round(BF_vertical_distanceNumeric ,digits=2)
-
-BF_vertical_distance_rounded <- round(BF_vertical_distance,digits=2)
+BF_vertical_distance_rounded <- round(BF_vertical_distance$bf,digits=2)
+BF_vertical_distance_rounded
 
 
 ```
@@ -244,7 +241,7 @@ vertical_distancePlot_main <-
   scale_y_continuous(name="Pcongruent") +
   #scale_color_manual(values = c("#000000")) +
   plot_theme + 
-   labs(subtitle=glue("β = {vertical_distance_summary$Value[1]}, CI={vertical_distance_summary$Value[2]}, ΔELPD={vertical_distance_summary$Value[3]} , Weight={vertical_distance_summary$Value[4]}, Bayes factor = {BF_vertical_distance}"))+
+   labs(subtitle=glue("β = {vertical_distance_summary$Value[1]}, CI={vertical_distance_summary$Value[2]}, ΔELPD={vertical_distance_summary$Value[3]} , Weight={vertical_distance_summary$Value[4]}, Bayes factor = {BF_vertical_distance_rounded}"))+
   #geom_table_npc(data=vertical_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) + 
   theme(legend.position = "none",
         axis.text.x.top = element_text())
