@@ -797,8 +797,25 @@ SOR_walker_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
 
 ```
 
-```{r}
+```{r SOR walker importance via loo}
+SOR_walker_null_model <- brm(PcongruentAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           save_all_pars = TRUE,
+                           data=SOR_walker)
 
+BF_SOR_walker = brms::bayes_factor(SOR_walker_fit, SOR_walker_null_model)
+
+
+SOR_walker_fit <- add_criterion(SOR_walker_fit, "loo", reloo=TRUE)
+SOR_walker_null_model <- add_criterion(SOR_walker_null_model, "loo", reloo=TRUE)
+
+SOR_walker_compare <- loo::loo_compare(list("Distance" = SOR_walker_fit$criteria$loo,
+                                          "Intercept" = SOR_walker_null_model$criteria$loo))
+
+SOR_walker_weight <- loo::loo_model_weights(list("Distance" = SOR_walker_fit$criteria$loo,
+                                               "Intercept" = SOR_walker_null_model$criteria$loo))
+BF_SOR_walker
 ```
 
 ## Single object report condition sphere
