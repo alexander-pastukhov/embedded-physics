@@ -818,6 +818,27 @@ SOR_walker_weight <- loo::loo_model_weights(list("Distance" = SOR_walker_fit$cri
 BF_SOR_walker
 ```
 
+```{r rounding BF SOR walker}
+BF_SOR_walker_rounded <- round(BF_SOR_walker$bf,digits=2)
+BF_SOR_walker_rounded
+
+```
+
+```{r SOR walker summary}
+SOR_walker_summary <-
+  fixef(SOR_walker_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = stringr::str_c(round(-SOR_walker_compare[2, 1], 1), "±", round(-SOR_walker_compare[2, 2], 2)),
+         Weight = round(c(SOR_walker_weight)["Distance"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
+
+
 ## Single object report condition sphere
 ```{r}
 SOR_sphere<- 
