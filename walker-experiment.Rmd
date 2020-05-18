@@ -839,6 +839,25 @@ SOR_walker_summary <-
 ```
 
 
+```{r fitting SOR walker as factor}
+set.seed(878929)
+SOR_walker_as_factor_fit <- brm(PcongruentAdj ~ ShiftAsFactor + (1|Participant),
+                              family=Beta(), 
+                              cores = future::availableCores(),
+                              data=SOR_walker,
+                              prior=c(prior(normal(0,10), class="b")))
+
+SOR_walker_comparison <-
+  fixef(SOR_walker_as_factor_fit) %>%
+              data.frame() %>%
+              rownames_to_column("Factor") %>%
+              mutate(Est = ifelse(Factor == "Intercept", 
+                                  "Control\ncondition", 
+                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
+  select(Est) %>%
+  rename(Label = Est)
+```
+
 ## Single object report condition sphere
 ```{r}
 SOR_sphere<- 
