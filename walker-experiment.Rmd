@@ -143,7 +143,7 @@ vertical_distance_weight <- loo::loo_model_weights(list("Distance" = vertical_di
 
 BF_vertical_distance
 ```
-```{r rounding bayes factor}
+```{r rounding bayes factor vertical distance}
 BF_vertical_distance_rounded <- round(BF_vertical_distance$bf,digits=2)
 BF_vertical_distance_rounded
 
@@ -303,6 +303,14 @@ horizontal_distance_weight <- loo::loo_model_weights(list("Distance" = horizonta
                                                "Intercept" = horizontal_distance_null_model$criteria$loo))
 BF_horizontal_distance
 ```
+```{r rounding bayes factor horizontal distabnce}
+BF_horizontal_distance_rounded <- round(BF_horizontal_distance$bf,digits=2)
+BF_horizontal_distance_rounded
+
+
+```
+
+
 ```{r horizontal distance summary}
 horizontal_distance_summary <-
   fixef(horizontal_distance_fit) %>%
@@ -369,7 +377,7 @@ horizontal_distance_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(horizontal_distance_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-   labs(subtitle=glue("β = {horizontal_distance_summary$Value[1]}, CI={horizontal_distance_summary$Value[2]}, ΔELPD={horizontal_distance_summary$Value[3]} , Weight={horizontal_distance_summary$Value[4]}, Bayes factor= {BF_horizontal_distance}"))+
+   labs(subtitle=glue("β = {horizontal_distance_summary$Value[1]}, CI={horizontal_distance_summary$Value[2]}, ΔELPD={horizontal_distance_summary$Value[3]} , Weight={horizontal_distance_summary$Value[4]}, Bayes factor= {BF_horizontal_distance_rounded}"))+
   #geom_table_npc(data=horizontal_distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text())
@@ -460,6 +468,13 @@ sphere_ambiguity_weight <- loo::loo_model_weights(list("Sphere Disambiguation" =
                                                "Intercept" = sphere_ambiguity_null_model$criteria$loo))
 
 ```
+```{r rounding bayes factor sphere ambiguity}
+BF_sphere_ambiguity_rounded <- round(BF_sphere_ambiguity$bf,digits=2)
+BF_sphere_ambiguity_rounded
+
+
+```
+
 
 ```{r sphere ambiguity summary}
 sphere_ambiguity_summary <-
@@ -531,7 +546,7 @@ sphere_ambiguity_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(sphere_ambiguity_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  labs(subtitle=glue("β = {sphere_ambiguity_summary$Value[1]}, CI={sphere_ambiguity_summary$Value[2]}, ΔELPD={sphere_ambiguity_summary$Value[3]} , Weight={sphere_ambiguity_summary$Value[4]}, Bayes factor= {BF_sphere_ambiguity}"))+
+  labs(subtitle=glue("β = {sphere_ambiguity_summary$Value[1]}, CI={sphere_ambiguity_summary$Value[2]}, ΔELPD={sphere_ambiguity_summary$Value[3]} , Weight={sphere_ambiguity_summary$Value[4]}, Bayes factor= {BF_sphere_ambiguity_rounded}"))+
     theme(legend.position = "none",
         axis.text.x.top = element_text())
 sphere_ambiguity_plot_main
@@ -636,6 +651,10 @@ walker_ambiguity_weight <- loo::loo_model_weights(list("Walker Disambiguation" =
                                                "Intercept" = walker_ambiguity_null_model$criteria$loo))
 
 ```
+```{r rounding bayes factor walker ambiguity}
+BF_walker_ambiguity_rounded <- round(BF_walker_ambiguity$bf,digits=2)
+BF_walker_ambiguity_rounded
+```
 
 
 ```{r walker ambiguity summary}
@@ -705,7 +724,7 @@ walker_ambiguity_plot_main <-
                      sec.axis=dup_axis(name=NULL, labels=(walker_ambiguity_comparison$Label))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme +
-  labs(subtitle=glue("β = {walker_ambiguity_summary$Value[1]}, CI={walker_ambiguity_summary$Value[2]}, ΔELPD={walker_ambiguity_summary$Value[3]} , Weight={walker_ambiguity_summary$Value[4]}, Bayes Factor= {BF_walker_ambiguity}"))+
+  labs(subtitle=glue("β = {walker_ambiguity_summary$Value[1]}, CI={walker_ambiguity_summary$Value[2]}, ΔELPD={walker_ambiguity_summary$Value[3]} , Weight={walker_ambiguity_summary$Value[4]}, Bayes Factor= {BF_walker_ambiguity_rounded}"))+
   #geom_table_npc(data=walker_ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text())
