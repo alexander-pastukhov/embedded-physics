@@ -130,7 +130,7 @@ vertical_distance_null_model <- brm(PcongruentAdj ~ (1|Participant),
                            save_all_pars = TRUE,
                            data=vertical_distance)
 
-BF_vertical_distance = brms::bayes_factor(vertical_distance_fit, vertical_distance_null_model)
+BF_vertical_distance<-brms::bayes_factor(vertical_distance_fit, vertical_distance_null_model)
 
 vertical_distance_fit <- add_criterion(vertical_distance_fit, "loo", reloo=TRUE)
 vertical_distance_null_model <- add_criterion(vertical_distance_null_model, "loo", reloo=TRUE)
@@ -142,6 +142,15 @@ vertical_distance_weight <- loo::loo_model_weights(list("Distance" = vertical_di
                                                "Intercept" = vertical_distance_null_model$criteria$loo))
 
 BF_vertical_distance
+```
+```{r rounding bayes factor}
+#BF_vertical_distance%>%
+ # dplyr::mutate(BF_vertical_distanceNumeric= as.numeric(BF_vertical_distance))
+#BF_vertical_distance_rounded <- round(BF_vertical_distanceNumeric ,digits=2)
+
+BF_vertical_distance_rounded <- round(BF_vertical_distance,digits=2)
+
+
 ```
 
 
