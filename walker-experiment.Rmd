@@ -916,3 +916,115 @@ SOR_sphere<-
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
 ```
 
+```{r fitting SOR sphere as a contiuous variable}
+set.seed(83661)
+SOR_sphere_fit <- brm(PcongruentAdj ~ SphereBiasAbs + (1|Participant),
+                    family=Beta(),
+                    data=SOR_sphere,
+                    cores=future::availableCores(),
+                    save_all_pars = TRUE,
+                    prior=c(prior(normal(0,10), class="b")))
+
+```
+
+```{r SOR sphere importance via loo}
+SOR_sphere_null_model <- brm(PcongruentAdj ~ (1|Participant),
+                           family=Beta(),
+                           cores=future::availableCores(),
+                           save_all_pars = TRUE,
+                           data=SOR_sphere)
+
+BF_SOR_sphere = brms::bayes_factor(SOR_sphere_fit, SOR_sphere_null_model)
+
+
+SOR_sphere_fit <- add_criterion(SOR_sphere_fit, "loo", reloo=TRUE)
+SOR_sphere_null_model <- add_criterion(SOR_sphere_null_model, "loo", reloo=TRUE)
+
+SOR_sphere_compare <- loo::loo_compare(list("Sphere Bias" = SOR_sphere_fit$criteria$loo,
+                                          "Intercept" = SOR_sphere_null_model$criteria$loo))
+
+SOR_sphere_weight <- loo::loo_model_weights(list("Sphere Bias" = SOR_sphere_fit$criteria$loo,
+                                               "Intercept" = SOR_sphere_null_model$criteria$loo))
+BF_SOR_walker
+```
+
+```{r rounding BF SOR sphere}
+BF_SOR_sphere_rounded <- round(BF_SOR_sphere$bf,digits=2)
+BF_SOR_sphere_rounded
+
+```
+
+```{r SOR sphere summary}
+SOR_sphere_summary <-
+  fixef(SOR_sphere_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = stringr::str_c(round(-SOR_sphere_compare[2, 1], 1), "±", round(-SOR_sphere_compare[2, 2], 2)),
+         Weight = round(c(SOR_sphere_weight)["Sphere Bias"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+```
+
+
+```{r fitting SOR Sphere as factor}
+set.seed(81810)
+SOR_walker_as_factor_fit <- brm(PcongruentAdj ~ SphereBiasAsFactor + (1|Participant),
+                              family=Beta(), 
+                              cores = future::availableCores(),
+                              data=SOR_sphere,
+                              prior=c(prior(normal(0,10), class="b")))
+
+
+```
+
+```{r SOR sphere comparison}
+SOR_walker_comparison <-
+  fixef(SOR_sphere_as_factor_fit) %>%
+              data.frame() %>%
+              rownames_to_column("Factor") %>%
+              mutate(Est = ifelse(Factor == "Intercept", 
+                                  "Control\ncondition", 
+                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
+  select(Est) %>%
+  rename(Label = Est)
+```
+
+
+```{r plot SOR sphere continous predictions MAIN PLOT}
+SOR_walker_fit_predictions <- predict(SOR_sphere_fit,
+                                             newdata = data.frame(SphereBiasAbs= seq(0, 4.2, length.out = 100)),
+                                             probs = c(0.025, 0.25, 0.75, 0.975),
+                                             re_formula = NA) %>%
+  data.frame()%>%
+  add_column(ShiftAbs = seq(0, 4.2, length.out = 100))
+
+SOR_sphere_inset <-
+  tibble(x=0.01, y=0.92, tb=list(SOR_sphere_summary))
+
+SOR_sphere_plot_main <-
+  ggplot(data=SOR_sphere_fit_predictions,
+      aes(x = SphereBiasAbs, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() + 
+  geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
+                aes(x=SphereBiasAbs, group=SphereBiasAbs, y=Pcongruent)) + 
+  theme(legend.position = "none") + 
+  scale_x_continuous(name = "Sphere Bias", breaks = unique(SOR_sphere$SphereBiasAbs),
+                     sec.axis=dup_axis(name=NULL, labels=(SOR_sphere_comparison$Label))) +
+  scale_y_continuous(name="Pcongruent") +
+  plot_theme +
+   labs(subtitle=glue("β = {SOR_sphere_summary$Value[1]}, CI={SOR_sphere_summary$Value[2]}, ΔELPD={SOR_sphere_summary$Value[3]} , Weight={SOR_sphere_summary$Value[4]}, 
+                      Bayes factor= {BF_SOR_sphere_rounded}"))+
+  theme(legend.position = "none",
+        axis.text.x.top = element_text())
+
+SOR_sphere_plot_main
+
+
+ggsave(SOR_sphere_plot_main, filename = "SOR sphere.png", units="cm", width=14, height=8)
+ggsave(SOR_sphere_plot_main, filename = "SOR sphere.pdf", units="cm", width=14, height=8, device=cairo_pdf)
+```
