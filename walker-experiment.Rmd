@@ -914,7 +914,7 @@ ggsave(SOR_walker_plot_main, filename = "SOR walker.pdf", units="cm", width=14, 
 ## Single object report condition sphere
 
 ```{r single condition sphere}
-sor_sphere <- 
+SOR_sphere <- 
   reports %>%
   filter(SessionTag=="Addendumer", Condition %in% c("Sphere")) %>%
   
@@ -963,7 +963,7 @@ SOR_sphere_fit <- brm(PconsistentAdj ~ ShiftAbs + (1|Participant),
 ```
 
 ```{r SOR sphere importance via loo}
-SOR_sphere_null_model <- brm(PconsisntentAdj ~ (1|Participant),
+SOR_sphere_null_model <- brm(PconsistentAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
                            save_all_pars = TRUE,
@@ -1006,7 +1006,7 @@ SOR_sphere_summary <-
 
 ```{r fitting SOR Sphere as factor}
 set.seed(81810)
-SOR_sphere_as_factor_fit <- brm(PconsisntentAdj ~ ShiftAsFactor + (1|Participant),
+SOR_sphere_as_factor_fit <- brm(PconsistentAdj ~ ShiftAsFactor + (1|Participant),
                               family=Beta(), 
                               cores = future::availableCores(),
                               data=SOR_sphere,
@@ -1046,7 +1046,7 @@ SOR_sphere_plot_main <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
   geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
-                aes(x=ShiftAbs, group=ShiftAbs, y=Pconsisntent)) + 
+                aes(x=ShiftAbs, group=ShiftAbs, y=Pconsistent)) + 
   theme(legend.position = "none") + 
   scale_x_continuous(name = "Shift", breaks = unique(SOR_sphere$ShiftAbs),
                      sec.axis=dup_axis(name=NULL, labels=(SOR_sphere_comparison$Label))) +
