@@ -768,7 +768,7 @@ walker_ambiguity_levels %>%
 ## Single object report condition walker
 
 ```{r}
-sor_walker<- 
+SOR_walker<- 
   reports %>%
   filter(SessionTag=="Addendumer", Condition %in% c("Walker")) %>%
   
@@ -778,7 +778,7 @@ sor_walker<-
   # computing absolute shift
   dplyr::mutate(ShiftAbs = abs(Shift),
                 ShiftAsFactor = as.factor(ShiftAbs),
-                ShiftAsFactor = fct_relevel(ShiftAsFactor, "0","2","4")) 
+                ShiftAsFactor = fct_relevel(ShiftAsFactor, "0","2","4")) %>%
 
   ## ----------- SASHA SAYS -----------
   ## 
@@ -791,7 +791,7 @@ sor_walker<-
   dplyr::group_by(Participant, ShiftAbs, ShiftAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
-            CongruentDur = sum(Duration[Percept=="congruent"]),
+            CongruentDur = sum(Duration[IsCongruent=="TRUE"]),
             Pcongruent = CongruentDur / TotalDuration) %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
   
@@ -940,9 +940,9 @@ sor_sphere <-
   dplyr::group_by(Participant, ShiftAbs, ShiftAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
                    # if value in the brackets is true it'll be considered if not it will not
-                   CongruentDur = sum(Duration[Percept=="left"]),               ## EXHNAGE IS LEFT OR RIGHT CONGRUENT?!!!!!!!!!!!!!!!!!!!!!
-                   Pcongruent = CongruentDur / TotalDuration) %>%
-  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
+                   ConsistentDur = sum(Duration[InBiasDirection=="TRUE"]),               ## EXHNAGE IS LEFT OR RIGHT CONGRUENT?!!!!!!!!!!!!!!!!!!!!!
+                   Pconsistent = ConsistentDur / TotalDuration) %>%
+  dplyr::mutate(PconsistentAdj = Pconsistent*0.999+0.0005)
  # dplyr::group_by(Participant, SphereBiasAbs, SphereBiasAsFactor) %>%
  # dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
@@ -953,7 +953,7 @@ sor_sphere <-
 
 ```{r fitting SOR sphere as a contiuous variable}
 set.seed(83661)
-SOR_sphere_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
+SOR_sphere_fit <- brm(PconsistentAdj ~ ShiftAbs + (1|Participant),
                     family=Beta(),
                     data=SOR_sphere,
                     cores=future::availableCores(),
@@ -963,7 +963,7 @@ SOR_sphere_fit <- brm(PcongruentAdj ~ ShiftAbs + (1|Participant),
 ```
 
 ```{r SOR sphere importance via loo}
-SOR_sphere_null_model <- brm(PcongruentAdj ~ (1|Participant),
+SOR_sphere_null_model <- brm(PconsisntentAdj ~ (1|Participant),
                            family=Beta(),
                            cores=future::availableCores(),
                            save_all_pars = TRUE,
@@ -1006,7 +1006,7 @@ SOR_sphere_summary <-
 
 ```{r fitting SOR Sphere as factor}
 set.seed(81810)
-SOR_sphere_as_factor_fit <- brm(PcongruentAdj ~ ShiftAsFactor + (1|Participant),
+SOR_sphere_as_factor_fit <- brm(PconsisntentAdj ~ ShiftAsFactor + (1|Participant),
                               family=Beta(), 
                               cores = future::availableCores(),
                               data=SOR_sphere,
@@ -1046,11 +1046,11 @@ SOR_sphere_plot_main <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() + 
   geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
-                aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) + 
+                aes(x=ShiftAbs, group=ShiftAbs, y=Pconsisntent)) + 
   theme(legend.position = "none") + 
   scale_x_continuous(name = "Shift", breaks = unique(SOR_sphere$ShiftAbs),
                      sec.axis=dup_axis(name=NULL, labels=(SOR_sphere_comparison$Label))) +
-  scale_y_continuous(name="Pcongruent") +
+  scale_y_continuous(name="Pconsistent") +
   plot_theme() +
    labs(subtitle=glue("β = {SOR_sphere_summary$Value[1]}, CI={SOR_sphere_summary$Value[2]}, ΔELPD={SOR_sphere_summary$Value[3]} , Weight={SOR_sphere_summary$Value[4]}, 
                       Bayes factor= {BF_SOR_sphere_rounded}"))+
