@@ -350,14 +350,22 @@ occlusion_fit <- brm(PCorotationAdj ~ Occlusion + (1|Participant),
                      family=Beta(),
                      data=occlusion,
                      refresh = 0,
+                     save_all_pars = TRUE,
                      prior=c(prior(normal(0,1), class="b")))
 
 occlusion_null_model <- brm(PCorotationAdj ~ (1|Participant),
                            family=Beta(),
                            refresh=0,
                            cores=future::availableCores(),
+                           save_all_pars = TRUE,
                            data=occlusion)
 
+BF_occlusion<-brms::bayes_factor(occlusion_fit, occlusion_null_model)
+
+BF_occlusion
+
+BF_occlusion_rounded <- round(BF_occlusion$bf,digits=2)
+BF_occlusion_rounded
 ```
 
 ```{r Occlusion importance via loo}
