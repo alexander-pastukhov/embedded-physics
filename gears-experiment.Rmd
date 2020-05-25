@@ -544,7 +544,7 @@ filter(Condition=="Ambiguity")%>%
 ```
 
 ```{r disambiguation duration}
-disambiguationDUR <-reports%>%
+disambiguationDur <-reports%>%
 filter(Condition=="Ambiguity")%>% 
   filter(Percept!="unclear")%>%
   group_by(Participant)%>%
