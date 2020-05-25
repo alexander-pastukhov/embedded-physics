@@ -531,6 +531,20 @@ ambiguity<- reports%>%
 
 ```
 
+```{r disambiguiation sanity check}
+disambiguation <-reports%>%
+filter(Condition=="Ambiguity")%>% 
+  filter(Percept!="unclear")%>%
+  group_by(Participant)%>%
+  summarize(TotalCorotation=sum(Percept=="Corotation"),
+            Disambiguation=sum(DisplayLeft !="ambiguous", DisplayRight != "ambiguous"),
+            Pdisambiguation=Disambiguation/TotalCorotation)%>%
+  mutate(PdisambiguationAdj= Pdisambiguation*0.999+0.0005)
+
+```
+
+
+
 ```{r fitting ambiguity as factor}
 set.seed(99435)
 ambiguity_as_factor_fit <- brm(PCorotationAdj ~ Display +(1|Participant),
