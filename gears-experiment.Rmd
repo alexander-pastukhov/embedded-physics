@@ -83,7 +83,7 @@ reports <-
   
   # 5. Renaming Displays
   mutate(Percept=as.factor(Percept),
-         Percept=fct_recode(Percept, "Counterrotation"="up", "Counterrotation"="down", "Corotation"="left", "Corotation"="right"),
+         IsCorotating=(Percept=="left" | Percept=="right"),
          DisplayLeft=as.factor(DisplayLeft),
          DisplayLeft = fct_recode(DisplayLeft, "strong"="gear24-strong",
                                                "medium"= "gear24-medium",
@@ -552,6 +552,28 @@ filter(Condition=="Ambiguity")%>%
             Disambiguation=sum(Duration[DisplayLeft !="ambiguous"| DisplayRight !="ambiguous"]),
             Pdisambiguation=Disambiguation/TotalCorotation)%>%
   mutate(PdisambiguationAdj= Pdisambiguation*0.999+0.0005)
+
+ambiguityPlot_main <-
+  ggplot(data=disambiguationDur, 
+      aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_violin(data = ambiguity_fit_predictions, aes(x=as.numeric(Display)), 
+              fill="gray64", color="white", draw_quantiles = c(0.5)) +
+  geom_quasirandom(data=ambiguity, method="tukeyDense", width=0.1,
+                aes(x=as.numeric(Display), group=Display, y=PdisambiguationAdj)) +
+  scale_x_continuous(name="Display",
+                     breaks = unique(as.numeric(ambiguity$Display)),
+                     labels = c("ambiguous","weak", "medium","medium-strong","strong"),
+                     sec.axis =  dup_axis(name = element_blank(),
+                                          labels = ambiguity_comparison$Label))+
+  scale_y_continuous(name="Pcorotation") +
+  scale_color_manual(values = c("#000000", four_colors)) +
+  plot_theme() +
+  geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  theme(legend.position = "none",
+        axis.text.x.top = element_text(color=four_colors))
+  ambiguityPlot_main
 ```
 
 
