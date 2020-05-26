@@ -106,6 +106,9 @@ reports <-
    mutate(Display = ifelse(DisplayLeft=="ambiguous", as.character(DisplayRight), as.character(DisplayLeft)),
           Display=as.factor(Display),
           Display=fct_relevel(Display,"ambiguous", "weak", "medium", "medium-strong", "strong")) %>% 
+  mutate(PrimeGear=ifelse(DisplayLeft=="ambiguous", "RightGear", "LeftGear"),
+          PrimeGear=as.factor(PrimeGear))%>%
+
   
   # 6. Convert Occlusion into numeric. First, change "None" to "0" via stringr::str_replace_all(Occlusion, "None", "0").
   #    Then, convert it to numeric in mutate.
