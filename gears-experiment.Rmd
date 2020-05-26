@@ -132,7 +132,7 @@ distance <-
   dplyr::group_by(Participant, Distance, DistanceAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
-            CorotateDur = sum(Duration[Percept=="Corotation"]),
+            CorotateDur = sum(Duration[IsCorotating==TRUE]),
             Pcorotation = CorotateDur / TotalDuration) %>%
   # beta distribution does not like 0 and 1
   dplyr::mutate(PCorotationAdj = Pcorotation * 0.999 + 0.0005)
@@ -340,7 +340,7 @@ occlusion<- reports%>%
   dplyr::group_by(Participant, Occlusion, OcclusionAsFactor) %>% 
   dplyr::summarize(TotalDuration = sum(Duration),
            #if value in the brackets is true itll be considered if not it will not
-            CorotateDur = sum(Duration[Percept == "Corotation"]),
+            CorotateDur = sum(Duration[IsCorotating == TRUE]),
             Pcorotation = CorotateDur / TotalDuration)%>%
   
  dplyr:: mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
@@ -529,56 +529,12 @@ ambiguity<- reports%>%
   summarize(TotalDuration=sum(Duration),
   
   # if value in the brackets is true itll be considered if not it will not
-  CorotateDur=sum(Duration[Percept=="Corotation"]),
+  CorotateDur=sum(Duration[IsCorotating== TRUE]),
   Pcorotation=CorotateDur/TotalDuration)%>%
   mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
 
 ```
 
-```{r disambiguiation sanity check}
-disambiguation <-reports%>%
-filter(Condition=="Ambiguity")%>% 
-  filter(Percept!="unclear")%>%
-  group_by(Participant)%>%
-  summarize(TotalCorotation=sum(Percept=="Corotation"),
-            Disambiguation=sum(DisplayLeft !="ambiguous", DisplayRight != "ambiguous"),
-            Pdisambiguation=Disambiguation/TotalCorotation)%>%
-  mutate(PdisambiguationAdj= Pdisambiguation*0.999+0.0005)
-
-```
-
-```{r disambiguation duration}
-disambiguationDur <-reports%>%
-filter(Condition=="Ambiguity")%>% 
-  filter(Percept!="unclear")%>%
-  group_by(Participant)%>%
-  summarize(TotalCorotation=sum(Duration[Percept=="Corotation"]),
-            Disambiguation=sum(Duration[DisplayLeft !="ambiguous"| DisplayRight !="ambiguous"]),
-            Pdisambiguation=Disambiguation/TotalCorotation)%>%
-  mutate(PdisambiguationAdj= Pdisambiguation*0.999+0.0005)
-
-ambiguityPlot_main <-
-  ggplot(data=disambiguationDur, 
-      aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
-  geom_line() +
-  geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_violin(data = ambiguity_fit_predictions, aes(x=as.numeric(Display)), 
-              fill="gray64", color="white", draw_quantiles = c(0.5)) +
-  geom_quasirandom(data=ambiguity, method="tukeyDense", width=0.1,
-                aes(x=as.numeric(Display), group=Display, y=PdisambiguationAdj)) +
-  scale_x_continuous(name="Display",
-                     breaks = unique(as.numeric(ambiguity$Display)),
-                     labels = c("ambiguous","weak", "medium","medium-strong","strong"),
-                     sec.axis =  dup_axis(name = element_blank(),
-                                          labels = ambiguity_comparison$Label))+
-  scale_y_continuous(name="Pcorotation") +
-  scale_color_manual(values = c("#000000", four_colors)) +
-  plot_theme() +
-  geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
-  ambiguityPlot_main
-```
 
 
 ```{r fitting ambiguity as factor}
