@@ -98,8 +98,9 @@ reports <-
                                                "weak"="gear24-weak",
                                                "ambiguous"= "gear24"),
         DisplayRight=fct_relevel(DisplayRight, "ambiguous", "weak", "medium", "medium-strong", "strong")) %>%
-
-  
+  mutate(LeftGear = case_when(Percept == "right" ~ "CW", Percept == "left" ~ "CCW", Percept=="up" ~ "CCW", Percept== "down" ~ "CW"),
+       RightGear= case_when(Percept== "right" ~"CW", Percept =="left"  ~ "CCW", Percept == "up"~ "CW", Percept== "down" ~ "CCW"))%>%
+   
   # 5. Figuring out OTHER gear display. "gear24" for fully ambiguous, other image for disambiguated cases.
   #    Logic: if DisplayLeft == "gear24" then it is "DisplayRight" else it is DisplayLeft.
    mutate(Display = ifelse(DisplayLeft=="ambiguous", as.character(DisplayRight), as.character(DisplayLeft)),
