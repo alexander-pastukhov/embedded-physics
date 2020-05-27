@@ -690,3 +690,130 @@ ambiguity_levels %>%
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 
 ```
+
+## Disambiguation check
+```{r Proportion of clockwise}
+disambiguation<- reports%>%
+  filter(Condition=="Control"|Condition=="Ambiguity")%>% 
+  filter(Percept!="unclear")%>%
+  
+  group_by(Participant, Display)%>% 
+  summarize(TotalDuration=sum(Duration),
+    ClockwiseDur=sum(Duration[RightGear== "CCW" | LeftGear=="CCW"]),
+    PClockwise=ClockwiseDur/TotalDuration)%>%
+  mutate(PClockwiseAdj=PClockwise*0.999+0.0005)
+```
+
+```{r fitting disambiguation/ambiguity as factor}
+set.seed(5516800)
+disambiguation_as_factor_fit <- brm(PClockwiseAdj ~ Display +(1|Participant),
+                     family= Beta(),
+                     data= disambiguation,
+                     refresh=0,
+                     cores=future::availableCores(),
+                     save_all_pars = TRUE,
+                     prior=c(prior(normal(0, 1), class="b")))
+
+disambiguation_comparison <-
+  fixef(disambiguation_as_factor_fit) %>%
+              data.frame() %>%
+              rownames_to_column("Factor") %>%
+              mutate(Est = ifelse(Factor == "Intercept", 
+                                  "Control\ncondition", 
+                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
+  select(Est) %>%
+  rename(Label = Est)
+```
+
+```{r predicting and plotting disambiguation/ambiguity}
+disambiguation_fit_predictions <- predict(disambiguation_as_factor_fit,
+                                     newdata = data.frame(Display = levels(disambiguation$Display)),
+                                     summary = FALSE,
+                                     re_formula = NA) %>%
+  data.frame() %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "PClockwise") %>%
+  mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(disambiguation$Display)))
+  
+
+disambiguation_fit_moments <-
+  disambiguation_fit_predictions %>%
+  group_by(Display) %>%
+  summarise(meanP = mean(PClockwise),
+            medianP= median(PClockwise))
+
+
+```
+
+```{r disambiguation/ambiguity importance via loo}
+disambiguation_null_model <- brm(PClockwiseAdj ~ (1|Participant),
+                           family=Beta(),
+                           refresh=0,
+                           cores=future::availableCores(),
+                           save_all_pars = TRUE,
+                           data=disambiguation)
+
+BF_disambiguation_as_factor<-brms::bayes_factor(disambiguation_as_factor_fit, disambiguation_null_model)
+
+BF_disambiguation_as_factor
+
+BF_disambiguation_as_factor_rounded <- round(BF_disambiguation_as_factor$bf,digits=2)
+BF_disambiguation_as_factor_rounded
+
+disambiguation_as_factor_fit <- add_criterion(disambiguation_as_factor_fit, "loo", reloo=TRUE)
+disambiguation_null_model <- add_criterion(disambiguation_null_model, "loo", reloo=TRUE)
+
+disambiguation_compare <- loo::loo_compare(list("Display" = disambiguation_as_factor_fit$criteria$loo,
+                                          "Intercept" = disambiguation_null_model$criteria$loo))
+
+disambiguation_weight <- loo::loo_model_weights(list("Display" = disambiguation_as_factor_fit$criteria$loo,
+                                               "Intercept" = disambiguation_null_model$criteria$loo))
+```
+
+```{r disambiguation/ambiguity summary}
+disambiguation_summary <-
+  fixef(disambiguation_as_factor_fit) %>%
+  data.frame() %>%
+  slice(n()) %>% 
+  mutate(`β` = round(Estimate, 4), 
+         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
+  select(`β`, CI) %>%
+  mutate("ΔELPD" = stringr::str_c(round(-disambiguation_compare[2, 1], 1), "±",  round(-disambiguation_compare[2, 2], 2)),
+         Weight = round(c(disambiguation_weight)["Display"], 2)) %>%
+  mutate_all(as.character) %>%
+  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
+
+disambiguation_summary<- 
+  subset(disambiguation_summary, Stat!="β" & Stat!="CI")
+```
+
+ 
+
+```{r plotting disambiguation}
+disambiguation_inset <-
+  tibble(x=0.01, y=0.92, tb=list(disambiguation_summary))
+
+disambiguationPlot_main <-
+  ggplot(data=disambiguation_fit_predictions, 
+      aes(x = as.numeric(Display), group=Display, y=PClockwise)) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_violin(data = disambiguation_fit_predictions, aes(x=as.numeric(Display)), 
+              fill="gray64", color="white", draw_quantiles = c(0.5)) +
+  geom_quasirandom(data=disambiguation, method="tukeyDense", width=0.1,
+                aes(x=as.numeric(Display), group=Display, y=PClockwise)) +
+  scale_x_continuous(name="Display",
+                     breaks = unique(as.numeric(disambiguation$Display)),
+                     labels = c("ambiguous","weak", "medium","medium-strong","strong"),
+                     sec.axis =  dup_axis(name = element_blank(),
+                                          labels = disambiguation_comparison$Label))+
+  scale_y_continuous(name="Pclockwise") +
+  scale_color_manual(values = c("#000000", four_colors)) +
+  plot_theme() +
+  geom_table_npc(data=disambiguation_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  theme(legend.position = "none",
+        axis.text.x.top = element_text(color=four_colors))
+  disambiguationPlot_main
+
+ggsave(disambiguationPlot_main, filename = "gears-disambiguation.png", units="cm", width=14, height=8)
+ggsave(disambiguationPlot_main, filename = "gears-disambiguation.pdf", units="cm", width=14, height=8, device=cairo_pdf)
+```
