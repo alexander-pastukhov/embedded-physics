@@ -240,8 +240,9 @@ distancePlot_main <-
                      sec.axis =  dup_axis(name=NULL, labels=distance_comparison$Label)) +
   scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
-  plot_theme() + 
-  geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  plot_theme() +
+  labs(subtitle=glue("β = distance_summary$Value[1]}, CI={distance_summary$Value[2]}, ΔELPD={distance_summary$Value[3]} , Weight={distance_summary$Value[4]}, Bayes Factor= {BF_distance_rounded}"))+
+  #geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors))
 distancePlot_main
@@ -447,7 +448,8 @@ occlusionPlot_main <-
   scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() + 
-  geom_table_npc(data=occlusion_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , Weight={occlusion_summary$Value[4]}, Bayes Factor= {BF_occlusion_rounded}"))+
+  #geom_table_npc(data=occlusion_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors))
 occlusionPlot_main
@@ -642,10 +644,11 @@ ambiguityPlot_main <-
   scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
-  geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+   labs(subtitle=glue("β = {ambiguity_summary$Value[1]}, CI={ambiguity_summary$Value[2]}, ΔELPD={ambiguity_summary$Value[3]} , Weight={ambiguity_summary$Value[4]}, Bayes Factor= {BF_ambiguity_as_factor_rounded}"))+
+  #geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors))
-  ambiguityPlot_main
+ambiguityPlot_main
 
 ggsave(ambiguityPlot_main, filename = "gears-ambiguity.png", units="cm", width=14, height=8)
 ggsave(ambiguityPlot_main, filename = "gears-ambiguity.pdf", units="cm", width=14, height=8, device=cairo_pdf)
