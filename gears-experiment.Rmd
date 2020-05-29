@@ -106,7 +106,7 @@ reports <-
    mutate(Display = ifelse(DisplayLeft=="ambiguous", as.character(DisplayRight), as.character(DisplayLeft)),
           Display=as.factor(Display),
           Display=fct_relevel(Display,"ambiguous", "weak", "medium", "medium-strong", "strong")) %>% 
-  mutate(PrimeGear=ifelse(DisplayLeft=="ambiguous", "RightGear", "LeftGear"),
+  mutate(PrimeGear=ifelse(DisplayLeft=="ambiguous", RightGear, LeftGear),
           PrimeGear=as.factor(PrimeGear))%>%
 
   
@@ -644,7 +644,7 @@ ambiguityPlot_main <-
   scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
-   labs(subtitle=glue("β = {ambiguity_summary$Value[1]}, CI={ambiguity_summary$Value[2]},Bayes Factor= {BF_ambiguity_as_factor_rounded}"))+
+   labs(subtitle=glue("β = {ambiguity_summary$Value[1]}, CI={ambiguity_summary$Value[2]}, ΔELPD={ambiguity_summary$Value[3]} , Weight={ambiguity_summary$Value[4]}, Bayes Factor= {BF_ambiguity_as_factor_rounded}"))+
   #geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors))
