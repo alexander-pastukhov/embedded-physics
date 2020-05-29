@@ -702,14 +702,14 @@ disambiguation<- reports%>%
   
   group_by(Participant, Display)%>% 
   summarize(TotalDuration=sum(Duration),
-    CClockwiseDur=sum(Duration[RightGear== "CCW" | LeftGear=="CCW"]),
-    PCClockwise=CClockwiseDur/TotalDuration)%>%
-  mutate(PCClockwiseAdj=PCClockwise*0.999+0.0005)
+    ClockwiseDur=sum(Duration[PrimeGear=="CW"]),
+    PClockwise=ClockwiseDur/TotalDuration)%>%
+  mutate(PClockwiseAdj=PClockwise*0.999+0.0005)
 ```
 
 ```{r fitting disambiguation/ambiguity as factor}
 set.seed(5516800)
-disambiguation_as_factor_fit <- brm(PCClockwiseAdj ~ Display +(1|Participant),
+disambiguation_as_factor_fit <- brm(PClockwiseAdj ~ Display +(1|Participant),
                      family= Beta(),
                      data= disambiguation,
                      refresh=0,
@@ -734,21 +734,21 @@ disambiguation_fit_predictions <- predict(disambiguation_as_factor_fit,
                                      summary = FALSE,
                                      re_formula = NA) %>%
   data.frame() %>%
-  pivot_longer(everything(), names_to = "Display", values_to = "PCClockwise") %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "PClockwise") %>%
   mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(disambiguation$Display)))
   
 
 disambiguation_fit_moments <-
   disambiguation_fit_predictions %>%
   group_by(Display) %>%
-  summarise(meanP = mean(PCClockwise),
-            medianP= median(PCClockwise))
+  summarise(meanP = mean(PClockwise),
+            medianP= median(PClockwise))
 
 
 ```
 
 ```{r disambiguation/ambiguity importance via loo}
-disambiguation_null_model <- brm(PCClockwiseAdj ~ (1|Participant),
+disambiguation_null_model <- brm(PClockwiseAdj ~ (1|Participant),
                            family=Beta(),
                            refresh=0,
                            cores=future::availableCores(),
@@ -797,19 +797,19 @@ disambiguation_inset <-
 
 disambiguationPlot_main <-
   ggplot(data=disambiguation_fit_predictions, 
-      aes(x = as.numeric(Display), group=Display, y=PCClockwise)) + 
+      aes(x = as.numeric(Display), group=Display, y=PClockwise)) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_violin(data = disambiguation_fit_predictions, aes(x=as.numeric(Display)), 
               fill="gray64", color="white", draw_quantiles = c(0.5)) +
   geom_quasirandom(data=disambiguation, method="tukeyDense", width=0.1,
-                aes(x=as.numeric(Display), group=Display, y=PCClockwise)) +
+                aes(x=as.numeric(Display), group=Display, y=PClockwise)) +
   scale_x_continuous(name="Display",
                      breaks = unique(as.numeric(disambiguation$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = disambiguation_comparison$Label))+
-  scale_y_continuous(name="Pcounterclockwise") +
+  scale_y_continuous(name="Pclockwise") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
   labs(subtitle=glue("β = {disambiguation_summary$Value[1]}, CI={disambiguation_summary$Value[2]}, Bayes factor = {BF_disambiguation_as_factor_rounded}"))+
