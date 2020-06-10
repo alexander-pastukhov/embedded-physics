@@ -236,9 +236,9 @@ vertical_distancePlot_main <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.1,
                 aes(x=Distance, group=Distance, y=Pcongruent)) + 
-  scale_x_continuous(name = "Distance [%]",breaks=unique(vertical_distance$Distance), #limits=c(-1,5),
+  scale_x_continuous(name = "Vertical Distance (degrees)]",breaks=unique(vertical_distance$Distance), #limits=c(-1,5),
                      sec.axis =  dup_axis(name=NULL, labels=vertical_distance_comparison$Label)) +
-  scale_y_continuous(name="Pcongruent") +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   #scale_color_manual(values = c("#000000")) +
   plot_theme() + 
    labs(subtitle=glue("β = {vertical_distance_summary$Value[1]}, CI={vertical_distance_summary$Value[2]}, ΔELPD={vertical_distance_summary$Value[3]} , Weight={vertical_distance_summary$Value[4]}, 
@@ -374,9 +374,9 @@ horizontal_distance_plot_main <-
   geom_quasirandom(data=horizontal_distance, method="tukeyDense", width=0.2,
                 aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Shift [%]", breaks = unique(horizontal_distance$ShiftAbs),
+  scale_x_continuous(name = "Horizontal Distance (degrees)", breaks = unique(horizontal_distance$ShiftAbs),
                      sec.axis=dup_axis(name=NULL, labels=(horizontal_distance_comparison$Label))) +
-  scale_y_continuous(name="Pcongruent") +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
    labs(subtitle=glue("β = {horizontal_distance_summary$Value[1]}, CI={horizontal_distance_summary$Value[2]}, ΔELPD={horizontal_distance_summary$Value[3]} , Weight={horizontal_distance_summary$Value[4]}, 
                       Bayes factor= {BF_horizontal_distance_rounded}"))+
@@ -544,9 +544,9 @@ sphere_ambiguity_plot_main <-
  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width= 0.07,
               aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) + 
  theme(legend.position = "none") + 
- scale_x_continuous(name = "Sphere Disambiguation", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs), 
+ scale_x_continuous(name = "Sphere Disambiguation (degrees)", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs), 
                      sec.axis=dup_axis(name=NULL, labels=(sphere_ambiguity_comparison$Label))) +
-  scale_y_continuous(name="Pcongruent") +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
   labs(subtitle=glue("β = {sphere_ambiguity_summary$Value[1]}, CI={sphere_ambiguity_summary$Value[2]}, ΔELPD={sphere_ambiguity_summary$Value[3]} , Weight={sphere_ambiguity_summary$Value[4]}, 
                      Bayes factor= {BF_sphere_ambiguity_rounded}"))+
@@ -723,9 +723,9 @@ walker_ambiguity_plot_main <-
  geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width= 0.07,
               aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) + 
  theme(legend.position = "none") + 
- scale_x_continuous(name = "Walker Disambiguation", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs), 
+ scale_x_continuous(name = "Walker Disambiguation (degrees)", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs), 
                      sec.axis=dup_axis(name=NULL, labels=(walker_ambiguity_comparison$Label))) +
-  scale_y_continuous(name="Pcongruent") +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
   labs(subtitle=glue("β = {walker_ambiguity_summary$Value[1]}, CI={walker_ambiguity_summary$Value[2]}, ΔELPD={walker_ambiguity_summary$Value[3]} , Weight={walker_ambiguity_summary$Value[4]}, 
                      Bayes Factor= {BF_walker_ambiguity_rounded}"))+
@@ -895,9 +895,9 @@ SOR_walker_plot_main <-
   geom_quasirandom(data=SOR_walker, method="tukeyDense", width=0.2,
                 aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Shift [%]", breaks = unique(SOR_walker$ShiftAbs),
+  scale_x_continuous(name = "Shift (degrees)", breaks = unique(SOR_walker$ShiftAbs),
                      sec.axis=dup_axis(name=NULL, labels=(SOR_walker_comparison$Label))) +
-  scale_y_continuous(name="Pcongruent") +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
    labs(subtitle=glue("β = {SOR_walker_summary$Value[1]}, CI={SOR_walker_summary$Value[2]}, ΔELPD={SOR_walker_summary$Value[3]} , Weight={SOR_walker_summary$Value[4]}, 
                       Bayes factor= {BF_SOR_walker_rounded}"))+
@@ -1048,7 +1048,7 @@ SOR_sphere_plot_main <-
   geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
                 aes(x=ShiftAbs, group=ShiftAbs, y=Pconsistent)) + 
   theme(legend.position = "none") + 
-  scale_x_continuous(name = "Shift", breaks = unique(SOR_sphere$ShiftAbs),
+  scale_x_continuous(name = "Shift (degrees)", breaks = unique(SOR_sphere$ShiftAbs),
                      sec.axis=dup_axis(name=NULL, labels=(SOR_sphere_comparison$Label))) +
   scale_y_continuous(name="Pconsistent") +
   plot_theme() +
