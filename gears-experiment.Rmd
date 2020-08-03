@@ -800,8 +800,8 @@ disambiguation_summary <-
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
 
-disambiguation_summary<- 
-  subset(disambiguation_summary, Stat!="β" & Stat!="CI")
+#disambiguation_summary<- 
+ # subset(disambiguation_summary, Stat!="β" & Stat!="CI")
 ```
 
  
@@ -826,7 +826,7 @@ disambiguationPlot_main <-
                                           labels = disambiguation_comparison$Label))+
   scale_y_continuous(name="Pclockwise") +
   plot_theme() +
-  labs(subtitle=glue("BF = {BF_disambiguation_as_factor_rounded}"))+
+  labs(subtitle=glue("BF = {BF_disambiguation_as_factor_rounded},ΔELPD={disambiguation_summary$Value[3]}, W={disambiguation_summary$Value[4]}"))+
   theme(legend.position = "none") # axis.text.x.top = element_text(color=four_colors)
 
 disambiguationPlot_main
