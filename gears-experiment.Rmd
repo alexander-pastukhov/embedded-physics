@@ -163,6 +163,7 @@ BF_distance<-brms::bayes_factor(distance_fit, distance_null_model)
 BF_distance
 
 BF_distance_rounded <- round(BF_distance$bf,digits=2)
+BF_distance_rounded <-sprintf('%.2g', BF_distance$bf)
 BF_distance_rounded
 
 ```
@@ -241,16 +242,24 @@ distancePlot_main <-
   scale_y_continuous(name="Pcorotation",limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
+<<<<<<< HEAD
   labs(subtitle=glue("β = {distance_summary$Value[1]}, CI={distance_summary$Value[2]}, ΔELPD={distance_summary$Value[3]} , Weight={distance_summary$Value[4]}, 
                      Bayes Factor= {BF_distance_rounded}"))+
   #geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors))
+=======
+  labs(subtitle=glue("β = {distance_summary$Value[1]}, CI={distance_summary$Value[2]}, ΔELPD={distance_summary$Value[3]} , W={distance_summary$Value[4]}, BF= {BF_distance_rounded}"))+
+  # geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
+  theme(legend.position = "none", 
+        plot.subtitle=element_text(size=10, hjust=0.5)) # ,        axis.text.x.top = element_text(color=four_colors)
+>>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
 distancePlot_main
 
 ggsave(distancePlot_main, filename = "gears-distance.png", units="cm", width=14, height=8)
 ggsave(distancePlot_main, filename = "gears-distance.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
+
 ```{r practical significance distance-fit predictions}
 p_significance(
   distance_fit_predictions,
@@ -371,6 +380,7 @@ BF_occlusion<-brms::bayes_factor(occlusion_fit, occlusion_null_model)
 BF_occlusion
 
 BF_occlusion_rounded <- round(BF_occlusion$bf,digits=2)
+BF_occlusion_rounded <- sprintf('%.2g', BF_occlusion$bf)
 BF_occlusion_rounded
 ```
 
@@ -449,11 +459,15 @@ occlusionPlot_main <-
   scale_y_continuous(name="Pcorotation", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() + 
+<<<<<<< HEAD
   labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , Weight={occlusion_summary$Value[4]}, 
                      Bayes Factor= {BF_occlusion_rounded}"))+
+=======
+  labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , W={occlusion_summary$Value[4]}, BF= {BF_occlusion_rounded}"))+
+>>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
   #geom_table_npc(data=occlusion_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
+  theme(legend.position = "none", 
+        plot.subtitle=element_text(size=10, hjust=0.5)) # axis.text.x.top = element_text(color=four_colors)
 occlusionPlot_main
 
 ggsave(occlusionPlot_main, filename = "gears-occlusion.png", units="cm", width=14, height=8)
@@ -594,6 +608,7 @@ BF_ambiguity_as_factor<-brms::bayes_factor(ambiguity_as_factor_fit, ambiguity_nu
 BF_ambiguity_as_factor
 
 BF_ambiguity_as_factor_rounded <- round(BF_ambiguity_as_factor$bf,digits=2)
+BF_ambiguity_as_factor_rounded <- sprintf('%.2g', BF_ambiguity_as_factor$bf)
 BF_ambiguity_as_factor_rounded
 
 ambiguity_as_factor_fit <- add_criterion(ambiguity_as_factor_fit, "loo", reloo=TRUE)
@@ -607,7 +622,7 @@ ambiguity_weight <- loo::loo_model_weights(list("Display" = ambiguity_as_factor_
 ```
 
 ```{r ambiguity summary}
-ambiguity_summary1 <-
+ambiguity_summary <-
   fixef(ambiguity_as_factor_fit) %>%
   data.frame() %>%
   slice(n()) %>% 
@@ -618,9 +633,6 @@ ambiguity_summary1 <-
          Weight = round(c(ambiguity_weight)["Display"], 2)) %>%
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
-
-ambiguity_summary<- 
-  subset(ambiguity_summary1, Stat!="β" & Stat!="CI")
 ```
 
  
@@ -646,11 +658,15 @@ ambiguityPlot_main <-
   scale_y_continuous(name="Pcorotation", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
+<<<<<<< HEAD
    labs(subtitle=glue("β = {ambiguity_summary$Value[1]}, CI={ambiguity_summary$Value[2]}, ΔELPD={ambiguity_summary$Value[3]} , Weight={ambiguity_summary$Value[4]}, 
                       Bayes Factor= {BF_ambiguity_as_factor_rounded}"))+
+=======
+   labs(subtitle=glue("ΔELPD={ambiguity_summary$Value[3]} , W={ambiguity_summary$Value[4]}, BF= {BF_ambiguity_as_factor_rounded}"))+
+>>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
   #geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
+        plot.subtitle=element_text(size=10, hjust=0.5)) # axis.text.x.top = element_text(color=four_colors)
 ambiguityPlot_main
 
 ggsave(ambiguityPlot_main, filename = "gears-ambiguity.png", units="cm", width=14, height=8)
@@ -695,6 +711,16 @@ ambiguity_levels %>%
             TotalBeta=n(),
             Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
 
+```
+
+## All plots together
+
+```{r}
+distancePlot_main / occlusionPlot_main / ambiguityPlot_main + 
+  plot_annotation(tag_levels= "A")
+
+ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
+ggsave('figure-02-gears.png', width=14, height=20, units="cm")
 ```
 
 ## Disambiguation check
@@ -766,6 +792,7 @@ BF_disambiguation_as_factor<-brms::bayes_factor(disambiguation_as_factor_fit, di
 BF_disambiguation_as_factor
 
 BF_disambiguation_as_factor_rounded <- round(BF_disambiguation_as_factor$bf,digits=2)
+BF_disambiguation_as_factor_rounded <- sprintf('%.2g', BF_disambiguation_as_factor$bf)
 BF_disambiguation_as_factor_rounded
 
 disambiguation_as_factor_fit <- add_criterion(disambiguation_as_factor_fit, "loo", reloo=TRUE)
@@ -816,6 +843,7 @@ disambiguationPlot_main <-
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = disambiguation_comparison$Label))+
   scale_y_continuous(name="Pclockwise") +
+<<<<<<< HEAD
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() + 
     labs(subtitle=glue("β = {disambiguation_summary$Value[1]}, CI={disambiguation_summary$Value[2]}, ΔELPD={disambiguation_summary$Value[3]}, Weight={disambiguation_summary$Value[4]},
@@ -824,10 +852,18 @@ disambiguationPlot_main <-
   theme(legend.position = "none",
         axis.text.x.top = element_text(color=four_colors))
   disambiguationPlot_main
+=======
+  plot_theme() +
+  labs(subtitle=glue("BF = {BF_disambiguation_as_factor_rounded}"))+
+  theme(legend.position = "none") # axis.text.x.top = element_text(color=four_colors)
+
+disambiguationPlot_main
+>>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
 
 ggsave(disambiguationPlot_main, filename = "gears-disambiguation.png", units="cm", width=14, height=8)
 ggsave(disambiguationPlot_main, filename = "gears-disambiguation.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
+<<<<<<< HEAD
 
 
 ```{r plot prime CW and Pcorotation}
@@ -950,3 +986,5 @@ PClockwisePlot_main
 ggsave(PClockwisePlot_main, filename = "gears-PClockwise.png", units="cm", width=14, height=8)
 ggsave(PClockwisePlot_main, filename = "gears-PClockwise.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
+=======
+>>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
