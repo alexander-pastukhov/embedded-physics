@@ -239,21 +239,13 @@ distancePlot_main <-
                 aes(x=Distance, group=Distance, y=Pcorotation)) + 
   scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=distance_comparison$Label)) +
-  scale_y_continuous(name="Pcorotation",limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+  scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
-<<<<<<< HEAD
-  labs(subtitle=glue("β = {distance_summary$Value[1]}, CI={distance_summary$Value[2]}, ΔELPD={distance_summary$Value[3]} , Weight={distance_summary$Value[4]}, 
-                     Bayes Factor= {BF_distance_rounded}"))+
-  #geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
-=======
   labs(subtitle=glue("β = {distance_summary$Value[1]}, CI={distance_summary$Value[2]}, ΔELPD={distance_summary$Value[3]} , W={distance_summary$Value[4]}, BF= {BF_distance_rounded}"))+
   # geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none", 
         plot.subtitle=element_text(size=10, hjust=0.5)) # ,        axis.text.x.top = element_text(color=four_colors)
->>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
 distancePlot_main
 
 ggsave(distancePlot_main, filename = "gears-distance.png", units="cm", width=14, height=8)
@@ -456,15 +448,10 @@ occlusionPlot_main <-
                 aes(x=Occlusion, group=Occlusion, y=Pcorotation)) + 
   scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion),
                      sec.axis =  dup_axis(name=NULL, labels=occlusion_comparison$Label)) +
-  scale_y_continuous(name="Pcorotation", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+  scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() + 
-<<<<<<< HEAD
-  labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , Weight={occlusion_summary$Value[4]}, 
-                     Bayes Factor= {BF_occlusion_rounded}"))+
-=======
   labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , W={occlusion_summary$Value[4]}, BF= {BF_occlusion_rounded}"))+
->>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
   #geom_table_npc(data=occlusion_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none", 
         plot.subtitle=element_text(size=10, hjust=0.5)) # axis.text.x.top = element_text(color=four_colors)
@@ -655,15 +642,10 @@ ambiguityPlot_main <-
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = ambiguity_comparison$Label))+
-  scale_y_continuous(name="Pcorotation", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+  scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
-<<<<<<< HEAD
-   labs(subtitle=glue("β = {ambiguity_summary$Value[1]}, CI={ambiguity_summary$Value[2]}, ΔELPD={ambiguity_summary$Value[3]} , Weight={ambiguity_summary$Value[4]}, 
-                      Bayes Factor= {BF_ambiguity_as_factor_rounded}"))+
-=======
    labs(subtitle=glue("ΔELPD={ambiguity_summary$Value[3]} , W={ambiguity_summary$Value[4]}, BF= {BF_ambiguity_as_factor_rounded}"))+
->>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
   #geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
   theme(legend.position = "none",
         plot.subtitle=element_text(size=10, hjust=0.5)) # axis.text.x.top = element_text(color=four_colors)
@@ -818,8 +800,8 @@ disambiguation_summary <-
   mutate_all(as.character) %>%
   pivot_longer(everything(), names_to = "Stat", values_to = "Value")
 
-#disambiguation_summary<- 
-  #subset(disambiguation_summary, Stat!="β" & Stat!="CI")
+disambiguation_summary<- 
+  subset(disambiguation_summary, Stat!="β" & Stat!="CI")
 ```
 
  
@@ -843,148 +825,12 @@ disambiguationPlot_main <-
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = disambiguation_comparison$Label))+
   scale_y_continuous(name="Pclockwise") +
-<<<<<<< HEAD
-  scale_color_manual(values = c("#000000", four_colors)) +
-  plot_theme() + 
-    labs(subtitle=glue("β = {disambiguation_summary$Value[1]}, CI={disambiguation_summary$Value[2]}, ΔELPD={disambiguation_summary$Value[3]}, Weight={disambiguation_summary$Value[4]},
-                     Bayes factor ={BF_disambiguation_as_factor_rounded}"))+
- # geom_table_npc(data=disambiguation_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
-  disambiguationPlot_main
-=======
   plot_theme() +
   labs(subtitle=glue("BF = {BF_disambiguation_as_factor_rounded}"))+
   theme(legend.position = "none") # axis.text.x.top = element_text(color=four_colors)
 
 disambiguationPlot_main
->>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
 
 ggsave(disambiguationPlot_main, filename = "gears-disambiguation.png", units="cm", width=14, height=8)
 ggsave(disambiguationPlot_main, filename = "gears-disambiguation.pdf", units="cm", width=14, height=8, device=cairo_pdf)
 ```
-<<<<<<< HEAD
-
-
-```{r plot prime CW and Pcorotation}
-plot(x = disambiguation$PClockwise,y = disambiguation$Pcorotation,
-   xlab = "Pprime_cw",
-   ylab = "Pcorotation")
-```
-```{r PClockwise as factor fit}
-set.seed(184959)
-PClockwise_as_factor_fit <- brm(PCorotationAdj ~ PClockwise +(1|Participant),
-                     family= Beta(),
-                     data= disambiguation,
-                     refresh=0,
-                     cores=future::availableCores(),
-                     save_all_pars = TRUE,
-                     prior=c(prior(normal(0, 1), class="b")))
-
-PClockwise_comparison <-
-  fixef(PClockwise_as_factor_fit) %>%
-              data.frame() %>%
-              rownames_to_column("Factor") %>%
-              mutate(Est = ifelse(Factor == "Intercept", 
-                                  "Control\ncondition", 
-                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
-  select(Est) %>%
-  rename(Label = Est)
-```
-
-
-```{r}
-summary(PClockwise_as_factor_fit)
-```
-
-```{r predicting and plotting PClockwise}
-PClockwise_fit_predictions <- predict(PClockwise_as_factor_fit,
-                                     summary = FALSE,
-                                     re_formula = NA) %>%
-  data.frame() %>%
-  pivot_longer(everything(), names_to = "PClockwise", values_to = "Pclockwise") 
-  
-  
-
-PClockwise_fit_moments <-
-  PClockwise_fit_predictions %>%
-  group_by(PClockwise) %>%
-  summarise(meanP = mean(Pclockwise),
-            medianP= median(Pclockwise))
-
-
-```
-
-```{r PClockwise importance via loo}
-PClockwise_null_model <- brm(PClockwiseAdj ~ (1|Participant),
-                           family=Beta(),
-                           refresh=0,
-                           cores=future::availableCores(),
-                           save_all_pars = TRUE,
-                           data=disambiguation)
-
-BF_PClockwise_as_factor<-brms::bayes_factor(PClockwise_as_factor_fit, PClockwise_null_model)
-
-BF_PClockwise_as_factor
-
-BF_PClockwise_as_factor_rounded <- round(BF_PClockwise_as_factor$bf,digits=2)
-BF_PClockwise_as_factor_rounded
-
-PClockwise_as_factor_fit <- add_criterion(PClockwise_as_factor_fit, "loo", reloo=TRUE)
-PClockwise_null_model <- add_criterion(PClockwise_null_model, "loo", reloo=TRUE)
-
-PClockwise_compare <- loo::loo_compare(list("PClockwise" = PClockwise_as_factor_fit$criteria$loo,
-                                          "Intercept" = PClockwise_null_model$criteria$loo))
-
-PClockwise_weight <- loo::loo_model_weights(list("PClockwise" = PClockwise_as_factor_fit$criteria$loo,
-                                               "Intercept" = PClockwise_null_model$criteria$loo))
-```
-
-```{r PClockwise summary}
-PClockwise_summary <-
-  fixef(PClockwise_as_factor_fit) %>%
-  data.frame() %>%
-  slice(n()) %>% 
-  mutate(`β` = round(Estimate, 4), 
-         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
-  select(`β`, CI) %>%
-  mutate("ΔELPD" = stringr::str_c(round(-PClockwise_compare[2, 1], 1), "±",  round(-PClockwise_compare[2, 2], 2)),
-         Weight = round(c(PClockwise_weight)["PClockwise"], 2)) %>%
-  mutate_all(as.character) %>%
-  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
-
-PClockwise_summary<- 
-  subset(PClockwise_summary, Stat!="β" & Stat!="CI")
-```
-
- 
-
-```{r plotting PClockwise}
-PClockwise_inset <-
-  tibble(x=0.01, y=0.92, tb=list(PClockwise_summary))
-
-PClockwisePlot_main <-
-  ggplot(data=PClockwise_fit_predictions, 
-      aes(x = as.numeric(PClockwise), group=PClockwise, y=Pcorotation)) + 
-  geom_line() +
-  geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_violin(data = PClockwise_fit_predictions, aes(x=as.numeric(PClockwise)), 
-              fill="gray64", color="white", draw_quantiles = c(0.5)) +
-  geom_quasirandom(data=disambiguation, method="tukeyDense", width=0.1,
-                aes(x=as.numeric(PClockwise), group=PClockwise, y=Pcorotation)) +
-  scale_x_continuous(name="PClockwise",
-                     sec.axis =  dup_axis(name = element_blank(),
-                                          labels = PClockwise_comparison$Label))+
-  scale_y_continuous(name="Pcorotation") +
-  scale_color_manual(values = c("#000000", four_colors)) +
-  plot_theme() +
-   labs(subtitle=glue("β = {PClockwise_summary$Value[1]}, CI={PClockwise_summary$Value[2]}, ΔELPD={PClockwise_summary$Value[3]} , Weight={PClockwise_summary$Value[4]}, Bayes Factor= {BF_PClockwise_as_factor_rounded}"))+
-   theme(legend.position = "none",
-        axis.text.x.top = element_text(color=four_colors))
-PClockwisePlot_main
-
-ggsave(PClockwisePlot_main, filename = "gears-PClockwise.png", units="cm", width=14, height=8)
-ggsave(PClockwisePlot_main, filename = "gears-PClockwise.pdf", units="cm", width=14, height=8, device=cairo_pdf)
-```
-=======
->>>>>>> 0c1a07664f01974c6dad5eae0f7d45c4c451e4cf
