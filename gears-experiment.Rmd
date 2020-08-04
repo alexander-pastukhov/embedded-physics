@@ -183,11 +183,12 @@ distance_weight <- loo::loo_model_weights(list("Distance" = distance_fit$criteri
 ```{r distance models summary, include=FALSE}
 distance_summary <-
   fixef(distance_fit) %>%
-  data.frame() %>%
-  slice(n()) %>% 
+  data.frame()%>%
+  #slice(n()) %>% 
   mutate(`β` = round(Estimate, 4), 
+          #`α` = round(Estimate, 4),
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
-  select(`β`, CI) %>%
+  select(`β`,`α`, CI) %>%
   mutate("ΔELPD" = stringr::str_c(round(-distance_compare[2, 1], 1), "±", round(-distance_compare[2, 2], 2)),
          Weight = round(c(distance_weight)["Distance"], 2)) %>%
   mutate_all(as.character) %>%
@@ -792,7 +793,7 @@ disambiguation_summary <-
   fixef(disambiguation_as_factor_fit) %>%
   data.frame() %>%
   slice(n()) %>% 
-  mutate(`β` = round(Estimate, 4), 
+  mutate(`β` = round(Estimate, 4),
          CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
   select(`β`, CI) %>%
   mutate("ΔELPD" = stringr::str_c(round(-disambiguation_compare[2, 1], 1), "±",  round(-disambiguation_compare[2, 2], 2)),
