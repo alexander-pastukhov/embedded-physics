@@ -508,7 +508,75 @@ ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
 ggsave('figure-02-gears.png', width=14, height=20, units="cm")
 ```
 
-## Disambiguation check
+
+#New Disambiguation
+```{r}
+disambiguation<- reports%>%
+  filter(Condition=="Control"|Condition=="Ambiguity")%>% 
+  filter(Percept!="unclear")%>%
+  
+  group_by(Participant, Display)%>% 
+  summarize(TotalDuration=sum(Duration), CorotateDur=sum(Duration[IsCorotating== TRUE]),
+    Pcorotation=CorotateDur/TotalDuration) %>%
+mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
+mutate(TermAsFactor = Display)
+```
+
+
+```{r fitting disambiguation as factor}
+set.seed(31937)
+disambiguation_factor_model <- fit_prototype(factor_prototype, disambiguation)
+disambiguation_intercept_model <- fit_prototype(intercept_prototype, disambiguation)
+```
+
+```{r comparing the disambiguation models}
+disambiguation_alpha <- compute_full_model_alpha(disambiguation_factor_model)
+disambiguation_comparison <- compare_models(disambiguation_factor_model, disambiguation_intercept_model)
+disambiguation_summary <- stringr::str_c(disambiguation_alpha, disambiguation_comparison, sep=", ")
+disambiguation_summary
+```
+
+```{r predicting and plotting ambiguity}
+disambiguation_fit_predictions <- predict(disambiguation_factor_model,
+                                     newdata = data.frame(TermAsFactor = levels(disambiguation$Display)),
+                                     summary = FALSE,
+                                     re_formula = NA) %>%
+  data.frame() %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "Pclockwise") %>%
+  mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(disambiguation$Display)))
+  
+
+disambiguation_fit_moments <-
+  disambiguation_fit_predictions %>%
+  group_by(Display) %>%
+  summarise(meanP = mean(Pclockwise),
+            medianP= median(Pclockwise))
+
+
+```
+
+```{r plotting disambiguation}
+disambiguation_plot_main <-
+  ggplot(data=disambiguation_fit_predictions, 
+      aes(x = as.numeric(Display), group=Display, y=Pclockwise)) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_violin(data = disambiguation_fit_predictions, aes(x=as.numeric(Display)), 
+              fill="gray64", color="white", draw_quantiles = c(0.5)) +
+  geom_quasirandom(data=disambiguation, method="tukeyDense", width=0.1,
+                aes(x=as.numeric(Display), group=Display, y=Pclockwise)) +
+  scale_x_continuous(name="Display",
+                     breaks = unique(as.numeric(disambiguation$Display)),
+                     labels = c("ambiguous","weak", "medium","medium-strong","strong"),
+                     sec.axis =  dup_axis(name = element_blank(),
+                                          labels = compute_factor_level_betas(disambiguation_factor_model)))+
+  scale_y_continuous(name="Pclockwise") +
+  plot_theme() +
+  labs(subtitle=disambiguation_summary)
+
+disambiguation_plot_main
+```
+## Old Disambiguation check
 ```{r Proportion of clockwise}
 disambiguation<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
