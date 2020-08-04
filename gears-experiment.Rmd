@@ -115,8 +115,16 @@ compute_full_model_beta <- function(full_model){
 ```{r full model alpha}
 # should be similar to how I compute beta but use boot:inv.logit() function to convert back to probability space.
 compute_full_model_alpha <- function(full_model){
-  sprintf("α=")
+  estimate <-
+    fixef(full_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame()%>%
+    rownames_to_column("Coefficient")%>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    filter(Coefficient == "Term")
+sprintf('α=%.4f [%0.2f..%0.2f]', estimate$Estimate, estimate$LowerCI, estimate$UpperCI)
+  inv.logit(α)
 }
+'α'
 ```
 
 ```{r factor model pairwise betas}
@@ -346,9 +354,17 @@ occlusion<- reports%>%
            #if value in the brackets is true itll be considered if not it will not
             CorotateDur = sum(Duration[IsCorotating == TRUE]),
             Pcorotation = CorotateDur / TotalDuration)%>%
+    # beta distribution does not like 0 and 1
+ dplyr:: mutate(PCorotationAdj = Pcorotation*0.999+0.0005)%>%
+ # duplicating Occlusion as Term for common BRMS model use
+  dplyr::mutate(Term = Occlusion,
+                TermAsFactor = OcclusionAsFactor)
+ 
   
- dplyr:: mutate(PCorotationAdj = Pcorotation*0.999+0.0005)
 ```
+
+
+
 ## Fitting occlusion condition via brms
 
 ```{r Fitting occlusion as a continuous variable}
