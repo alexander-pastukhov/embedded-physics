@@ -364,6 +364,13 @@ occlusion<- reports%>%
 ```
 
 
+```{r Fitting occlusion as a continuous variable via brms}
+# Computing brm for occlusion condition
+set.seed(9789931)
+occlusion_full_model <- fit_prototype(full_prototype, occlusion)
+occlusion_intercept_model <- fit_prototype(intercept_prototype, occlusion)
+occlusion_factor_model <- fit_prototype(factor_prototype, occlusion, add_loo = FALSE)
+```
 
 ## Fitting occlusion condition via brms
 
