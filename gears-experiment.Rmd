@@ -36,6 +36,10 @@ loadfonts(quiet = TRUE)
 rm(list=ls())
 ```
 
+## Utilities
+
+
+### Custom plotting theme
 ```{r Custom plotting theme}
 plot_theme <- function(){
   theme(text=element_text(family="Arial"),
@@ -45,13 +49,108 @@ plot_theme <- function(){
         axis.title.y = element_text(size = 10), 
         panel.grid.minor.x = element_blank(), 
         panel.grid.minor.y =  element_line(size = 0.24), 
-        axis.ticks = element_line(size = 0.24))
+        axis.ticks = element_line(size = 0.24),
+        plot.subtitle=element_text(size=10, hjust=0.5))
 } 
+```
 
-four_colors <- c("#F8766D", "#7CAE00", "#00BFC4", "#C77CFF")                 
+### Computing comparisons between the two models
+```{r compute BF}
+compute_BF <- function(full_model, reduced_model){
+  BF <- brms::bayes_factor(full_model, reduced_model, silent = TRUE)
+  sprintf('BF=%.2g', BF$bf)
+}
+```
+
+```{r compute dELPD}
+compute_dELPD <- function(full_model, intercept_model){
+  dLOO <-   
+    loo::loo_compare(list("Term" = full_model$criteria$loo,
+                          "Intercept" = intercept_model$criteria$loo)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient") %>%
+    
+    # invert difference, so it is positive if full model is better (and negative if it worse than intercept only)
+    mutate(elpd_diff = ifelse(Coefficient == "Intercept", -elpd_diff, elpd_diff)) %>%
+    slice(2)
+    
+  sprintf("ΔELPD=%.1f±%.2f", dLOO$elpd_diff[1], dLOO$se_diff[1])
+}
+```
+
+```{r compute full model weight}
+compute_full_model_weight <- function(full_mode, intercepts_model){
+  sfull_model_weight <- 
+    loo::loo_model_weights(list("Term" = full_mode$criteria$loo,
+                                "Intercept" = intercepts_model$criteria$loo))["Term"]
+  
+  sprintf("W=%.2f", full_model_weight)
+}
+```
+
+```{r compare two models}
+compare_models <- function(full_model, intercept_model){
+  BF <- compute_BF(full_model, intercept_model)
+  dELPD <- compute_dELPD(full_model, intercept_model)
+  Weight <- compute_full_model_weight(full_model, intercept_model)
+
+  stringr::str_c(dELPD, Weight, BF, sep=', ')
+}
+```
+
+### Computation of coefficient estimates and their 89% credible intervals
+
+```{r full model beta}
+compute_full_model_beta <- function(full_model){
+  estimate <- 
+    fixef(full_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient") %>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    filter(Coefficient == "Term")
+  sprintf('β=%.4f [%0.2f..%0.2f]', estimate$Estimate, estimate$LowerCI, estimate$UpperCI)
+}
+```
+
+```{r full model alpha}
+# should be similar to how I compute beta but use boot:inv.logit() function to convert back to probability space.
+compute_full_model_alpha <- function(full_model){
+  sprintf("α=")
+}
+```
+
+```{r factor model pairwise betas}
+compute_factor_level_betas <- function(factor_model){
+  fixef(factor_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient") %>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    mutate(Label = ifelse(Coefficient == "Intercept", 
+                          "Control\ncondition", 
+                           glue("β={round(Estimate, 2)}\n{round(LowerCI, 1)}..{round(UpperCI, 1)}"))) %>%
+    pull(Label)
+}
+```
+
+### Wrapper for commom parameters of the BRMS update 
+```{r brms prototype fit}
+fit_prototype <- function(prototype, data, add_loo=TRUE){
+  fit <- 
+    update(prototype,
+           newdata=data,
+           refresh=0,
+           cores=future::availableCores(),
+           save_all_pars=TRUE)
+  
+  if (add_loo){
+    fit <- add_criterion(fit, "loo", reloo=TRUE)
+  }
+  fit
+}
 ```
 
 ## Importing data
+
 ```{r Import}
 reports <- 
   # 1. Figure out which files need to be loaded
@@ -134,201 +233,96 @@ distance <-
             # if value in the brackets is true it'll be considered if not it will not
             CorotateDur = sum(Duration[IsCorotating==TRUE]),
             Pcorotation = CorotateDur / TotalDuration) %>%
+
   # beta distribution does not like 0 and 1
-  dplyr::mutate(PCorotationAdj = Pcorotation * 0.999 + 0.0005)
+  dplyr::mutate(PCorotationAdj = Pcorotation * 0.999 + 0.0005) %>%
+  
+  # duplicating distance as Term for common BRMS model use
+  dplyr::mutate(Term = Distance,
+                TermAsFactor = DistanceAsFactor)
+
 ```
 
-##Fitting distance condition via brms 
+### Precompiling BRMS models, so we can reuse them
+
+```{r brms models}
+full_prototype <- brm(PCorotationAdj ~ Term + (1|Participant),
+                     family=Beta(),
+                     data=distance,
+                     chains=0, # this means that model is never sampled
+                     prior=c(prior(normal(0, 1), class="b")))
+
+intercept_prototype <- brm(PCorotationAdj ~ (1|Participant),
+                           family=Beta(),
+                           chains=0, # this means that model is never sampled
+                           data=distance)
+
+factor_prototype <- brm(PCorotationAdj ~ TermAsFactor + (1|Participant),
+                        family=Beta(),
+                        data=distance,
+                        chains=0, # this means that model is never sampled
+                        prior=c(prior(normal(0,1), class="b")))
+```
+
+### Fitting distance condition via brms
 
 ```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
 set.seed(9578175)
-distance_fit <- brm(PCorotationAdj ~ Distance + (1|Participant),
-                    family=Beta(),
-                    data=distance,
-                    refresh=0,
-                    cores=future::availableCores(),
-                    save_all_pars = TRUE,
-                    prior=c(prior(normal(0, 1), class="b")))
-
-distance_null_model <- brm(PCorotationAdj ~ (1|Participant),
-                           family=Beta(),
-                           refresh=0,
-                           cores=future::availableCores(),
-                          save_all_pars = TRUE,
-                           data=distance)
-
-BF_distance<-brms::bayes_factor(distance_fit, distance_null_model)
-
-BF_distance
-
-BF_distance_rounded <- round(BF_distance$bf,digits=2)
-BF_distance_rounded <-sprintf('%.2g', BF_distance$bf)
-BF_distance_rounded
-
+distance_full_model <- fit_prototype(full_prototype, distance)
+distance_intercept_model <- fit_prototype(intercept_prototype, distance)
+distance_factor_model <- fit_prototype(factor_prototype, distance, add_loo = FALSE)
 ```
 
+### Generate a full model summary
 
-```{r Distance importance via loo}
-distance_fit <- add_criterion(distance_fit, "loo", reloo=TRUE)
-distance_null_model <- add_criterion(distance_null_model, "loo", reloo=TRUE)
+```{r}
+# Compute estimates for individual parameters
+distance_alpha <- compute_full_model_alpha(distance_full_model)
+distance_beta <- compute_full_model_beta(distance_full_model)  
 
-distance_compare <- loo::loo_compare(list("Distance" = distance_fit$criteria$loo,
-                                          "Intercept" = distance_null_model$criteria$loo))
+# Compare the two models with term (full) and without it (intercept)
+distance_comparison <- compare_models(distance_full_model, distance_intercept_model)
 
-distance_weight <- loo::loo_model_weights(list("Distance" = distance_fit$criteria$loo,
-                                               "Intercept" = distance_null_model$criteria$loo))
+# summary text
+distance_summary <- stringr::str_c(distance_alpha, distance_beta, distance_comparison, sep=', ')
+distance_summary
 ```
+### Generate model predictions
 
-```{r distance models summary, include=FALSE}
-distance_summary <-
-  fixef(distance_fit) %>%
-  data.frame()%>%
-  #slice(n()) %>% 
-  mutate(`β` = round(Estimate, 4), 
-          #`α` = round(Estimate, 4),
-         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
-  select(`β`,`α`, CI) %>%
-  mutate("ΔELPD" = stringr::str_c(round(-distance_compare[2, 1], 1), "±", round(-distance_compare[2, 2], 2)),
-         Weight = round(c(distance_weight)["Distance"], 2)) %>%
-  mutate_all(as.character) %>%
-  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
-```
-
-```{r alpha summary string}
-`α`=round(fixef(distance_fit))
-`α`
-```
-
-
-## Distance as factor
-```{r fitting distance as factor}
-set.seed(9847899)
-distance_as_factor_fit <- brm(PCorotationAdj ~ DistanceAsFactor + (1|Participant),
-                              family=Beta(),
-                              data=distance,
-                              refresh=0,
-                              prior=c(prior(normal(0,1), class="b")))
-
-distance_comparison <-
-  fixef(distance_as_factor_fit) %>%
-              data.frame() %>%
-              rownames_to_column("Factor") %>%
-              mutate(Est = ifelse(Factor == "Intercept", 
-                                  "Control\ncondition", 
-                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
-  select(Est) %>%
-  rename(Label = Est)
-```
-
-
-
-```{r Plot Distance as continuous predictions}
+```{r Distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-distance_fit_predictions <- predict(distance_fit,
-                                    newdata = data.frame(Distance = seq(-10, 70, 1)),
+distance_fit_predictions <- predict(distance_full_model,
+                                    newdata = data.frame(Term = seq(-10, 70, 1)),
                                     probs = c(0.025, 0.25, 0.75, 0.975),
                                     re_formula = NA) %>%
   data.frame() %>%
-  add_column(Distance = seq(-10, 70, 1))
+  add_column(Term = seq(-10, 70, 1)) %>%
+  rename(Distance = Term)
+```
 
-distance_inset <-
-  tibble(x=0.01, y=0.92, tb=list(distance_summary))
-
-distancePlot_main <-
-  ggplot(data=distance_fit_predictions, 
-      aes(x = Distance, y=Estimate)) + 
+### Summary plot
+```{r distance summary plot}
+distance_plot <-
+  ggplot(data=distance_fit_predictions, aes(x=Distance, y=Estimate)) + 
   geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
-                aes(x=Distance, group=Distance, y=Pcorotation)) + 
+                  aes(x=Distance, group=Distance, y=Pcorotation)) +
   scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance),
-                     sec.axis =  dup_axis(name=NULL, labels=distance_comparison$Label)) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_factor_model))) +
   scale_y_continuous(name="Pcorotation") +
-  scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
-  labs(subtitle=glue("β = {distance_summary$Value[1]}, CI={distance_summary$Value[2]}, ΔELPD={distance_summary$Value[3]} , W={distance_summary$Value[4]}, BF= {BF_distance_rounded}"))+
-  # geom_table_npc(data=distance_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none", 
-        plot.subtitle=element_text(size=10, hjust=0.5)) # ,        axis.text.x.top = element_text(color=four_colors)
-distancePlot_main
+  labs(subtitle=distance_summary)
 
-ggsave(distancePlot_main, filename = "gears-distance.png", units="cm", width=14, height=8)
-ggsave(distancePlot_main, filename = "gears-distance.pdf", units="cm", width=14, height=8, device=cairo_pdf)
+distance_plot
 ```
-
-```{r practical significance distance-fit predictions}
-p_significance(
-  distance_fit_predictions,
-  threshold = "default",
-  effects = c("all"),
-  component = c("all"),
-)
-#p_significance(distance_fit_predictions, threshold = "default")
-```
-
-```{r No of values above 0 distance slope}
-## computing values above 0
-posterior_samples(distance_fit) %>%
-  select(b_Distance) %>%
-  summarise(PaboveZero = round(100 * mean(b_Distance>0), 1)) %>%
-  pull(PaboveZero)
-
-```
-
-
-```{r plotting pairwise comparisons for the individual levels of Distance}
-samples_distance_as_factor_fit <- posterior_samples(distance_as_factor_fit)
-
-distance_levels <- 
-  samples_distance_as_factor_fit %>%
-  
-  # only retain distacn levels
-  select(starts_with("b_Distance")) %>%
-  
-  # wide to long
-  pivot_longer(cols=everything(), names_to = "Distance", values_to = "Beta") %>%
-
-  # turn distance name into a factor
-  mutate(Distance = str_remove_all(Distance, "b_DistanceAsFactor"), 
-         Distance = as.factor(Distance),
-         Distance = fct_relevel(Distance, "-8.13", "0", "8.13", "32.52", "65.04"))
-
-distance_means <- 
-  distance_levels %>%
-  group_by(Distance) %>%
-  summarise(Beta = round(median(Beta), 2))
-          
-distancePlot_asFactor <-
-  ggplot(data=distance_levels, 
-       aes(x = Beta, fill=Distance)) + 
-  geom_histogram(position="identity", alpha=0.5, bins=200) + 
-  scale_x_continuous(expression(Beta[i]),
-                     sec.axis = dup_axis(name = element_blank(),
-                    breaks = distance_means$Beta,
-                    labels = glue("{distance_means$Distance}%"))) +
-  plot_theme ()+ 
-  theme(legend.position = "none",
-        axis.ticks.x.top = element_line(color=four_colors),
-        axis.text.x.top = element_text(color=four_colors))
-
-distancePlot_asFactor
-```
-
-```{r Number of values above zero distance as factor}
-distance_levels %>%
-  group_by(Distance) %>%
-  summarize(numAbove=sum(Beta > 0),
-            TotalBeta=n(),
-            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
-```
-
-
 
 
 ## Occlusion Condition
+
 ```{r occlusion data}
 #Computing Occlusion Duration
 occlusion<- reports%>%
@@ -458,10 +452,8 @@ occlusionPlot_main <-
   scale_y_continuous(name="Pcorotation") +
   scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() + 
-  labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , W={occlusion_summary$Value[4]}, BF= {BF_occlusion_rounded}"))+
-  #geom_table_npc(data=occlusion_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none", 
-        plot.subtitle=element_text(size=10, hjust=0.5)) # axis.text.x.top = element_text(color=four_colors)
+  labs(subtitle=glue("β = {occlusion_summary$Value[1]}, CI={occlusion_summary$Value[2]}, ΔELPD={occlusion_summary$Value[3]} , W={occlusion_summary$Value[4]}, BF= {BF_occlusion_rounded}"))
+
 occlusionPlot_main
 
 ggsave(occlusionPlot_main, filename = "gears-occlusion.png", units="cm", width=14, height=8)
@@ -525,54 +517,47 @@ occlusion_levels %>%
 
 
 
-## Ambiguity Condition
+## Ambiguity 
+
 ```{r}
 ##Computing Ambiguity Duration
 ambiguity<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
   filter(Percept!="unclear")%>%
-  
-  # 1. Display to factor                 ## isnt this part of preprossessing now?
-  # 2. Rename levels using fct_recode
-  # 3. Reorder Display
-  
-  # each participant and Ambiguity seperatly
+
+    # each participant and Ambiguity seperatly
   group_by(Participant, Display)%>% 
   summarize(TotalDuration=sum(Duration),
+          
+              # if value in the brackets is true itll be considered if not it will not
+              CorotateDur=sum(Duration[IsCorotating== TRUE]),
+              Pcorotation=CorotateDur/TotalDuration) %>%
+  mutate(PCorotationAdj=Pcorotation*0.999+0.0005) %>%
   
-  # if value in the brackets is true itll be considered if not it will not
-  CorotateDur=sum(Duration[IsCorotating== TRUE]),
-  Pcorotation=CorotateDur/TotalDuration)%>%
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)
-
+  mutate(TermAsFactor = Display)
 ```
 
 
 
 ```{r fitting ambiguity as factor}
 set.seed(99435)
-ambiguity_as_factor_fit <- brm(PCorotationAdj ~ Display +(1|Participant),
-                     family= Beta(),
-                     data= ambiguity,
-                     refresh=0,
-                     cores=future::availableCores(),
-                     save_all_pars = TRUE,
-                     prior=c(prior(normal(0, 1), class="b")))
-
-ambiguity_comparison <-
-  fixef(ambiguity_as_factor_fit) %>%
-              data.frame() %>%
-              rownames_to_column("Factor") %>%
-              mutate(Est = ifelse(Factor == "Intercept", 
-                                  "Control\ncondition", 
-                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
-  select(Est) %>%
-  rename(Label = Est)
+ambiguity_factor_model <- fit_prototype(factor_prototype, ambiguity)
+ambiguity_intercept_model <- fit_prototype(intercept_prototype, ambiguity)
 ```
 
+
+Comparing the two models
+```{r}
+ambiguity_alpha <- compute_full_model_alpha(ambiguity_factor_model)
+ambiguity_comparison <- compare_models(ambiguity_factor_model, ambiguity_intercept_model)
+ambiguity_summary <- stringr::str_c(ambiguity_alpha, ambiguity_comparison, sep=", ")
+ambiguity_summary
+```
+Generating predictions
+
 ```{r predicting and plotting ambiguity}
-ambiguity_fit_predictions <- predict(ambiguity_as_factor_fit,
-                                     newdata = data.frame(Display = levels(ambiguity$Display)),
+ambiguity_fit_predictions <- predict(ambiguity_factor_model,
+                                     newdata = data.frame(TermAsFactor = levels(ambiguity$Display)),
                                      summary = FALSE,
                                      re_formula = NA) %>%
   data.frame() %>%
@@ -589,53 +574,9 @@ ambiguity_fit_moments <-
 
 ```
 
-```{r Ambiguity importance via loo}
-ambiguity_null_model <- brm(PCorotationAdj ~ (1|Participant),
-                           family=Beta(),
-                           refresh=0,
-                           cores=future::availableCores(),
-                           save_all_pars = TRUE,
-                           data=ambiguity)
-
-BF_ambiguity_as_factor<-brms::bayes_factor(ambiguity_as_factor_fit, ambiguity_null_model)
-
-BF_ambiguity_as_factor
-
-BF_ambiguity_as_factor_rounded <- round(BF_ambiguity_as_factor$bf,digits=2)
-BF_ambiguity_as_factor_rounded <- sprintf('%.2g', BF_ambiguity_as_factor$bf)
-BF_ambiguity_as_factor_rounded
-
-ambiguity_as_factor_fit <- add_criterion(ambiguity_as_factor_fit, "loo", reloo=TRUE)
-ambiguity_null_model <- add_criterion(ambiguity_null_model, "loo", reloo=TRUE)
-
-ambiguity_compare <- loo::loo_compare(list("Display" = ambiguity_as_factor_fit$criteria$loo,
-                                          "Intercept" = ambiguity_null_model$criteria$loo))
-
-ambiguity_weight <- loo::loo_model_weights(list("Display" = ambiguity_as_factor_fit$criteria$loo,
-                                               "Intercept" = ambiguity_null_model$criteria$loo))
-```
-
-```{r ambiguity summary}
-ambiguity_summary <-
-  fixef(ambiguity_as_factor_fit) %>%
-  data.frame() %>%
-  slice(n()) %>% 
-  mutate(`β` = round(Estimate, 4), 
-         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
-  select(`β`, CI) %>%
-  mutate("ΔELPD" = stringr::str_c(round(-ambiguity_compare[2, 1], 1), "±",  round(-ambiguity_compare[2, 2], 2)),
-         Weight = round(c(ambiguity_weight)["Display"], 2)) %>%
-  mutate_all(as.character) %>%
-  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
-```
-
- 
 
 ```{r plotting ambiguity}
-ambiguity_inset <-
-  tibble(x=0.01, y=0.92, tb=list(ambiguity_summary))
-
-ambiguityPlot_main <-
+ambiguity_plot_main <-
   ggplot(data=ambiguity_fit_predictions, 
       aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
   geom_line() +
@@ -648,58 +589,12 @@ ambiguityPlot_main <-
                      breaks = unique(as.numeric(ambiguity$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
-                                          labels = ambiguity_comparison$Label))+
+                                          labels = compute_factor_level_betas(ambiguity_factor_model)))+
   scale_y_continuous(name="Pcorotation") +
-  scale_color_manual(values = c("#000000", four_colors)) +
   plot_theme() +
-   labs(subtitle=glue("ΔELPD={ambiguity_summary$Value[3]} , W={ambiguity_summary$Value[4]}, BF= {BF_ambiguity_as_factor_rounded}"))+
-  #geom_table_npc(data=ambiguity_inset, aes(npcx=x, npcy=y, label= tb), size=8 * 0.35) +
-  theme(legend.position = "none",
-        plot.subtitle=element_text(size=10, hjust=0.5)) # axis.text.x.top = element_text(color=four_colors)
-ambiguityPlot_main
+  labs(subtitle=ambiguity_summary)
 
-ggsave(ambiguityPlot_main, filename = "gears-ambiguity.png", units="cm", width=14, height=8)
-ggsave(ambiguityPlot_main, filename = "gears-ambiguity.pdf", units="cm", width=14, height=8, device=cairo_pdf)
-```
-
-```{r plotting pairwise comparisons for the individual levels of Ambiguity}
-samples_ambiguity_as_factor_fit <- posterior_samples(ambiguity_as_factor_fit)
-
-ambiguity_levels <- 
-  samples_ambiguity_as_factor_fit%>%
-  select(starts_with("b_Display")) %>%
-  
-  # wide to long
-  pivot_longer(cols= everything(), names_to = "Display", values_to = "Beta") %>%
-
-  # turn distance name into a factor
-  mutate(Display = str_remove_all(Display, "b_Display"),
-         Display = as.factor(Display),
-         Display = fct_relevel(Display, "ambiguous", "weak", "medium", "medium-strong", "Strong"))
-ambiguityPlot_asFactor <-
-ggplot(data=ambiguity_levels, 
-       aes(x = Beta, fill=Display)) + 
-  geom_histogram(alpha=0.5, position="identity", bins=150) + 
-  scale_x_continuous(expression(Beta[i])) +
-  plot_theme() + 
-   theme(
-    legend.position = c(.05, 0.95),
-    legend.justification = c("left", "top"),
-    legend.box.just = "left",
-    legend.text=element_text(size=8, family="Arial"),
-    legend.title = element_text(size=10, family="Arial"),
-    legend.margin = margin(6, 6, 6, 6))
-
-ambiguityPlot_asFactor
-```
-
-```{r computing values above 0 for Ambiguity as factor}
-ambiguity_levels %>%
-  group_by(Display) %>%
-  summarize(numAbove=sum(Beta > 0),
-            TotalBeta=n(),
-            Pbetaabove= round(100 * (numAbove/TotalBeta), 1))
-
+ambiguity_plot_main
 ```
 
 ## All plots together
