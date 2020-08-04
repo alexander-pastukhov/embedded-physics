@@ -386,6 +386,37 @@ occlusion_summary <- stringr::str_c(occlusion_alpha, occlusion_beta, occlusion_c
 occlusion_summary
 ```
 
+### Generate model predictions Occlusion
+
+```{r Occlusion as continuous predictions}
+# predict GROUP-LEVEL Pcorotation
+occlusion_fit_predictions <- predict(occlusion_full_model,
+                                    newdata = data.frame(Term = seq(-10, 70, 1)),
+                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    re_formula = NA) %>%
+  data.frame() %>%
+  add_column(Term = seq(-10, 70, 1)) %>%
+  rename(Occlusion = Term)
+```
+
+### Summary plot Occlusion
+```{r occlusion summary plot}
+occlusion_plot <-
+  ggplot(data=occlusion_fit_predictions, aes(x=Occlusion, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
+                  aes(x=Occlusion, group=Occlusion, y=Pcorotation)) +
+  scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_factor_model))) +
+  scale_y_continuous(name="Pcorotation") +
+  plot_theme() +
+  labs(subtitle=occlusion_summary)
+
+occlusion_plot
+```
 
 ## Fitting occlusion condition via brms
 
