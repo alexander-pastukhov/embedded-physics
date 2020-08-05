@@ -116,15 +116,26 @@ compute_full_model_beta <- function(full_model){
 ```{r full model alpha}
 # should be similar to how I compute beta but use boot:inv.logit() function to convert back to probability space.
 compute_full_model_alpha <- function(full_model){
-  estimate <-
+  alpha <-
     fixef(full_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
     data.frame()%>%
     rownames_to_column("Coefficient")%>%
     rename(LowerCI=4, UpperCI=5) %>%
-    filter(Coefficient == "Term")
-sprintf('α=inv.logit(%.4f [%0.2f..%0.2f])', estimate$Estimate, estimate$LowerCI, estimate$UpperCI)
+    filter(Coefficient == "Intercept")
+sprintf('α=%.4f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
+        inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
   }
+```
 
+```{r}
+alpha <-
+    fixef(full_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame()%>%
+    rownames_to_column("Coefficient")%>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    filter(Coefficient == "Intercept")
+sprintf('α=%.4f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
+        inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
 ```
 
 ```{r factor model pairwise betas}
