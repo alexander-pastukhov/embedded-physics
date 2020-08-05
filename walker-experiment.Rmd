@@ -79,7 +79,15 @@ compute_dELPD <- function(full_model, intercept_model){
 }
 ```
 
-
+```{r compute full model weight}
+compute_full_model_weight <- function(full_mode, intercepts_model){
+  sfull_model_weight <- 
+    loo::loo_model_weights(list("Term" = full_mode$criteria$loo,
+                                "Intercept" = intercepts_model$criteria$loo))["Term"]
+  
+  sprintf("W=%.2f", full_model_weight)
+}
+```
 
 # Importing data
 ```{r Import}
