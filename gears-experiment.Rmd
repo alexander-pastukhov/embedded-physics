@@ -51,7 +51,7 @@ plot_theme <- function(){
         panel.grid.minor.x = element_blank(), 
         panel.grid.minor.y =  element_line(size = 0.24), 
         axis.ticks = element_line(size = 0.24),
-        plot.subtitle=element_text(size=10, hjust=0.5))
+        plot.subtitle=element_text(size=8, hjust=0.5))
 } 
 ```
 
@@ -81,7 +81,7 @@ compute_dELPD <- function(full_model, intercept_model){
 
 ```{r compute full model weight}
 compute_full_model_weight <- function(full_mode, intercepts_model){
-  sfull_model_weight <- 
+  full_model_weight <- 
     loo::loo_model_weights(list("Term" = full_mode$criteria$loo,
                                 "Intercept" = intercepts_model$criteria$loo))["Term"]
   
@@ -114,7 +114,6 @@ compute_full_model_beta <- function(full_model){
 ```
 
 ```{r full model alpha}
-# should be similar to how I compute beta but use boot:inv.logit() function to convert back to probability space.
 compute_full_model_alpha <- function(full_model){
   alpha <-
     fixef(full_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
@@ -122,20 +121,9 @@ compute_full_model_alpha <- function(full_model){
     rownames_to_column("Coefficient")%>%
     rename(LowerCI=4, UpperCI=5) %>%
     filter(Coefficient == "Intercept")
-sprintf('α=%.4f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
+sprintf('α=%.2f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
         inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
   }
-```
-
-```{r}
-alpha <-
-    fixef(full_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
-    data.frame()%>%
-    rownames_to_column("Coefficient")%>%
-    rename(LowerCI=4, UpperCI=5) %>%
-    filter(Coefficient == "Intercept")
-sprintf('α=%.4f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
-        inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
 ```
 
 ```{r factor model pairwise betas}
@@ -488,7 +476,7 @@ ambiguity_fit_moments <-
 
 
 ```{r plotting ambiguity}
-ambiguity_plot_main <-
+ambiguity_plot <-
   ggplot(data=ambiguity_fit_predictions, 
       aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
   geom_line() +
@@ -506,13 +494,13 @@ ambiguity_plot_main <-
   plot_theme() +
   labs(subtitle=ambiguity_summary)
 
-ambiguity_plot_main
+ambiguity_plot
 ```
 
 ## All plots together
 
 ```{r}
-distancePlot_main / occlusionPlot_main / ambiguityPlot_main + 
+distance_plot / occlusion_plot / ambiguity_plot + 
   plot_annotation(tag_levels= "A")
 
 ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
@@ -520,7 +508,7 @@ ggsave('figure-02-gears.png', width=14, height=20, units="cm")
 ```
 
 
-#New Disambiguation
+## Disambiguation effectiveness check
 ```{r}
 disambiguation<- reports%>%
   filter(Condition=="Control"|Condition=="Ambiguity")%>% 
