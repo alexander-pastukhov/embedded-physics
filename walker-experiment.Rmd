@@ -140,6 +140,25 @@ compute_factor_level_betas <- function(factor_model){
 }
 ```
 
+
+### Wrapper for commom parameters of the BRMS update 
+```{r brms prototype fit}
+fit_prototype <- function(prototype, data, add_loo=TRUE){
+  fit <- 
+    update(prototype,
+           newdata=data,
+           refresh=0,
+           cores=future::availableCores(),
+           save_all_pars=TRUE)
+  
+  if (add_loo){
+    fit <- add_criterion(fit, "loo", reloo=TRUE)
+  }
+  fit
+}
+```
+
+
 # Importing data
 ```{r Import}
 read_walker_csv <- function(filename){
