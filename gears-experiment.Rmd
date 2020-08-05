@@ -516,8 +516,11 @@ disambiguation<- reports%>%
   filter(Percept!="unclear")%>%
   
   group_by(Participant, Display)%>% 
-  summarize(TotalDuration=sum(Duration), CorotateDur=sum(Duration[IsCorotating== TRUE]),
-    Pcorotation=CorotateDur/TotalDuration) %>%
+  summarize(TotalDuration=sum(Duration),
+            ClockwiseDur=sum(Duration[PrimeGear=="CW"]),
+    Pcorotation=ClockwiseDur/TotalDuration)%>%
+    #CorotateDur=sum(Duration[IsCorotating== TRUE]),
+    #Pcorotation=CorotateDur/TotalDuration) %>%
 mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
 mutate(TermAsFactor = Display)
 ```
