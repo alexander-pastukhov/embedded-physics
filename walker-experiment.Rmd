@@ -239,6 +239,15 @@ vertical_distance <-
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
 ```
 
+### Fitting vertical distance condition via brms
+
+```{r Fitting vertical distance as a continuous variable via brms}
+set.seed(5515605 )
+vertical_distance_full_model <- fit_prototype(full_prototype, vertical_distance)
+vertical_distance_intercept_model <- fit_prototype(intercept_prototype, vertical_distance)
+vertical_distance_factor_model <- fit_prototype(factor_prototype, vertical_distance, add_loo = FALSE)
+```
+
 ```{r fitting vertical distance as a continous variable}
 set.seed(45950)
 vertical_distance_fit <- brm(PcongruentAdj ~ Distance + (1|Participant),
