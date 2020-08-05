@@ -14,6 +14,7 @@ extrafont::loadfonts(quiet = TRUE)
 ```{r libraries}
 library(bayestestR)
 library(betareg)
+library(boot)
 library(brms)
 library(dplyr)
 library(extrafont)
@@ -53,6 +54,15 @@ plot_theme <- function()
         axis.ticks = element_line(size = 0.24))
 }
 ```
+
+### Computing comparisons between the two models
+```{r compute BF}
+compute_BF <- function(full_model, reduced_model){
+  BF <- brms::bayes_factor(full_model, reduced_model, silent = TRUE)
+  sprintf('BF=%.2g', BF$bf)
+}
+```
+
 
 # Importing data
 ```{r Import}
