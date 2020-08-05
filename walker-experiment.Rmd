@@ -268,6 +268,22 @@ vertical_distance_intercept_model <- fit_prototype(intercept_prototype, vertical
 vertical_distance_factor_model <- fit_prototype(factor_prototype, vertical_distance, add_loo = FALSE)
 ```
 
+### Full model summary vertical distance
+
+```{r}
+# Compute estimates for individual parameters
+vertical_distance_alpha <- compute_full_model_alpha(vertical_distance_full_model)
+vertical_distance_beta <- compute_full_model_beta(vertical_distance_full_model)  
+
+# Compare the two models with term (full) and without it (intercept)
+vertical_distance_comparison <- compare_models(vertical_distance_full_model, vertical_distance_intercept_model)
+
+# summary text
+vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
+verical_distance_summary
+```
+
+
 ```{r fitting vertical distance as a continous variable}
 set.seed(45950)
 vertical_distance_fit <- brm(PcongruentAdj ~ Distance + (1|Participant),
