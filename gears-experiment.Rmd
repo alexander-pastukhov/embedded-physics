@@ -545,15 +545,15 @@ disambiguation_fit_predictions <- predict(disambiguation_factor_model,
                                      summary = FALSE,
                                      re_formula = NA) %>%
   data.frame() %>%
-  pivot_longer(everything(), names_to = "Display", values_to = "Pclockwise") %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "Pcorotation") %>%
   mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(disambiguation$Display)))
   
 
 disambiguation_fit_moments <-
   disambiguation_fit_predictions %>%
   group_by(Display) %>%
-  summarise(meanP = mean(Pclockwise),
-            medianP= median(Pclockwise))
+  summarise(meanP = mean(Pcorotation),
+            medianP= median(Pcorotation))
 
 
 ```
@@ -561,7 +561,7 @@ disambiguation_fit_moments <-
 ```{r plotting disambiguation}
 disambiguation_plot_main <-
   ggplot(data=disambiguation_fit_predictions, 
-      aes(x = as.numeric(Display), group=Display, y=Pclockwise)) + 
+      aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_violin(data = disambiguation_fit_predictions, aes(x=as.numeric(Display)), 
