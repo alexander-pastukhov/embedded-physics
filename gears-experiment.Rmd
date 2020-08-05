@@ -238,11 +238,11 @@ distance <-
   dplyr::group_by(Participant, Distance, DistanceAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
-            CorotateDur = sum(Duration[IsCorotating==TRUE]),
-            Pcorotation = CorotateDur / TotalDuration) %>%
+            CounterrotateDur = sum(Duration[!IsCorotating]),
+            Pcounterrotate = CounterrotateDur / TotalDuration) %>%
 
   # beta distribution does not like 0 and 1
-  dplyr::mutate(PCorotationAdj = Pcorotation * 0.999 + 0.0005) %>%
+  dplyr::mutate(Padj = Pcounterrotate * 0.999 + 0.0005) %>%
   
   # duplicating distance as Term for common BRMS model use
   dplyr::mutate(Term = Distance,
@@ -253,18 +253,18 @@ distance <-
 ### Precompiling BRMS models, so we can reuse them
 
 ```{r brms models}
-full_prototype <- brm(PCorotationAdj ~ Term + (1|Participant),
+full_prototype <- brm(Padj ~ Term + (1|Participant),
                      family=Beta(),
                      data=distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
 
-intercept_prototype <- brm(PCorotationAdj ~ (1|Participant),
+intercept_prototype <- brm(Padj ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=distance)
 
-factor_prototype <- brm(PCorotationAdj ~ TermAsFactor + (1|Participant),
+factor_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=distance,
                         chains=0, # this means that model is never sampled
@@ -301,7 +301,7 @@ distance_summary
 # predict GROUP-LEVEL Pcorotation
 distance_fit_predictions <- predict(distance_full_model,
                                     newdata = data.frame(Term = seq(-10, 70, 1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
   data.frame() %>%
   add_column(Term = seq(-10, 70, 1)) %>%
@@ -312,15 +312,15 @@ distance_fit_predictions <- predict(distance_full_model,
 ```{r distance summary plot}
 distance_plot <-
   ggplot(data=distance_fit_predictions, aes(x=Distance, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q5.5, ymax=Q94.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
-                  aes(x=Distance, group=Distance, y=Pcorotation)) +
+                  aes(x=Distance, group=Distance, y=Pcounterrotate)) +
   scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_factor_model))) +
-  scale_y_continuous(name="Pcorotation") +
+  scale_y_continuous(name="Pcounter-rotation") +
   plot_theme() +
   labs(subtitle=distance_summary)
 
@@ -351,10 +351,10 @@ occlusion<- reports%>%
   dplyr::group_by(Participant, Occlusion, OcclusionAsFactor) %>% 
   dplyr::summarize(TotalDuration = sum(Duration),
            #if value in the brackets is true itll be considered if not it will not
-            CorotateDur = sum(Duration[IsCorotating == TRUE]),
-            Pcorotation = CorotateDur / TotalDuration)%>%
+            CounterrotateDur = sum(Duration[!IsCorotating]),
+            Pcounterrotate = CounterrotateDur / TotalDuration)%>%
     # beta distribution does not like 0 and 1
- dplyr:: mutate(PCorotationAdj = Pcorotation*0.999+0.0005)%>%
+ dplyr:: mutate(Padj = Pcounterrotate*0.999+0.0005)%>%
  # duplicating Occlusion as Term for common BRMS model use
   dplyr::mutate(Term = Occlusion,
                 TermAsFactor = OcclusionAsFactor)
@@ -390,11 +390,11 @@ occlusion_summary
 ```{r Occlusion as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 occlusion_fit_predictions <- predict(occlusion_full_model,
-                                    newdata = data.frame(Term = seq(-10, 70, 1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    newdata = data.frame(Term = seq(0, 70, 1)),
+                                    probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
   data.frame() %>%
-  add_column(Term = seq(-10, 70, 1)) %>%
+  add_column(Term = seq(0, 70, 1)) %>%
   rename(Occlusion = Term)
 ```
 
@@ -402,15 +402,15 @@ occlusion_fit_predictions <- predict(occlusion_full_model,
 ```{r occlusion summary plot}
 occlusion_plot <-
   ggplot(data=occlusion_fit_predictions, aes(x=Occlusion, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q5.5, ymax=Q94.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
-                  aes(x=Occlusion, group=Occlusion, y=Pcorotation)) +
+                  aes(x=Occlusion, group=Occlusion, y=Pcounterrotate)) +
   scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_factor_model))) +
-  scale_y_continuous(name="Pcorotation") +
+  scale_y_continuous(name="Pcounter-rotation") +
   plot_theme() +
   labs(subtitle=occlusion_summary)
 
@@ -430,9 +430,9 @@ ambiguity<- reports%>%
   summarize(TotalDuration=sum(Duration),
           
               # if value in the brackets is true itll be considered if not it will not
-              CorotateDur=sum(Duration[IsCorotating== TRUE]),
-              Pcorotation=CorotateDur/TotalDuration) %>%
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005) %>%
+              CounterrotateDur=sum(Duration[!IsCorotating]),
+              Pcounterrotate=CounterrotateDur/TotalDuration) %>%
+  mutate(Padj=Pcounterrotate*0.999+0.0005) %>%
   
   mutate(TermAsFactor = Display)
 ```
@@ -461,15 +461,15 @@ ambiguity_fit_predictions <- predict(ambiguity_factor_model,
                                      summary = FALSE,
                                      re_formula = NA) %>%
   data.frame() %>%
-  pivot_longer(everything(), names_to = "Display", values_to = "Pcorotation") %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "Pcounterrotate") %>%
   mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(ambiguity$Display)))
   
 
 ambiguity_fit_moments <-
   ambiguity_fit_predictions %>%
   group_by(Display) %>%
-  summarise(meanP = mean(Pcorotation),
-            medianP= median(Pcorotation))
+  summarise(meanP = mean(Pcounterrotate),
+            medianP= median(Pcounterrotate))
 
 
 ```
@@ -478,19 +478,19 @@ ambiguity_fit_moments <-
 ```{r plotting ambiguity}
 ambiguity_plot <-
   ggplot(data=ambiguity_fit_predictions, 
-      aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
+      aes(x = as.numeric(Display), group=Display, y=Pcounterrotate)) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_violin(data = ambiguity_fit_predictions, aes(x=as.numeric(Display)), 
               fill="gray64", color="white", draw_quantiles = c(0.5)) +
   geom_quasirandom(data=ambiguity, method="tukeyDense", width=0.1,
-                aes(x=as.numeric(Display), group=Display, y=Pcorotation)) +
+                aes(x=as.numeric(Display), group=Display, y=Pcounterrotate)) +
   scale_x_continuous(name="Display",
                      breaks = unique(as.numeric(ambiguity$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = compute_factor_level_betas(ambiguity_factor_model)))+
-  scale_y_continuous(name="Pcorotation") +
+  scale_y_continuous(name="Pcounter-rotation") +
   plot_theme() +
   labs(subtitle=ambiguity_summary)
 
@@ -505,6 +505,7 @@ distance_plot / occlusion_plot / ambiguity_plot +
 
 ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
 ggsave('figure-02-gears.png', width=14, height=20, units="cm")
+ggsave('figure-02-gears.svg', width=14, height=20, units="cm")
 ```
 
 
@@ -517,10 +518,8 @@ disambiguation<- reports%>%
   group_by(Participant, Display)%>% 
   summarize(TotalDuration=sum(Duration),
             ClockwiseDur=sum(Duration[PrimeGear=="CW"]),
-    Pcorotation=ClockwiseDur/TotalDuration)%>%
-    #CorotateDur=sum(Duration[IsCorotating== TRUE]),
-    #Pcorotation=CorotateDur/TotalDuration) %>%
-mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
+    Pclockwise=ClockwiseDur/TotalDuration)%>%
+mutate(Padj=Pclockwise*0.999+0.0005)%>%
 mutate(TermAsFactor = Display)
 ```
 
@@ -544,15 +543,15 @@ disambiguation_fit_predictions <- predict(disambiguation_factor_model,
                                      summary = FALSE,
                                      re_formula = NA) %>%
   data.frame() %>%
-  pivot_longer(everything(), names_to = "Display", values_to = "Pcorotation") %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "Pclockwise") %>%
   mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(disambiguation$Display)))
   
 
 disambiguation_fit_moments <-
   disambiguation_fit_predictions %>%
   group_by(Display) %>%
-  summarise(meanP = mean(Pcorotation),
-            medianP= median(Pcorotation))
+  summarise(meanP = mean(Pclockwise),
+            medianP= median(Pclockwise))
 
 
 ```
@@ -560,7 +559,7 @@ disambiguation_fit_moments <-
 ```{r plotting disambiguation}
 disambiguation_plot_main <-
   ggplot(data=disambiguation_fit_predictions, 
-      aes(x = as.numeric(Display), group=Display, y=Pcorotation)) + 
+      aes(x = as.numeric(Display), group=Display, y=Pclockwise)) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_violin(data = disambiguation_fit_predictions, aes(x=as.numeric(Display)), 
@@ -577,133 +576,9 @@ disambiguation_plot_main <-
   labs(subtitle=disambiguation_summary)
 
 disambiguation_plot_main
-```
-## Old Disambiguation check
-```{r Proportion of clockwise}
-disambiguation<- reports%>%
-  filter(Condition=="Control"|Condition=="Ambiguity")%>% 
-  filter(Percept!="unclear")%>%
-  
-  group_by(Participant, Display)%>% 
-  summarize(TotalDuration=sum(Duration),
-    ClockwiseDur=sum(Duration[PrimeGear=="CW"]),
-    PClockwise=ClockwiseDur/TotalDuration,
-    CorotateDur=sum(Duration[IsCorotating== TRUE]),
-    Pcorotation=CorotateDur/TotalDuration) %>%
-  mutate(PCorotationAdj=Pcorotation*0.999+0.0005)%>%
-  mutate(PClockwiseAdj=PClockwise*0.999+0.0005)
+
+ggsave("figure-s01.png", units="cm", width=14, height=7)
+ggsave("figure-s01.pdf", units="cm", width=14, height=7, device=cairo_pdf)
+ggsave("figure-s01.svg", units="cm", width=14, height=7)
 ```
 
-```{r fitting disambiguation/ambiguity as factor}
-set.seed(5516800)
-disambiguation_as_factor_fit <- brm(PClockwiseAdj ~ Display +(1|Participant),
-                     family= Beta(),
-                     data= disambiguation,
-                     refresh=0,
-                     cores=future::availableCores(),
-                     save_all_pars = TRUE,
-                     prior=c(prior(normal(0, 1), class="b")))
-
-disambiguation_comparison <-
-  fixef(disambiguation_as_factor_fit) %>%
-              data.frame() %>%
-              rownames_to_column("Factor") %>%
-              mutate(Est = ifelse(Factor == "Intercept", 
-                                  "Control\ncondition", 
-                                  glue("β={round(Estimate, 2)}\n{round(Q2.5, 1)}..{round(Q97.5, 1)}"))) %>%
-  select(Est) %>%
-  rename(Label = Est)
-```
-
-```{r predicting and plotting disambiguation/ambiguity}
-disambiguation_fit_predictions <- predict(disambiguation_as_factor_fit,
-                                     newdata = data.frame(Display = levels(disambiguation$Display)),
-                                     summary = FALSE,
-                                     re_formula = NA) %>%
-  data.frame() %>%
-  pivot_longer(everything(), names_to = "Display", values_to = "PClockwise") %>%
-  mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(disambiguation$Display)))
-  
-
-disambiguation_fit_moments <-
-  disambiguation_fit_predictions %>%
-  group_by(Display) %>%
-  summarise(meanP = mean(PClockwise),
-            medianP= median(PClockwise))
-
-
-```
-
-```{r disambiguation/ambiguity importance via loo}
-disambiguation_null_model <- brm(PClockwiseAdj ~ (1|Participant),
-                           family=Beta(),
-                           refresh=0,
-                           cores=future::availableCores(),
-                           save_all_pars = TRUE,
-                           data=disambiguation)
-
-BF_disambiguation_as_factor<-brms::bayes_factor(disambiguation_as_factor_fit, disambiguation_null_model)
-
-BF_disambiguation_as_factor
-
-BF_disambiguation_as_factor_rounded <- round(BF_disambiguation_as_factor$bf,digits=2)
-BF_disambiguation_as_factor_rounded <- sprintf('%.2g', BF_disambiguation_as_factor$bf)
-BF_disambiguation_as_factor_rounded
-
-disambiguation_as_factor_fit <- add_criterion(disambiguation_as_factor_fit, "loo", reloo=TRUE)
-disambiguation_null_model <- add_criterion(disambiguation_null_model, "loo", reloo=TRUE)
-
-disambiguation_compare <- loo::loo_compare(list("Display" = disambiguation_as_factor_fit$criteria$loo,
-                                          "Intercept" = disambiguation_null_model$criteria$loo))
-
-disambiguation_weight <- loo::loo_model_weights(list("Display" = disambiguation_as_factor_fit$criteria$loo,
-                                               "Intercept" = disambiguation_null_model$criteria$loo))
-```
-
-```{r disambiguation/ambiguity summary}
-disambiguation_summary <-
-  fixef(disambiguation_as_factor_fit) %>%
-  data.frame() %>%
-  slice(n()) %>% 
-  mutate(`β` = round(Estimate, 4),
-         CI = glue("{round(Q2.5, 2)}..{round(Q97.5, 2)}")) %>%
-  select(`β`, CI) %>%
-  mutate("ΔELPD" = stringr::str_c(round(-disambiguation_compare[2, 1], 1), "±",  round(-disambiguation_compare[2, 2], 2)),
-         Weight = round(c(disambiguation_weight)["Display"], 2)) %>%
-  mutate_all(as.character) %>%
-  pivot_longer(everything(), names_to = "Stat", values_to = "Value")
-
-#disambiguation_summary<- 
- # subset(disambiguation_summary, Stat!="β" & Stat!="CI")
-```
-
- 
-
-```{r plotting disambiguation}
-disambiguation_inset <-
-  tibble(x=0.01, y=0.92, tb=list(disambiguation_summary))
-
-disambiguationPlot_main <-
-  ggplot(data=disambiguation_fit_predictions, 
-      aes(x = as.numeric(Display), group=Display, y=PClockwise)) + 
-  geom_line() +
-  geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_violin(data = disambiguation_fit_predictions, aes(x=as.numeric(Display)), 
-              fill="gray64", color="white", draw_quantiles = c(0.5)) +
-  geom_quasirandom(data=disambiguation, method="tukeyDense", width=0.1,
-                aes(x=as.numeric(Display), group=Display, y=PClockwise)) +
-  scale_x_continuous(name="Display",
-                     breaks = unique(as.numeric(disambiguation$Display)),
-                     labels = c("ambiguous","weak", "medium","medium-strong","strong"),
-                     sec.axis =  dup_axis(name = element_blank(),
-                                          labels = disambiguation_comparison$Label))+
-  scale_y_continuous(name="Pclockwise") +
-  plot_theme() +
-  labs(subtitle=glue("BF = {BF_disambiguation_as_factor_rounded},ΔELPD={disambiguation_summary$Value[3]}, W={disambiguation_summary$Value[4]}"))+
-  theme(legend.position = "none") # axis.text.x.top = element_text(color=four_colors)
-
-disambiguationPlot_main
-
-ggsave(disambiguationPlot_main, filename = "gears-disambiguation.png", units="cm", width=14, height=8)
-ggsave(disambiguationPlot_main, filename = "gears-disambiguation.pdf", units="cm", width=14, height=8, device=cairo_pdf)
-```
