@@ -201,26 +201,7 @@ reports <-
          Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))
 ```
 
-### Precompiling BRMS models
 
-```{r brms models}
-full_prototype <- brm(P ~ Term + (1|Participant),
-                     family=Beta(),
-                     data=distance,
-                     chains=0, # this means that model is never sampled
-                     prior=c(prior(normal(0, 1), class="b")))
-
-intercept_prototype <- brm(P ~ (1|Participant),
-                           family=Beta(),
-                           chains=0, # this means that model is never sampled
-                           data=distance)
-
-factor_prototype <- brm(P ~ TermAsFactor + (1|Participant),
-                        family=Beta(),
-                        data=distance,
-                        chains=0, # this means that model is never sampled
-                        prior=c(prior(normal(0,1), class="b")))
-```
 
 ## Distance vertical condition
 ```{r}
@@ -236,29 +217,35 @@ vertical_distance <-
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
             Pcongruent = CongruentDur / TotalDuration) %>%
-  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
+# duplicating distance as Term for common BRMS model use
+  dplyr::mutate(Term = Distance,
+                TermAsFactor = DistanceAsFactor)
 ```
 
 ### Precompiling BRMS models
 
 ```{r brms models}
-full_prototype <- brm(P ~ Term + (1|Participant),
+full_prototype <- brm(Pcongruent ~ Term + (1|Participant),
                      family=Beta(),
                      data=vertical_distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
 
-intercept_prototype <- brm(P ~ (1|Participant),
+intercept_prototype <- brm(Pcongruent ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=vertical_distance)
 
-factor_prototype <- brm(P ~ TermAsFactor + (1|Participant),
+factor_prototype <- brm(Pcongruent ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=vertical_distance,
                         chains=0, # this means that model is never sampled
                         prior=c(prior(normal(0,1), class="b")))
 ```
+
+
+
 ### Fitting vertical distance condition via brms
 
 ```{r Fitting vertical distance as a continuous variable via brms}
@@ -295,6 +282,24 @@ vertical_distance_fit_predictions <- predict(vertical_distance_full_model,
   rename(Distance = Term)
 ```
 
+### vertical distance summary plot
+```{r distance summary plot}
+vertical_distance_plot <-
+  ggplot(data=vertical_distance_fit_predictions, aes(x=Distance, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=2,
+                  aes(x=Distance, group=Distance, y=Pcongruent)) +
+  scale_x_continuous(name = "Distance [%]", breaks = unique(vertical_distance$Distance),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_distance_factor_model))) +
+  scale_y_continuous(name="Pcongruent") +
+  plot_theme() +
+  labs(subtitle=vertical_distance_summary)
+
+vertical_distance_plot
+```
 
 ## OLD CODE
 ```{r fitting vertical distance as a continous variable}
