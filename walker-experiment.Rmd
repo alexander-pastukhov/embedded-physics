@@ -63,6 +63,23 @@ compute_BF <- function(full_model, reduced_model){
 }
 ```
 
+```{r compute dELPD}
+compute_dELPD <- function(full_model, intercept_model){
+  dLOO <-   
+    loo::loo_compare(list("Term" = full_model$criteria$loo,
+                          "Intercept" = intercept_model$criteria$loo)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient") %>%
+    
+    # invert difference, so it is positive if full model is better (and negative if it worse than intercept only)
+    mutate(elpd_diff = ifelse(Coefficient == "Intercept", -elpd_diff, elpd_diff)) %>%
+    slice(2)
+    
+  sprintf("ΔELPD=%.1f±%.2f", dLOO$elpd_diff[1], dLOO$se_diff[1])
+}
+```
+
+
 
 # Importing data
 ```{r Import}
