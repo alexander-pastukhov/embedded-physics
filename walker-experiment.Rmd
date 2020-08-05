@@ -204,18 +204,18 @@ reports <-
 ### Precompiling BRMS models
 
 ```{r brms models}
-full_prototype <- brm(PCorotationAdj ~ Term + (1|Participant),
+full_prototype <- brm(P ~ Term + (1|Participant),
                      family=Beta(),
                      data=distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
 
-intercept_prototype <- brm(PCorotationAdj ~ (1|Participant),
+intercept_prototype <- brm(P ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=distance)
 
-factor_prototype <- brm(PCorotationAdj ~ TermAsFactor + (1|Participant),
+factor_prototype <- brm(P ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=distance,
                         chains=0, # this means that model is never sampled
@@ -239,6 +239,26 @@ vertical_distance <-
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)
 ```
 
+### Precompiling BRMS models
+
+```{r brms models}
+full_prototype <- brm(P ~ Term + (1|Participant),
+                     family=Beta(),
+                     data=vertical_distance,
+                     chains=0, # this means that model is never sampled
+                     prior=c(prior(normal(0, 1), class="b")))
+
+intercept_prototype <- brm(P ~ (1|Participant),
+                           family=Beta(),
+                           chains=0, # this means that model is never sampled
+                           data=vertical_distance)
+
+factor_prototype <- brm(P ~ TermAsFactor + (1|Participant),
+                        family=Beta(),
+                        data=vertical_distance,
+                        chains=0, # this means that model is never sampled
+                        prior=c(prior(normal(0,1), class="b")))
+```
 ### Fitting vertical distance condition via brms
 
 ```{r Fitting vertical distance as a continuous variable via brms}
