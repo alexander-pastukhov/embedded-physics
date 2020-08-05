@@ -40,7 +40,7 @@ library(tidyr)
 rm(list=ls())
 ```
 
-
+## Utilities
 ```{r Custom plotting theme}
 plot_theme <- function()
 {
@@ -86,6 +86,16 @@ compute_full_model_weight <- function(full_mode, intercepts_model){
                                 "Intercept" = intercepts_model$criteria$loo))["Term"]
   
   sprintf("W=%.2f", full_model_weight)
+}
+```
+
+```{r compare two models}
+compare_models <- function(full_model, intercept_model){
+  BF <- compute_BF(full_model, intercept_model)
+  dELPD <- compute_dELPD(full_model, intercept_model)
+  Weight <- compute_full_model_weight(full_model, intercept_model)
+
+  stringr::str_c(dELPD, Weight, BF, sep=', ')
 }
 ```
 
