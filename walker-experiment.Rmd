@@ -127,6 +127,18 @@ sprintf('α=%.4f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
   }
 ```
 
+```{r factor model pairwise betas}
+compute_factor_level_betas <- function(factor_model){
+  fixef(factor_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient") %>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    mutate(Label = ifelse(Coefficient == "Intercept", 
+                          "Control\ncondition", 
+                           glue("β={round(Estimate, 2)}\n{round(LowerCI, 1)}..{round(UpperCI, 1)}"))) %>%
+    pull(Label)
+}
+```
 
 # Importing data
 ```{r Import}
