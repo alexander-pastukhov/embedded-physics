@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(bayestestR)
 library(betareg)
+library(boot)
 library(brms)
 library(dplyr)
 library(extrafont)
@@ -121,10 +122,9 @@ compute_full_model_alpha <- function(full_model){
     rownames_to_column("Coefficient")%>%
     rename(LowerCI=4, UpperCI=5) %>%
     filter(Coefficient == "Term")
-sprintf('α=%.4f [%0.2f..%0.2f]', estimate$Estimate, estimate$LowerCI, estimate$UpperCI)
-  inv.logit(α)
-}
-'α'
+sprintf('α=inv.logit(%.4f [%0.2f..%0.2f])', estimate$Estimate, estimate$LowerCI, estimate$UpperCI)
+  }
+
 ```
 
 ```{r factor model pairwise betas}
