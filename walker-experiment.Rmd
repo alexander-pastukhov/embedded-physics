@@ -403,6 +403,81 @@ horizontal_distance_plot <-
 
 horizontal_distance_plot
 ```
+## Sphere ambiguity condition
+```{r}
+sphere_ambiguity <- 
+  reports %>%
+  filter(SessionTag == "Main", Condition %in% c("Control", "Sphere Ambiguity"))%>%
+  dplyr::mutate(SphereDisambiguationAbs = abs(SphereDisambiguation),
+                SphereDisambiguationAsFactor = as.factor(SphereDisambiguationAbs),
+                SphereDisambiguationAsFactor = fct_relevel(SphereDisambiguationAsFactor,"0","0.25","1")) %>%
+  
+  ## computing Pcongurent for each participant and distance seperatly
+  dplyr::group_by(Participant, SphereDisambiguationAbs, SphereDisambiguationAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CongruentDur = sum(Duration[Percept=="congruent"]),
+            Pcongruent = CongruentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
+# duplicating distance as Term for common BRMS model use
+  dplyr::mutate(Term = SphereDisambiguationAbs,
+                TermAsFactor = SphereDisambiguationAsFactor)
+```
+
+### Fitting sphere ambiguity condition via brms
+
+```{r Fitting sphere ambiguity as a continuous variable via brms}
+set.seed(5515605 )
+sphere_ambiguity_full_model <- fit_prototype(full_prototype, sphere_ambiguity)
+sphere_ambiguity_intercept_model <- fit_prototype(intercept_prototype, sphere_ambiguity)
+sphere_ambiguity_factor_model <- fit_prototype(factor_prototype, sphere_ambiguity, add_loo = FALSE)
+```
+
+### Full model summary sphere ambiguity
+
+```{r}
+# Compute estimates for individual parameters
+sphere_ambiguity_alpha <- compute_full_model_alpha(sphere_ambiguity_full_model)
+sphere_ambiguity_beta <- compute_full_model_beta(sphere_ambiguity_full_model)  
+
+# Compare the two models with term (full) and without it (intercept)
+sphere_ambiguity_comparison <- compare_models(sphere_ambiguity_full_model,sphere_ambiguity_intercept_model)
+
+# summary text
+sphere_ambiguity_summary <- stringr::str_c(sphere_ambiguity_alpha, sphere_ambiguity_beta, sphere_ambiguity_comparison, sep=', ')
+sphere_ambiguity_summary
+```
+### sphere ambiguity model predictions
+
+```{r sphere ambiguity as continuous predictions}
+# predict GROUP-LEVEL Pcorotation
+sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_full_model,
+                                    newdata = data.frame(Term = seq(-10, 70, 1)),
+                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    re_formula = NA) %>%
+  data.frame() %>%
+  add_column(Term = seq(-10, 70, 1)) %>%
+  rename(SphereDisambiguationAbs = Term)
+```
+
+### sphere ambiguity summary plot
+```{r sphere ambiguity plot}
+sphere_ambiguity_plot <-
+  ggplot(data=sphere_ambiguity_fit_predictions, aes(x=SphereDisambiguationAbs, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=0.2,
+                  aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) +
+  scale_x_continuous(name = "Sphere Disambiguation (degrees)", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(sphere_ambiguity_factor_model))) +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) ) +
+  plot_theme() +
+  labs(subtitle=sphere_ambiguity_summary)
+
+sphere_ambiguity_plot
+```
 
 ## OLD CODE
 ```{r fitting vertical distance as a continous variable}
