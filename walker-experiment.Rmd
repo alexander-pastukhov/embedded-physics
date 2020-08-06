@@ -354,11 +354,11 @@ horizontal_distance_summary
 ```{r horizontal_distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 horizontal_distance_fit_predictions <- predict(horizontal_distance_full_model,
-                                    newdata = data.frame(Term = seq(-10, 70, 1)),
+                                    newdata = data.frame(Term = seq(0, 4.1, 0.1)),
                                     probs = c(0.025, 0.25, 0.75, 0.975),
                                     re_formula = NA) %>%
   data.frame() %>%
-  add_column(Term = seq(-10, 70, 1)) %>%
+  add_column(Term = seq(0, 4.1, 0.1)) %>%
   rename(ShiftAbs = Term)
 ```
 
