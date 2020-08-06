@@ -80,9 +80,9 @@ compute_dELPD <- function(full_model, intercept_model){
 ```
 
 ```{r compute full model weight}
-compute_full_model_weight <- function(full_mode, intercepts_model){
-  sfull_model_weight <- 
-    loo::loo_model_weights(list("Term" = full_mode$criteria$loo,
+compute_full_model_weight <- function(full_model, intercepts_model){
+  full_model_weight <- 
+    loo::loo_model_weights(list("Term" = full_model$criteria$loo,
                                 "Intercept" = intercepts_model$criteria$loo))["Term"]
   
   sprintf("W=%.2f", full_model_weight)
@@ -263,7 +263,7 @@ vertical_distance_alpha <- compute_full_model_alpha(vertical_distance_full_model
 vertical_distance_beta <- compute_full_model_beta(vertical_distance_full_model)  
 
 # Compare the two models with term (full) and without it (intercept)
-vertical_distance_comparison <- compare_models(vertical_distance_full_model, vertical_distance_intercept_model)
+vertical_distance_comparison <- compare_models(vertical_distance_full_model,vertical_distance_intercept_model)
 
 # summary text
 vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
@@ -299,6 +299,10 @@ vertical_distance_plot <-
   labs(subtitle=vertical_distance_summary)
 
 vertical_distance_plot
+```
+
+```{r}
+print(vertical_distance_plot)
 ```
 
 ## OLD CODE
