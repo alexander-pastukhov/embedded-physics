@@ -267,18 +267,18 @@ vertical_distance_comparison <- compare_models(vertical_distance_full_model,vert
 
 # summary text
 vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
-verical_distance_summary
+vertical_distance_summary
 ```
 ### vertical distance model predictions
 
 ```{r vertical distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 vertical_distance_fit_predictions <- predict(vertical_distance_full_model,
-                                    newdata = data.frame(Term = seq(-10, 70, 1)),
+                                    newdata = data.frame(Term = seq(0, 4.1, 0.1)),
                                     probs = c(0.025, 0.25, 0.75, 0.975),
                                     re_formula = NA) %>%
   data.frame() %>%
-  add_column(Term = seq(-10, 70, 1)) %>%
+  add_column(Term = seq(0, 4.1, 0.1)) %>%
   rename(Distance = Term)
 ```
 
@@ -290,7 +290,7 @@ vertical_distance_plot <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=2,
+  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.2,
                   aes(x=Distance, group=Distance, y=Pcongruent)) +
   scale_x_continuous(name = "Distance [%]", breaks = unique(vertical_distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_distance_factor_model))) +
