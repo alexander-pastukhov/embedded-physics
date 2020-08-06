@@ -405,21 +405,21 @@ horizontal_distance_plot
 ```
 ## Sphere ambiguity condition
 ```{r}
-sphere_ambiguity <- 
+sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as levels of ambiguiation?
   reports %>%
-  filter(SessionTag == "Main", Condition %in% c("Control", "Sphere Ambiguity"))%>%
-  dplyr::mutate(SphereDisambiguationAbs = abs(SphereDisambiguation),
+  filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))%>%
+  dplyr::mutate(SphereDisambiguationAbs = abs(SphereDisambiguation), 
                 SphereDisambiguationAsFactor = as.factor(SphereDisambiguationAbs),
-                SphereDisambiguationAsFactor = fct_relevel(SphereDisambiguationAsFactor,"0","0.25","1")) %>%
+                SphereDisambiguationAsFactor = fct_relevel(SphereDisambiguationAsFactor, "0", "0.25", "1")) %>%
   
-  ## computing Pcongurent for each participant and distance seperatly
+  ## computing Pcongurent for each participant and disambiguation seperatly
   dplyr::group_by(Participant, SphereDisambiguationAbs, SphereDisambiguationAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
             Pcongruent = CongruentDur / TotalDuration) %>%
-  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
-# duplicating distance as Term for common BRMS model use
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005) %>%             
+# duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = SphereDisambiguationAbs,
                 TermAsFactor = SphereDisambiguationAsFactor)
 ```
@@ -472,7 +472,7 @@ sphere_ambiguity_plot <-
                   aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Sphere Disambiguation (degrees)", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(sphere_ambiguity_factor_model))) +
-  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) ) +
+  scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
   labs(subtitle=sphere_ambiguity_summary)
 
