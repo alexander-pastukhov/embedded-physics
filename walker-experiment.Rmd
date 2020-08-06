@@ -267,7 +267,7 @@ vertical_distance_comparison <- compare_models(vertical_distance_full_model,vert
 
 # summary text
 vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
-verical_distance_summary
+vertical_distance_summary
 ```
 ### vertical distance model predictions
 
