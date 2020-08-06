@@ -290,7 +290,7 @@ vertical_distance_plot <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=2,
+  geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.2,
                   aes(x=Distance, group=Distance, y=Pcongruent)) +
   scale_x_continuous(name = "Distance [%]", breaks = unique(vertical_distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_distance_factor_model))) +
@@ -303,6 +303,105 @@ vertical_distance_plot
 
 ```{r}
 print(vertical_distance_plot)
+```
+
+## Distance horizontal condition
+```{r}
+horizontal_distance <- 
+  reports %>%
+  filter(SessionTag == "Addendum", Condition %in% c("Control", "Shift"))%>%
+  dplyr::mutate(ShiftAbs = abs(Shift),
+                ShiftAsFactor = as.factor(ShiftAbs),
+                ShiftAsFactor= fct_relevel(ShiftAsFactor,"0", "1", "2", "3", "4")) %>%
+  
+  ## computing Pcongurent for each participant and distance seperatly
+  dplyr::group_by(Participant, ShiftAbs, ShiftAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+            # if value in the brackets is true it'll be considered if not it will not
+            CongruentDur = sum(Duration[Percept=="congruent"]),
+            Pcongruent = CongruentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
+# duplicating distance as Term for common BRMS model use
+  dplyr::mutate(Term = ShiftAbs,
+                TermAsFactor = ShiftAsFactor)
+```
+
+### Precompiling BRMS models
+
+```{r brms models}
+full_prototype <- brm(Pcongruent ~ Term + (1|Participant),
+                     family=Beta(),
+                     data=horizontal_distance,
+                     chains=0, # this means that model is never sampled
+                     prior=c(prior(normal(0, 1), class="b")))
+
+intercept_prototype <- brm(Pcongruent ~ (1|Participant),
+                           family=Beta(),
+                           chains=0, # this means that model is never sampled
+                           data=horizontal_distance)
+
+factor_prototype <- brm(Pcongruent ~ TermAsFactor + (1|Participant),
+                        family=Beta(),
+                        data=horizontal_distance,
+                        chains=0, # this means that model is never sampled
+                        prior=c(prior(normal(0,1), class="b")))
+```
+
+
+
+### Fitting horizontal distance condition via brms
+
+```{r Fitting Horizontal distance as a continuous variable via brms}
+set.seed(5515605 )
+horizontal_distance_full_model <- fit_prototype(full_prototype, horizontal_distance)
+horizontal_distance_intercept_model <- fit_prototype(intercept_prototype, horizontal_distance)
+horizontal_distance_factor_model <- fit_prototype(factor_prototype, horizontal_distance, add_loo = FALSE)
+```
+
+### Full model summary horizontal distance
+
+```{r}
+# Compute estimates for individual parameters
+horizontal_distance_alpha <- compute_full_model_alpha(horizontal_distance_full_model)
+horizontal_distance_beta <- compute_full_model_beta(horizontal_distance_full_model)  
+
+# Compare the two models with term (full) and without it (intercept)
+horizontal_distance_comparison <- compare_models(horizontal_distance_full_model,horizontal_distance_intercept_model)
+
+# summary text
+horizontal_distance_summary <- stringr::str_c(horizontal_distance_alpha, horizontal_distance_beta, horizontal_distance_comparison, sep=', ')
+horizontal_distance_summary
+```
+### horizontal_distance model predictions
+
+```{r horizontal_distance as continuous predictions}
+# predict GROUP-LEVEL Pcorotation
+horizontal_distance_fit_predictions <- predict(horizontal_distance_full_model,
+                                    newdata = data.frame(Term = seq(-10, 70, 1)),
+                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    re_formula = NA) %>%
+  data.frame() %>%
+  add_column(Term = seq(-10, 70, 1)) %>%
+  rename(ShiftAbs = Term)
+```
+
+### horizontal distance summary plot
+```{r horizontal_distance plot}
+horizontal_distance_plot <-
+  ggplot(data=horizontal_distance_fit_predictions, aes(x=ShiftAbs, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_quasirandom(data=horizontal_distance, method="tukeyDense", width=0.2,
+                  aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
+  scale_x_continuous(name = "Horizontal Distance (degrees)", breaks = unique(horizontal_distance$ShiftAbs),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(horizontal_distance_factor_model))) +
+  scale_y_continuous(name="Pcongruent") +
+  plot_theme() +
+  labs(subtitle=horizontal_distance_summary)
+
+horizontal_distance_plot
 ```
 
 ## OLD CODE
