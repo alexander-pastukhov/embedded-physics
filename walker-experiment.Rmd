@@ -326,29 +326,6 @@ horizontal_distance <-
                 TermAsFactor = ShiftAsFactor)
 ```
 
-### Precompiling BRMS models
-
-```{r brms models}
-full_prototype <- brm(Pcongruent ~ Term + (1|Participant),
-                     family=Beta(),
-                     data=horizontal_distance,
-                     chains=0, # this means that model is never sampled
-                     prior=c(prior(normal(0, 1), class="b")))
-
-intercept_prototype <- brm(Pcongruent ~ (1|Participant),
-                           family=Beta(),
-                           chains=0, # this means that model is never sampled
-                           data=horizontal_distance)
-
-factor_prototype <- brm(Pcongruent ~ TermAsFactor + (1|Participant),
-                        family=Beta(),
-                        data=horizontal_distance,
-                        chains=0, # this means that model is never sampled
-                        prior=c(prior(normal(0,1), class="b")))
-```
-
-
-
 ### Fitting horizontal distance condition via brms
 
 ```{r Fitting Horizontal distance as a continuous variable via brms}
