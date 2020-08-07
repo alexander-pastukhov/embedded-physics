@@ -8,10 +8,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-extrafont::loadfonts(quiet = TRUE)
-```
-
-```{r libraries}
 library(bayestestR)
 library(betareg)
 library(boot)
@@ -32,9 +28,9 @@ library(reshape2)
 library(stringr)
 library(tibble)
 library(tidyr)
+
+extrafont::loadfonts(quiet = TRUE)
 ```
-
-
 
 ```{r Tabula rasa}
 rm(list=ls())
@@ -51,7 +47,8 @@ plot_theme <- function()
         axis.title.y = element_text(size = 10), 
         panel.grid.minor.x = element_blank(), 
         panel.grid.minor.y =  element_line(size = 0.24), 
-        axis.ticks = element_line(size = 0.24))
+        axis.ticks = element_line(size = 0.24),
+        plot.subtitle=element_text(size=8, hjust=0.5))
 }
 ```
 
@@ -202,8 +199,8 @@ reports <-
 ```
 
 
-
 ## Distance vertical condition
+
 ```{r}
 vertical_distance <- 
   reports %>%
@@ -211,14 +208,14 @@ vertical_distance <-
   dplyr::mutate(DistanceAsFactor = as.factor(Distance),
                 DistanceAsFactor = fct_relevel(DistanceAsFactor,"0", "1", "2", "3", "4")) %>%
   
-  ## computing Pcongurent for each participant and distance seperatly
+  # computing Pcongurent for each participant and distance seperatly
   dplyr::group_by(Participant, Distance, DistanceAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
-            # if value in the brackets is true it'll be considered if not it will not
-            CongruentDur = sum(Duration[Percept=="congruent"]),
-            Pcongruent = CongruentDur / TotalDuration) %>%
+                   CongruentDur = sum(Duration[Percept=="congruent"]),
+                   Pcongruent = CongruentDur / TotalDuration) %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
-# duplicating distance as Term for common BRMS model use
+
+  # duplicating distance as Term for common BRMS model use
   dplyr::mutate(Term = Distance,
                 TermAsFactor = DistanceAsFactor)
 ```
@@ -226,18 +223,18 @@ vertical_distance <-
 ### Precompiling BRMS models
 
 ```{r brms models}
-full_prototype <- brm(Pcongruent ~ Term + (1|Participant),
+full_prototype <- brm(PcongruentAdj ~ Term + (1|Participant),
                      family=Beta(),
                      data=vertical_distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
 
-intercept_prototype <- brm(Pcongruent ~ (1|Participant),
+intercept_prototype <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=vertical_distance)
 
-factor_prototype <- brm(Pcongruent ~ TermAsFactor + (1|Participant),
+factor_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=vertical_distance,
                         chains=0, # this means that model is never sampled
@@ -269,13 +266,14 @@ vertical_distance_comparison <- compare_models(vertical_distance_full_model,vert
 vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
 vertical_distance_summary
 ```
+
 ### vertical distance model predictions
 
 ```{r vertical distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 vertical_distance_fit_predictions <- predict(vertical_distance_full_model,
                                     newdata = data.frame(Term = seq(0, 4.1, 0.1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
   data.frame() %>%
   add_column(Term = seq(0, 4.1, 0.1)) %>%
@@ -286,7 +284,7 @@ vertical_distance_fit_predictions <- predict(vertical_distance_full_model,
 ```{r distance summary plot}
 vertical_distance_plot <-
   ggplot(data=vertical_distance_fit_predictions, aes(x=Distance, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q5.5, ymax=Q94.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
@@ -300,11 +298,6 @@ vertical_distance_plot <-
 
 vertical_distance_plot
 ```
-
-```{r}
-print(vertical_distance_plot)
-```
-
 ## Distance horizontal condition
 ```{r}
 horizontal_distance <- 
@@ -355,7 +348,7 @@ horizontal_distance_summary
 # predict GROUP-LEVEL Pcorotation
 horizontal_distance_fit_predictions <- predict(horizontal_distance_full_model,
                                     newdata = data.frame(Term = seq(0, 4.1, 0.1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
   data.frame() %>%
   add_column(Term = seq(0, 4.1, 0.1)) %>%
@@ -366,7 +359,7 @@ horizontal_distance_fit_predictions <- predict(horizontal_distance_full_model,
 ```{r horizontal_distance plot}
 horizontal_distance_plot <-
   ggplot(data=horizontal_distance_fit_predictions, aes(x=ShiftAbs, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q5.5, ymax=Q94.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
@@ -428,12 +421,13 @@ sphere_ambiguity_summary
 
 ```{r sphere ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_full_model,
-                                    newdata = data.frame(Term = seq(0, 4.1, 0.1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
+sphere_ambiguity_fit_predictions <- 
+  predict(sphere_ambiguity_full_model,
+                                    newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+                                    probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
   data.frame() %>%
-  add_column(Term = seq(0, 4.1, 1)) %>%
+  add_column(Term = seq(0, 1.1, 0.1)) %>%
   rename(SphereDisambiguationAbs = Term)
 ```
 
@@ -441,13 +435,13 @@ sphere_ambiguity_fit_predictions <- predict(sphere_ambiguity_full_model,
 ```{r sphere ambiguity plot}
 sphere_ambiguity_plot <-
   ggplot(data=sphere_ambiguity_fit_predictions, aes(x=SphereDisambiguationAbs, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q5.5, ymax=Q94.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=0.07,
+  geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=0.04,
                   aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) +
-  scale_x_continuous(name = "Sphere Disambiguation (degrees)", limits= c(-0.09, 1.09), breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
+  scale_x_continuous(name = "Sphere Disambiguation (degrees)", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(sphere_ambiguity_factor_model))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
@@ -505,11 +499,11 @@ walker_ambiguity_summary
 ```{r walker ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 walker_ambiguity_fit_predictions <- predict(walker_ambiguity_full_model,
-                                    newdata = data.frame(Term = seq(0, 1)),
-                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+                                    probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
   data.frame() %>%
-  add_column(Term = seq(0, 1)) %>%
+  add_column(Term = seq(0, 1.1, 0.1)) %>%
   rename(WalkerDisambiguationAbs = Term)
 ```
 
@@ -517,7 +511,7 @@ walker_ambiguity_fit_predictions <- predict(walker_ambiguity_full_model,
 ```{r walker ambiguity plot}
 walker_ambiguity_plot <-
   ggplot(data=walker_ambiguity_fit_predictions, aes(x=WalkerDisambiguationAbs, y=Estimate)) + 
-  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q5.5, ymax=Q94.5), alpha= 0.25) + 
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
