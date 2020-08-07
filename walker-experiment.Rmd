@@ -521,9 +521,9 @@ walker_ambiguity_plot <-
   geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
   geom_line() +
   geom_hline(yintercept = 0.5, color="white", size= 1) +
-  geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width=0.2,
+  geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width=0.07,
                   aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) +
-  scale_x_continuous(name = "Walker Disambiguation (degrees)", breaks = unique(walker_ambiguity$WalkerDisambiguationAbs),
+  scale_x_continuous(name = "Walker Disambiguation (degrees)",limits= c(-0.09, 1.09),  breaks = unique(walker_ambiguity$WalkerDisambiguationAbs),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(walker_ambiguity_factor_model))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme() +
