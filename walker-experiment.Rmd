@@ -536,7 +536,7 @@ walker_ambiguity_plot
 
 
 ```{r}
-SOR_walker <- # how do i make it so -1 and -0.25 will be recognized as levels of ambiguiation?
+SOR_walker <- 
   reports %>%
   filter(SessionTag == "Addendumer", Condition %in% c("Walker"))%>%
     dplyr::mutate(IsCongruent = (SphereBias == -1 & RawPercept == "up") | (SphereBias == 1 & RawPercept == "down")) %>%
@@ -561,6 +561,7 @@ SOR_walker <- # how do i make it so -1 and -0.25 will be recognized as levels of
 
 ```{r Fitting SOR walker as a continuous variable via brms}
 set.seed(5515605 )
+# error here: 'beta' requires response greater than zero
 SOR_walker_full_model <- fit_prototype(full_prototype, SOR_walker)
 SOR_walker_intercept_model <- fit_prototype(intercept_prototype, SOR_walker)
 SOR_walker_factor_model <- fit_prototype(factor_prototype, SOR_walker, add_loo = FALSE)
@@ -611,6 +612,88 @@ SOR_walker_plot <-
 
 SOR_walker_plot
 ```
+
+## Single Object report sphere
+
+```{r single condition sphere}
+SOR_sphere <- 
+  reports %>%
+  filter(SessionTag=="Addendumer", Condition %in% c("Sphere")) %>%
+  mutate(InBiasDirection = (SphereBias == -1 & Percept == "right") | (SphereBias == 1 & Percept == "left")) %>%
+  
+  # absolute shift
+  dplyr::mutate(ShiftAbs = abs(Shift),
+                ShiftAsFactor = as.factor(ShiftAbs),
+                ShiftAsFactor = fct_relevel(ShiftAsFactor, "0","2","4")) %>%
+  
+  # computing Pcongurent for each participant and Shift seperatly
+  dplyr::group_by(Participant, ShiftAbs, ShiftAsFactor) %>%
+  dplyr::summarize(TotalDuration = sum(Duration),
+                   # if value in the brackets is true it'll be considered if not it will not
+                   ConsistentDur= sum(Duration[InBiasDirection=="TRUE"]),               
+                   Pcongruent = ConsistentDur / TotalDuration) %>%
+  dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
+# duplicating Sphere ambiguity as Term for common BRMS model use
+  dplyr::mutate(Term = ShiftAbs,
+                TermAsFactor = ShiftAsFactor)
+```
+
+### Fitting single object report sphere condition via brms
+
+```{r Fitting SOR sphere as a continuous variable via brms}
+set.seed(5515605 )
+# error here: 'beta' requires response greater than zero
+SOR_sphere_full_model <- fit_prototype(full_prototype, SOR_sphere)
+SOR_sphere_intercept_model <- fit_prototype(intercept_prototype, SOR_sphere)
+SOR_sphere_factor_model <- fit_prototype(factor_prototype, SOR_sphere, add_loo = FALSE)
+```
+
+### Full model summary SOR sphere
+
+```{r}
+# Compute estimates for individual parameters
+SOR_sphere_alpha <- compute_full_model_alpha(SOR_sphere_full_model)
+SOR_sphere_beta <- compute_full_model_beta(SOR_sphere_full_model)  
+
+# Compare the two models with term (full) and without it (intercept)
+SOR_sphere_comparison <- compare_models(SOR_sphere_full_model,SOR_sphere_intercept_model)
+
+# summary text
+SOR_sphere_summary <- stringr::str_c(SOR_sphere_alpha, SOR_sphere_beta, SOR_sphere_comparison, sep=', ')
+SOR_sphere_summary
+```
+### Sphere SOR model predictions
+
+```{r sphere SOR as continuous predictions}
+# predict GROUP-LEVEL Pcorotation
+SOR_sphere_fit_predictions <- predict(SOR_sphere_full_model,
+                                    newdata = data.frame(Term = seq(0, 4.2)),
+                                    probs = c(0.025, 0.25, 0.75, 0.975),
+                                    re_formula = NA) %>%
+  data.frame() %>%
+  add_column(Term = seq(0, 4.2)) %>%
+  rename(ShiftAbs = Term)
+```
+
+### Sphere SOR summary plot
+```{r walker SOR plot}
+SOR_sphere_plot <-
+  ggplot(data=SOR_sphere_fit_predictions, aes(x=ShiftAbs, y=Estimate)) + 
+  geom_ribbon(aes(ymin=Q2.5, ymax=Q97.5), alpha= 0.25) + 
+  geom_ribbon(aes(ymin=Q25, ymax=Q75), alpha= 0.25) + 
+  geom_line() +
+  geom_hline(yintercept = 0.5, color="white", size= 1) +
+  geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
+                  aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
+  scale_x_continuous(name = "Shift (degrees)", breaks = unique(SOR_sphere$ShiftAbs),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(SOR_sphere_factor_model))) +
+  scale_y_continuous(name="Pconsistent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+  plot_theme() +
+  labs(subtitle=SOR_sphere_summary)
+
+SOR_sphere_plot
+```
+
 
 
 ## OLD CODE
