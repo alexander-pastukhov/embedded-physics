@@ -585,13 +585,13 @@ SOR_walker_summary
 
 ```{r walker SOR as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-walker_ambiguity_fit_predictions <- predict(walker_ambiguity_full_model,
+SOR_walker_fit_predictions <- predict(SOR_walker_full_model,
                                     newdata = data.frame(Term = seq(0, 4.2)),
                                     probs = c(0.025, 0.25, 0.75, 0.975),
                                     re_formula = NA) %>%
   data.frame() %>%
   add_column(Term = seq(0, 4.2)) %>%
-  rename(WalkerDisambiguationAbs = Term)
+  rename(ShiftAbs = Term)
 ```
 
 ### walker SOR summary plot
