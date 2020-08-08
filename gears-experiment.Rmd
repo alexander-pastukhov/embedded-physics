@@ -109,7 +109,7 @@ compute_full_model_beta <- function(full_model){
     rownames_to_column("Coefficient") %>%
     rename(LowerCI=4, UpperCI=5) %>%
     filter(Coefficient == "Term")
-  sprintf('β=%.4f [%0.2f..%0.2f]', estimate$Estimate, estimate$LowerCI, estimate$UpperCI)
+  sprintf('β=%.4f [%0.2f..%0.2f]', exp(estimate$Estimate), exp(estimate$LowerCI), exp(estimate$UpperCI))
 }
 ```
 
@@ -134,7 +134,7 @@ compute_factor_level_betas <- function(factor_model){
     rename(LowerCI=4, UpperCI=5) %>%
     mutate(Label = ifelse(Coefficient == "Intercept", 
                           "Control\ncondition", 
-                           glue("β={round(Estimate, 2)}\n{round(LowerCI, 1)}..{round(UpperCI, 1)}"))) %>%
+                           glue("β={round(exp(Estimate), 2)}\n{round(exp(LowerCI), 1)}..{round(exp(UpperCI), 1)}"))) %>%
     pull(Label)
 }
 ```
