@@ -1,4 +1,6 @@
-# Embedded physics project
+# When Perception is stronger than Physics
+Data and analysis for the **When Perception is stronger than Physics: Perceptual similarities rather than laws of physics govern the perception of interacting objects** manuscript.
+
 
 ## File format
 
@@ -39,3 +41,5 @@ It contains data set with two maipulated gears instead of one.
 It contains data set for the participant, who's session was cut short but a migraine attack./
 
 ## License
+All data (and associated content) is licensed under the [CC-By Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/). All code is licensed
+under the [MIT License](http://www.opensource.org/licenses/mit-license.php).
