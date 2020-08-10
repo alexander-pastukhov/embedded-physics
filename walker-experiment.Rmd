@@ -290,7 +290,7 @@ vertical_distance_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.2,
                   aes(x=Distance, group=Distance, y=Pcongruent)) +
-  scale_x_continuous(name = "Distance [%]", breaks = unique(vertical_distance$Distance),
+  scale_x_continuous(name = "Vertical Distance (degrees)", breaks = unique(vertical_distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_distance_factor_model))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme() +
