@@ -318,7 +318,7 @@ distance_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
                   aes(x=Distance, group=Distance, y=Pcounterrotate)) +
-  scale_x_continuous(name = "Distance [%]", breaks = unique(distance$Distance),
+  scale_x_continuous(name = "Distance (degrees)", breaks = unique(distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_factor_model))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme() +
@@ -408,7 +408,7 @@ occlusion_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
                   aes(x=Occlusion, group=Occlusion, y=Pcounterrotate)) +
-  scale_x_continuous(name = "Occlusion [%]", breaks = unique(occlusion$Occlusion),
+  scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_factor_model))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme() +
@@ -485,7 +485,7 @@ ambiguity_plot <-
               fill="gray64", color="white", draw_quantiles = c(0.5)) +
   geom_quasirandom(data=ambiguity, method="tukeyDense", width=0.1,
                 aes(x=as.numeric(Display), group=Display, y=Pcounterrotate)) +
-  scale_x_continuous(name="Display",
+  scale_x_continuous(name="Display (degrees)",
                      breaks = unique(as.numeric(ambiguity$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
@@ -566,7 +566,7 @@ disambiguation_plot_main <-
               fill="gray64", color="white", draw_quantiles = c(0.5)) +
   geom_quasirandom(data=disambiguation, method="tukeyDense", width=0.1,
                 aes(x=as.numeric(Display), group=Display, y=Pclockwise)) +
-  scale_x_continuous(name="Display",
+  scale_x_continuous(name="Display (degrees)",
                      breaks = unique(as.numeric(disambiguation$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
