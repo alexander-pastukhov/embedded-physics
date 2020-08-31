@@ -255,18 +255,18 @@ distance <-
 ### Precompiling BRMS models, so we can reuse them
 
 ```{r brms models}
-full_prototype <- brm(Padj ~ Term + (1|Participant),
+perceptual_coupling_prototype <- brm(Padj ~ Term + (1|Participant),
                      family=Beta(),
                      data=distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
 
-intercept_prototype <- brm(Padj ~ (1|Participant),
+independent_prototype <- brm(Padj ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=distance)
 
-factor_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
+pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=distance,
                         chains=0, # this means that model is never sampled
@@ -278,9 +278,9 @@ factor_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
 ```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
 set.seed(9578175)
-distance_full_model <- fit_prototype(full_prototype, distance)
-distance_intercept_model <- fit_prototype(intercept_prototype, distance)
-distance_factor_model <- fit_prototype(factor_prototype, distance, add_loo = FALSE)
+distance_full_model <- fit_prototype(perceptual_coupling_prototype, distance)
+distance_independent_model <- fit_prototype(independent_prototype, distance)
+distance_factor_model <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
 ```
 
 ### Generate a full model summary
@@ -368,9 +368,9 @@ occlusion<- reports%>%
 ```{r Fitting occlusion as a continuous variable via brms}
 # Computing brm for occlusion condition
 set.seed(9789931)
-occlusion_full_model <- fit_prototype(full_prototype, occlusion)
-occlusion_intercept_model <- fit_prototype(intercept_prototype, occlusion)
-occlusion_factor_model <- fit_prototype(factor_prototype, occlusion, add_loo = FALSE)
+occlusion_full_model <- fit_prototype(perceptual_coupling_prototype, occlusion)
+occlusion_intercept_model <- fit_prototype(independent_prototype, occlusion)
+occlusion_factor_model <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
 ```
 
 ### Generate a full model summary for Occlusion
@@ -443,8 +443,8 @@ ambiguity<- reports%>%
 
 ```{r fitting ambiguity as factor}
 set.seed(99435)
-ambiguity_factor_model <- fit_prototype(factor_prototype, ambiguity)
-ambiguity_intercept_model <- fit_prototype(intercept_prototype, ambiguity)
+ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, ambiguity)
+ambiguity_intercept_model <- fit_prototype(independent_prototype, ambiguity)
 ```
 
 
@@ -528,8 +528,8 @@ mutate(TermAsFactor = Display)
 
 ```{r fitting disambiguation as factor}
 set.seed(31937)
-disambiguation_factor_model <- fit_prototype(factor_prototype, disambiguation)
-disambiguation_intercept_model <- fit_prototype(intercept_prototype, disambiguation)
+disambiguation_factor_model <- fit_prototype(pairwise_comparison_prototype, disambiguation)
+disambiguation_intercept_model <- fit_prototype(independent_prototype, disambiguation)
 ```
 
 ```{r comparing the disambiguation models}
