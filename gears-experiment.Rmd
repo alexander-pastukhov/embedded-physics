@@ -295,12 +295,13 @@ perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
 independent_model <- fit_prototype(independent_prototype, distance)
 physics <- fit_prototype(physics_prototype, distance)
 ```
-```{r}
-print(perceptual_coupling)
-```
 
 ```{r}
-a_table <- lm(perceptual_coupling, independent_model, physics)
+a_table <-   loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
+                          "Independent" = independent_model$criteria$loo,
+                          "Physics"= physics$criteria$loo)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient")
 ```
 
 ### Generate a full model summary
