@@ -290,21 +290,22 @@ distance_independent_model <- fit_prototype(independent_prototype, distance)
 distance_physics <- fit_prototype(physics_prototype, distance)
 distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
 ```
+
 ```{r}
-perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
-independent_model <- fit_prototype(independent_prototype, distance)
-physics <- fit_prototype(physics_prototype, distance)
+perceptual_coupling <- distance_perceptual_coupling
+independent_model <- distance_independent_model
+physics <- distance_physics
 ```
 
 ```{r comparing the three models ELPD}
-models_elpd<- 
+models_elpd <- 
   loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
                           "Independent" = independent_model$criteria$loo,
                           "Physics"= physics$criteria$loo)) %>%
     data.frame() %>%
     rownames_to_column("Model")%>%
-mutate("ΔELPD"=(sprintf("%.1f±%.2f", elpd_diff, se_diff)))%>%
-select(Model, "ΔELPD")
+mutate(dELPD=(sprintf("%.1f±%.2f", elpd_diff, se_diff))) %>%
+select(Model, dELPD)
 
 ```
 
@@ -316,14 +317,13 @@ models_weight <-
 rownames_to_column("Model")%>%
   mutate( Weight= (sprintf("%.2f", .)))%>%
   select(Model, Weight)
-
-
-
 ```
 
 ```{r joining the tables}
 model_comparison <-
   dplyr::left_join(models_elpd, models_weight, by="Model")
+
+model_comparison
 ```
 
 
