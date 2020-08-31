@@ -57,17 +57,17 @@ plot_theme <- function(){
 
 ### Computing comparisons between the two models
 ```{r compute BF}
-compute_BF <- function(full_model, reduced_model){
-  BF <- brms::bayes_factor(full_model, reduced_model, silent = TRUE)
+compute_BF <- function(perceptual_coupling_model, reduced_model){
+  BF <- brms::bayes_factor(perceptual_coupling_model, reduced_model, silent = TRUE)
   sprintf('BF=%.2g', BF$bf)
 }
 ```
 
 ```{r compute dELPD}
-compute_dELPD <- function(full_model, intercept_model){
+compute_dELPD <- function(full_model, independent_model){
   dLOO <-   
     loo::loo_compare(list("Term" = full_model$criteria$loo,
-                          "Intercept" = intercept_model$criteria$loo)) %>%
+                          "Intercept" = independent_model$criteria$loo)) %>%
     data.frame() %>%
     rownames_to_column("Coefficient") %>%
     
