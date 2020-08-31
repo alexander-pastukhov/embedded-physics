@@ -218,7 +218,9 @@ reports <-
   
   # 6. Convert Occlusion into numeric. First, change "None" to "0" via stringr::str_replace_all(Occlusion, "None", "0").
   #    Then, convert it to numeric in mutate.
-  mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))
+  mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))%>%
+  
+  mutate(NotInteracting= (IsCorotating ==FALSE))
 
 ```
 
@@ -485,7 +487,7 @@ ambiguity_plot <-
               fill="gray64", color="white", draw_quantiles = c(0.5)) +
   geom_quasirandom(data=ambiguity, method="tukeyDense", width=0.1,
                 aes(x=as.numeric(Display), group=Display, y=Pcounterrotate)) +
-  scale_x_continuous(name="Display (degrees)",
+  scale_x_continuous(name="Display",
                      breaks = unique(as.numeric(ambiguity$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
