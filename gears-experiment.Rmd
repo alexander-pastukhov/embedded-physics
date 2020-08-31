@@ -297,12 +297,13 @@ physics <- fit_prototype(physics_prototype, distance)
 ```
 
 ```{r}
-a_table <-   loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
+loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
                           "Independent" = independent_model$criteria$loo,
                           "Physics"= physics$criteria$loo)) %>%
     data.frame() %>%
     rownames_to_column("Model")%>%
-mutate("ΔELPD"=(sprintf("ΔELPD=%.1f±%.2f", a_table$elpd_diff[1],  a_table$se_diff[1])))
+mutate("ΔELPD"=(sprintf("%.1f±%.2f", elpd_diff, se_diff)))%>%
+select(Model, "ΔELPD")
 
 ```
 
