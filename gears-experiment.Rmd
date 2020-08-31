@@ -290,6 +290,18 @@ distance_independent_model <- fit_prototype(independent_prototype, distance)
 distance_physics <- fit_prototype(physics_prototype, distance)
 distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
 ```
+```{r}
+perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
+independent_model <- fit_prototype(independent_prototype, distance)
+physics <- fit_prototype(physics_prototype, distance)
+```
+```{r}
+print(perceptual_coupling)
+```
+
+```{r}
+a_table <- lm(perceptual_coupling, independent_model, physics)
+```
 
 ### Generate a full model summary
 
