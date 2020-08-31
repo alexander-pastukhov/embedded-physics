@@ -296,7 +296,7 @@ independent_model <- fit_prototype(independent_prototype, distance)
 physics <- fit_prototype(physics_prototype, distance)
 ```
 
-```{r}
+```{r comparing the three models ELPD}
 loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
                           "Independent" = independent_model$criteria$loo,
                           "Physics"= physics$criteria$loo)) %>%
@@ -306,6 +306,18 @@ mutate("ΔELPD"=(sprintf("%.1f±%.2f", elpd_diff, se_diff)))%>%
 select(Model, "ΔELPD")
 
 ```
+```{r comparing the three models weight}
+loo::loo_model_weights(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,                          "Independent" = independent_model$criteria$loo, "Physics" = physics$criteria$loo))%>%
+  data.matrix()%>%
+  data.frame()%>%
+rownames_to_column("Model")%>%
+  mutate( Weight= (sprintf("%.2f", .)))%>%
+  select(Model, Weight)
+
+
+
+```
+
 
 ### Generate a full model summary
 
