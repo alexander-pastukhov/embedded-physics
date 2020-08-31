@@ -297,7 +297,8 @@ physics <- fit_prototype(physics_prototype, distance)
 ```
 
 ```{r comparing the three models ELPD}
-loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
+models_elpd<- 
+  loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,
                           "Independent" = independent_model$criteria$loo,
                           "Physics"= physics$criteria$loo)) %>%
     data.frame() %>%
@@ -306,8 +307,10 @@ mutate("ΔELPD"=(sprintf("%.1f±%.2f", elpd_diff, se_diff)))%>%
 select(Model, "ΔELPD")
 
 ```
+
 ```{r comparing the three models weight}
-loo::loo_model_weights(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,                          "Independent" = independent_model$criteria$loo, "Physics" = physics$criteria$loo))%>%
+models_weight <-
+  loo::loo_model_weights(list("Perceptual Coupling" = perceptual_coupling$criteria$loo,                          "Independent" = independent_model$criteria$loo, "Physics" = physics$criteria$loo))%>%
   data.matrix()%>%
   data.frame()%>%
 rownames_to_column("Model")%>%
@@ -316,6 +319,11 @@ rownames_to_column("Model")%>%
 
 
 
+```
+
+```{r joining the tables}
+model_comparison <-
+  dplyr::left_join(models_elpd, models_weight, by="Model")
 ```
 
 
