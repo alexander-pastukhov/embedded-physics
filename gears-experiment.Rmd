@@ -248,7 +248,8 @@ distance <-
   
   # duplicating distance as Term for common BRMS model use
   dplyr::mutate(Term = Distance,
-                TermAsFactor = DistanceAsFactor)
+                TermAsFactor = DistanceAsFactor)%>%
+  dplyr::mutate(NotInteracting= (Distance > "-8.13"))
 
 ```
 
@@ -265,6 +266,12 @@ independent_prototype <- brm(Padj ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=distance)
+
+physics_prototype <- brm(Padj ~ NotInteracting + (1|Participant),
+                         family = Beta(),
+                         data= distance,
+                         chains=0, 
+                         prior=c(prior(normal(0, 1), class="b")))
 
 pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
