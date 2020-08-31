@@ -220,7 +220,7 @@ reports <-
   #    Then, convert it to numeric in mutate.
   mutate(OccluderWidth= as.numeric(ifelse(Occlusion=="None", "0", Occlusion)))%>%
   
-  mutate(NotInteracting= (IsCorotating ==FALSE))
+  mutate(NotInteracting= (Distance > "-8.13"))
 
 ```
 
