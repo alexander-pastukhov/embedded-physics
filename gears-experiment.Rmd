@@ -287,6 +287,7 @@ pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
 set.seed(9578175)
 distance_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
 distance_independent_model <- fit_prototype(independent_prototype, distance)
+distance_physics <- fit_prototype(physics_prototype, distance)
 distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
 ```
 
