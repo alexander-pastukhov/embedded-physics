@@ -285,20 +285,20 @@ pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
 ```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
 set.seed(9578175)
-distance_full_model <- fit_prototype(perceptual_coupling_prototype, distance)
+distance_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
 distance_independent_model <- fit_prototype(independent_prototype, distance)
-distance_factor_model <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
+distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
 ```
 
 ### Generate a full model summary
 
 ```{r}
 # Compute estimates for individual parameters
-distance_alpha <- compute_full_model_alpha(distance_full_model)
-distance_beta <- compute_full_model_beta(distance_full_model)  
+distance_alpha <- compute_full_model_alpha(distance_perceptual_coupling)
+distance_beta <- compute_full_model_beta(distance_perceptual_coupling)  
 
 # Compare the two models with term (full) and without it (intercept)
-distance_comparison <- compare_models(distance_full_model, distance_intercept_model)
+distance_comparison <- compare_models(distance_perceptual_coupling, distance_intercept_model)
 
 # summary text
 distance_summary <- stringr::str_c(distance_alpha, distance_beta, distance_comparison, sep=', ')
@@ -308,7 +308,7 @@ distance_summary
 
 ```{r Distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-distance_fit_predictions <- predict(distance_full_model,
+distance_fit_predictions <- predict(distance_perceptual_coupling,
                                     newdata = data.frame(Term = seq(-10, 70, 1)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
@@ -328,7 +328,7 @@ distance_plot <-
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
                   aes(x=Distance, group=Distance, y=Pcounterrotate)) +
   scale_x_continuous(name = "Distance (degrees)", breaks = unique(distance$Distance),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_factor_model))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_pairwise_comparison))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme() +
   labs(subtitle=distance_summary)
