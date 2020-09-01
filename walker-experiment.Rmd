@@ -235,7 +235,7 @@ independent_prototype <- brm(PcongruentAdj ~ (1|Participant),
                            chains=0, # this means that model is never sampled
                            data=vertical_distance)
 
-physics_prototype <- brm(PconruentAdj ~ NotInteracting) + (1|Participant),
+physics_prototype <- brm(PconruentAdj ~ NotInteracting + (1|Participant),
                           family=Beta(),
                           data=vertical_distance,
                           chains=0,
