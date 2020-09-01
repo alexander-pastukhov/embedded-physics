@@ -619,7 +619,8 @@ SOR_walker <-
              
 # duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = ShiftAbs,
-                TermAsFactor = ShiftAsFactor)
+                TermAsFactor = ShiftAsFactor)%>%
+  dplyr::mutate(NotInteracting=as.numeric(ShiftAbs != 0))
 ```
 
 ### Fitting single object report walker condition via brms
@@ -627,30 +628,23 @@ SOR_walker <-
 ```{r Fitting SOR walker as a continuous variable via brms}
 set.seed(5515605 )
 # error here: 'beta' requires response greater than zero
-SOR_walker_full_model <- fit_prototype(perceptual_coupling_prototype, SOR_walker)
-SOR_walker_intercept_model <- fit_prototype(independent_prototype, SOR_walker)
-SOR_walker_factor_model <- fit_prototype(pairwise_comparison_prototype, SOR_walker, add_loo = FALSE)
+SOR_walker_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, SOR_walker)
+SOR_walker_independent_model <- fit_prototype(independent_prototype, SOR_walker)
+SOR_walker_physics <- fit_prototype(physics_prototype, SOR_walker)
+SOR_walker_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, SOR_walker, add_loo = FALSE)
 ```
 
-### Full model summary SOR walker
+### Compare models
 
 ```{r}
-# Compute estimates for individual parameters
-SOR_walker_alpha <- compute_full_model_alpha(SOR_walker_full_model)
-SOR_walker_beta <- compute_full_model_beta(SOR_walker_full_model)  
-
-# Compare the two models with term (full) and without it (intercept)
-SOR_walker_comparison <- compare_models(SOR_walker_full_model,SOR_walker_intercept_model)
-
-# summary text
-SOR_walker_summary <- stringr::str_c(SOR_walker_alpha, SOR_walker_beta, SOR_walker_comparison, sep=', ')
-SOR_walker_summary
+compare_models(SOR_walker_perceptual_coupling_model, SOR_walker_independent_model, SOR_walker_physics)
 ```
+
 ### walker SOR model predictions
 
 ```{r walker SOR as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-SOR_walker_fit_predictions <- predict(SOR_walker_full_model,
+SOR_walker_fit_predictions <- predict(SOR_walker_perceptual_coupling,
                                     newdata = data.frame(Term = seq(0, 4.2)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
@@ -670,11 +664,9 @@ SOR_walker_plot <-
   geom_quasirandom(data=SOR_walker, method="tukeyDense", width=0.2,
                   aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Shift (degrees)", breaks = unique(SOR_walker$ShiftAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(SOR_walker_factor_model))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(SOR_walker_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
-  plot_theme() +
-  labs(subtitle=SOR_walker_summary)
-
+  plot_theme()
 SOR_walker_plot
 ```
 
