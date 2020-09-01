@@ -195,7 +195,8 @@ reports <-
   #5. Renaming Percepts
   mutate(RawPercept = Percept, 
          Percept=as.factor(Percept),
-         Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))
+         Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))%>%
+  mutate(NotInteracting=as.numeric(Distance > 0 | Shift != 0))
 ```
 
 
