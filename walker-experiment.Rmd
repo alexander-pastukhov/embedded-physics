@@ -305,15 +305,6 @@ vertical_physics <- fit_prototype(physics_prototype, vertical_distance)
 vertical_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, vertical_distance, add_loo = FALSE)
 ```
 
-### Full model summary vertical distance
-
-```{r}
-# Compute estimates for individual parameters
-vertical_distance_alpha <- compute_full_model_alpha(vertical_perceptual_coupling_model)
-vertical_distance_beta <- compute_full_model_beta(vertical_perceptual_coupling_model)  
-```
-
-
 ### Compare models
 
 ```{r}
@@ -349,6 +340,9 @@ vertical_distance_plot <-
   plot_theme()
 vertical_distance_plot
 ```
+
+
+
 ## Distance horizontal condition
 ```{r}
 horizontal_distance <- 
