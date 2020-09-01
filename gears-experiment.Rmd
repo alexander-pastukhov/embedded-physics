@@ -434,8 +434,8 @@ occlusion_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
                   aes(x=Occlusion, group=Occlusion, y=Pcounterrotate)) +
-  scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion))+
-                     #sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_factor_model))) +
+  scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_pairwise_comparison))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
 
@@ -461,7 +461,7 @@ ambiguity<- reports%>%
   
   mutate(Term= Display)%>%#used to be TermAsFactor
   mutate(TermAsFactor=Display)%>%
-  dplyr::mutate(NotInteracting=(0))
+  dplyr::mutate(NotInteracting=0)
 
 ```
 
@@ -469,7 +469,7 @@ ambiguity<- reports%>%
 set.seed(472832)
 ambiguity_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, ambiguity)
 ambiguity_independent_model <- fit_prototype(independent_prototype, ambiguity)
-ambiguity_physics<- fit_prototype(physics_prototype, ambiguity)
+ambiguity_physics <- fit_prototype(physics_prototype, ambiguity)
 ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ambiguity, add_loo = FALSE)
 ```
 
@@ -477,16 +477,10 @@ ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, am
 compare_models(ambiguity_perceptual_coupling, ambiguity_independent_model, ambiguity_physics)
 ```
 
-```{r fitting ambiguity as factor}
-set.seed(99435)
-ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, ambiguity)
-ambiguity_intercept_model <- fit_prototype(independent_prototype, ambiguity)
-```
-
 Generating predictions
 
 ```{r predicting and plotting ambiguity}
-ambiguity_fit_predictions <- predict(ambiguity_factor_model,
+ambiguity_fit_predictions <- predict(ambiguity_pairwise_comparison,
                                      newdata = data.frame(TermAsFactor = levels(ambiguity$Display)),
                                      summary = FALSE,
                                      re_formula = NA) %>%
@@ -519,7 +513,7 @@ ambiguity_plot <-
                      breaks = unique(as.numeric(ambiguity$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
-                                          labels = compute_factor_level_betas(ambiguity_factor_model)))+
+                                          labels = compute_factor_level_betas(ambiguity_pairwise_comparison)))+
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
 ambiguity_plot
@@ -531,9 +525,9 @@ ambiguity_plot
 distance_plot / occlusion_plot / ambiguity_plot + 
   plot_annotation(tag_levels= "A")
 
-ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-02-gears.png', width=14, height=20, units="cm")
-ggsave('figure-02-gears.svg', width=14, height=20, units="cm")
+# ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
+ggsave('figure-02-gears.png', width=14, height=16, units="cm")
+ggsave('figure-02-gears.svg', width=14, height=16, units="cm")
 ```
 
 
