@@ -459,38 +459,33 @@ sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005) %>%             
 # duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = SphereDisambiguationAbs,
-                TermAsFactor = SphereDisambiguationAsFactor)
+                TermAsFactor = SphereDisambiguationAsFactor)%>%
+  dplyr::mutate(NotInteracting=1)
 ```
 
 ### Fitting sphere ambiguity condition via brms
 
 ```{r Fitting sphere ambiguity as a continuous variable via brms}
 set.seed(5515605 )
-sphere_ambiguity_full_model <- fit_prototype(perceptual_coupling_prototype, sphere_ambiguity)
-sphere_ambiguity_intercept_model <- fit_prototype(independent_prototype, sphere_ambiguity)
-sphere_ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, sphere_ambiguity, add_loo = FALSE)
+sphere_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, sphere_ambiguity)
+sphere_independent_model <- fit_prototype(independent_prototype, sphere_ambiguity)
+sphere_physics <- fit_prototype(physics_prototype, sphere_ambiguity)
+sphere_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, sphere_ambiguity, add_loo = FALSE)
 ```
 
-### Full model summary sphere ambiguity
+
+### Compare models
 
 ```{r}
-# Compute estimates for individual parameters
-sphere_ambiguity_alpha <- compute_full_model_alpha(sphere_ambiguity_full_model)
-sphere_ambiguity_beta <- compute_full_model_beta(sphere_ambiguity_full_model)  
-
-# Compare the two models with term (full) and without it (intercept)
-sphere_ambiguity_comparison <- compare_models(sphere_ambiguity_full_model,sphere_ambiguity_intercept_model)
-
-# summary text
-sphere_ambiguity_summary <- stringr::str_c(sphere_ambiguity_alpha, sphere_ambiguity_beta, sphere_ambiguity_comparison, sep=', ')
-sphere_ambiguity_summary
+compare_models(sphere_perceptual_coupling_model, sphere_independent_model, sphere_physics)
 ```
+
 ### sphere ambiguity model predictions
 
 ```{r sphere ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 sphere_ambiguity_fit_predictions <- 
-  predict(sphere_ambiguity_full_model,
+  predict(sphere_perceptual_coupling_model,
                                     newdata = data.frame(Term = seq(0, 1.1, 0.1)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
@@ -510,11 +505,9 @@ sphere_ambiguity_plot <-
   geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=0.04,
                   aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Sphere Disambiguation (degrees)", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(sphere_ambiguity_factor_model))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(sphere_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
-  plot_theme() +
-  labs(subtitle=sphere_ambiguity_summary)
-
+  plot_theme()
 sphere_ambiguity_plot
 ```
 ### Walker ambiguity condition
