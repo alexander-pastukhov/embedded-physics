@@ -414,11 +414,11 @@ occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, oc
 ### Generate a full model summary for Occlusion
 ```{r}
 # Compute estimates for individual parameters
-occlusion_alpha <- compute_full_model_alpha(occlusion_full_model)
-occlusion_beta <- compute_full_model_beta(occlusion_full_model)  
+occlusion_alpha <- compute_full_model_alpha(occlusion_perceptual_coupling)
+occlusion_beta <- compute_full_model_beta(occlusion_perceptual_coupling)  
 
 # Compare the two models with term (full) and without it (intercept)
-occlusion_comparison <- compare_models(occlusion_full_model, occlusion_intercept_model)
+occlusion_comparison <- compare_models(occlusion_perceptual_coupling, occlusion_independent_model)
 
 # summary text
 occlusion_summary <- stringr::str_c(occlusion_alpha, occlusion_beta, occlusion_comparison, sep=', ')
@@ -433,7 +433,7 @@ compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlu
 
 ```{r Occlusion as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-occlusion_fit_predictions <- predict(occlusion_full_model,
+occlusion_fit_predictions <- predict(occlusion_perceptual_coupling,
                                     newdata = data.frame(Term = seq(0, 70, 1)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
