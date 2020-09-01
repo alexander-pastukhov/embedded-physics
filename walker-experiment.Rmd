@@ -218,7 +218,9 @@ vertical_distance <-
 
   # duplicating distance as Term for common BRMS model use
   dplyr::mutate(Term = Distance,
-                TermAsFactor = DistanceAsFactor)
+                TermAsFactor = DistanceAsFactor)%>%
+  mutate(NotInteracting=as.numeric(Distance > 0 ))
+
 ```
 
 ### Precompiling BRMS models
@@ -235,7 +237,7 @@ independent_prototype <- brm(PcongruentAdj ~ (1|Participant),
                            chains=0, # this means that model is never sampled
                            data=vertical_distance)
 
-physics_prototype <- brm(PconruentAdj ~ NotInteracting + (1|Participant),
+physics_prototype <- brm(PcongruentAdj ~ NotInteracting + (1|Participant),
                           family=Beta(),
                           data=vertical_distance,
                           chains=0,
@@ -268,11 +270,11 @@ vertical_distance_alpha <- compute_full_model_alpha(vertical_perceptual_coupling
 vertical_distance_beta <- compute_full_model_beta(vertical_perceptual_coupling_model)  
 
 # Compare the two models with term (full) and without it (intercept)
-vertical_distance_comparison <- compare_models(vertical_perceptual_coupling_model,vertical_independent_model)
+#vertical_distance_comparison <- compare_models(vertical_perceptual_coupling_model,vertical_independent_model)
 
 # summary text
-vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
-vertical_distance_summary
+#vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
+#vertical_distance_summary
 ```
 
 ### vertical distance model predictions
@@ -301,9 +303,7 @@ vertical_distance_plot <-
   scale_x_continuous(name = "Vertical Distance (degrees)", breaks = unique(vertical_distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent") +
-  plot_theme() +
-  labs(subtitle=vertical_distance_summary)
-
+  plot_theme()
 vertical_distance_plot
 ```
 ## Distance horizontal condition
