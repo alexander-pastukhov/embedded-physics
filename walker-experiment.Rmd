@@ -692,7 +692,8 @@ SOR_sphere <-
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
 # duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = ShiftAbs,
-                TermAsFactor = ShiftAsFactor)
+                TermAsFactor = ShiftAsFactor)%>%
+  dplyr::mutate(NotInteracting=as.numeric(ShiftAbs != 0))
 ```
 
 ### Fitting single object report sphere condition via brms
@@ -700,30 +701,23 @@ SOR_sphere <-
 ```{r Fitting SOR sphere as a continuous variable via brms}
 set.seed(5515605 )
 # error here: 'beta' requires response greater than zero
-SOR_sphere_full_model <- fit_prototype(perceptual_coupling_prototype, SOR_sphere)
-SOR_sphere_intercept_model <- fit_prototype(independent_prototype, SOR_sphere)
-SOR_sphere_factor_model <- fit_prototype(pairwise_comparison_prototype, SOR_sphere, add_loo = FALSE)
+SOR_sphere_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, SOR_sphere)
+SOR_sphere_independent_model <- fit_prototype(independent_prototype, SOR_sphere)
+SOR_sphere_physics <- fit_prototype(physics_prototype, SOR_sphere)
+SOR_sphere_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, SOR_sphere, add_loo = FALSE)
 ```
 
-### Full model summary SOR sphere
+
+### Compare models
 
 ```{r}
-# Compute estimates for individual parameters
-SOR_sphere_alpha <- compute_full_model_alpha(SOR_sphere_full_model)
-SOR_sphere_beta <- compute_full_model_beta(SOR_sphere_full_model)  
-
-# Compare the two models with term (full) and without it (intercept)
-SOR_sphere_comparison <- compare_models(SOR_sphere_full_model,SOR_sphere_intercept_model)
-
-# summary text
-SOR_sphere_summary <- stringr::str_c(SOR_sphere_alpha, SOR_sphere_beta, SOR_sphere_comparison, sep=', ')
-SOR_sphere_summary
+compare_models(SOR_sphere_perceptual_coupling_model, SOR_sphere_independent_model, SOR_sphere_physics)
 ```
 ### Sphere SOR model predictions
 
 ```{r sphere SOR as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-SOR_sphere_fit_predictions <- predict(SOR_sphere_full_model,
+SOR_sphere_fit_predictions <- predict(SOR_sphere_perceptual_coupling_model,
                                     newdata = data.frame(Term = seq(0, 4.2)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
@@ -743,10 +737,9 @@ SOR_sphere_plot <-
   geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
                   aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Shift (degrees)", breaks = unique(SOR_sphere$ShiftAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(SOR_sphere_factor_model))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(SOR_sphere_pairwise_comparison))) +
   scale_y_continuous(name="Pconsistent", limits= c(0.5, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
-  plot_theme() +
-  labs(subtitle=SOR_sphere_summary)
+  plot_theme()
 
 SOR_sphere_plot
 ```
