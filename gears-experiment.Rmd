@@ -383,7 +383,6 @@ occlusion<- reports%>%
  dplyr:: mutate(Display=as.factor(Display),
          OcclusionAsFactor=as.factor(Occlusion),
          OcclusionAsFactor=fct_relevel(OcclusionAsFactor, "0","8.13", "16.26", "32.52", "65.04")) %>%
-  
   # 2. Use fct_relevel function, which goes Var = fct_relevel(Var, "first level", "second level", ...)
   # each participant and Occlusion seperatly
   dplyr::group_by(Participant, Occlusion, OcclusionAsFactor) %>% 
@@ -395,8 +394,10 @@ occlusion<- reports%>%
  dplyr:: mutate(Padj = Pcounterrotate*0.999+0.0005)%>%
  # duplicating Occlusion as Term for common BRMS model use
   dplyr::mutate(Term = Occlusion,
-                TermAsFactor = OcclusionAsFactor)
- 
+                TermAsFactor = OcclusionAsFactor)%>%
+  #dplyr::mutate(NotInteracting= as.integer((Distance > "-8.13")))
+
+
   
 ```
 
@@ -404,9 +405,10 @@ occlusion<- reports%>%
 ```{r Fitting occlusion as a continuous variable via brms}
 # Computing brm for occlusion condition
 set.seed(9789931)
-occlusion_full_model <- fit_prototype(perceptual_coupling_prototype, occlusion)
-occlusion_intercept_model <- fit_prototype(independent_prototype, occlusion)
-occlusion_factor_model <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
+occlusion_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, occlusion)
+occlusion_independent_model <- fit_prototype(independent_prototype, occlusion)
+occlusion_physics<- fit_prototype(physics_prototype, occlusion)
+occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
 ```
 
 ### Generate a full model summary for Occlusion
@@ -421,6 +423,10 @@ occlusion_comparison <- compare_models(occlusion_full_model, occlusion_intercept
 # summary text
 occlusion_summary <- stringr::str_c(occlusion_alpha, occlusion_beta, occlusion_comparison, sep=', ')
 occlusion_summary
+```
+
+```{r comparing models}
+compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlusion_physics)
 ```
 
 ### Generate model predictions Occlusion
