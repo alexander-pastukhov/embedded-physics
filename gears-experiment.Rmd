@@ -359,8 +359,7 @@ distance_plot <-
   scale_x_continuous(name = "Distance (degrees)", breaks = unique(distance$Distance),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_pairwise_comparison))) +
   scale_y_continuous(name="Pcounter-rotation") +
-  plot_theme() +
-  labs(subtitle=distance_summary)
+  plot_theme()
 
 distance_plot
 ```
@@ -394,9 +393,7 @@ occlusion<- reports%>%
  # duplicating Occlusion as Term for common BRMS model use
   dplyr::mutate(Term = Occlusion,
                 TermAsFactor = OcclusionAsFactor)%>%
-  dplyr::mutate(NotInteracting= as.integer((Occlusion > "-8.13")))# since distance is not part of the data anymore and we know it can always interact, I am just trying sth here
-
-
+  dplyr::mutate(NotInteracting= as.integer((0)))
   
 ```
 
@@ -414,14 +411,7 @@ occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, oc
 ```{r}
 # Compute estimates for individual parameters
 occlusion_alpha <- compute_full_model_alpha(occlusion_perceptual_coupling)
-occlusion_beta <- compute_full_model_beta(occlusion_perceptual_coupling)  
-
-# Compare the two models with term (full) and without it (intercept)
-occlusion_comparison <- compare_models(occlusion_perceptual_coupling, occlusion_independent_model)
-
-# summary text
-occlusion_summary <- stringr::str_c(occlusion_alpha, occlusion_beta, occlusion_comparison, sep=', ')
-occlusion_summary
+occlusion_beta <- compute_full_model_beta(occlusion_perceptual_coupling)
 ```
 
 ```{r comparing models}
