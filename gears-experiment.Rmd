@@ -478,16 +478,27 @@ ambiguity<- reports%>%
               Pcounterrotate=CounterrotateDur/TotalDuration) %>%
   mutate(Padj=Pcounterrotate*0.999+0.0005) %>%
   
-  mutate(TermAsFactor = Display)
+  mutate(Term= Display)#used to be TermAsFactor
 ```
 
+```{r fitting ambiguity}
+set.seed(472832)
+ambiguity_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, ambiguity)
+ambiguity_independent_model <- fit_prototype(independent_prototype, ambiguity)
+ambiguity_physics<- fit_prototype(physics_prototype, ambiguity)
+ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ambiguity, add_loo = FALSE)
+```
 
+```{r comparing models ambiguity}
+compare_models(ambiguity_perceptual_coupling, ambiguity_independent_model, ambiguity_physics)
+```
 
 ```{r fitting ambiguity as factor}
 set.seed(99435)
 ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, ambiguity)
 ambiguity_intercept_model <- fit_prototype(independent_prototype, ambiguity)
 ```
+
 
 
 Comparing the two models
