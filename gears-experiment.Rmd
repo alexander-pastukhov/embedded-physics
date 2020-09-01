@@ -407,13 +407,6 @@ occlusion_physics<- fit_prototype(physics_prototype, occlusion)
 occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
 ```
 
-### Generate a full model summary for Occlusion
-```{r}
-# Compute estimates for individual parameters
-occlusion_alpha <- compute_full_model_alpha(occlusion_perceptual_coupling)
-occlusion_beta <- compute_full_model_beta(occlusion_perceptual_coupling)
-```
-
 ```{r comparing models}
 compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlusion_physics)
 ```
