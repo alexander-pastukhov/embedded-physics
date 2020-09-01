@@ -268,13 +268,6 @@ vertical_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ver
 # Compute estimates for individual parameters
 vertical_distance_alpha <- compute_full_model_alpha(vertical_perceptual_coupling_model)
 vertical_distance_beta <- compute_full_model_beta(vertical_perceptual_coupling_model)  
-
-# Compare the two models with term (full) and without it (intercept)
-#vertical_distance_comparison <- compare_models(vertical_perceptual_coupling_model,vertical_independent_model)
-
-# summary text
-#vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
-#vertical_distance_summary
 ```
 
 ### vertical distance model predictions
