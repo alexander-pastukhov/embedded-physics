@@ -119,7 +119,7 @@ compare_models <- function(perceptual_coupling_model, independent_model, physics
   models_alpha <-
     purrr::map_df(list("Perceptual Coupling" = perceptual_coupling_model, 
                      "Independent" = independent_model, 
-                     "Physics" = physics), ~compute_full_model_alpha(.)) %>%
+                     "Physics" = physics), ~compute_model_alpha(.)) %>%
     t() %>%
     data.frame() %>%
     rename(a = 1) %>%
@@ -128,7 +128,7 @@ compare_models <- function(perceptual_coupling_model, independent_model, physics
   models_beta <-
     purrr::map_df(list("Perceptual Coupling" = perceptual_coupling_model, 
                      "Independent" = independent_model, 
-                     "Physics" = physics), ~compute_full_model_beta(.)) %>%
+                     "Physics" = physics), ~compute_model_beta(.)) %>%
     t() %>%
     data.frame() %>%
     rename(b = 1) %>%
@@ -140,6 +140,37 @@ compare_models <- function(perceptual_coupling_model, independent_model, physics
 
 
 ### Computation of coefficient estimates and their 89% credible intervals
+
+
+```{r full model beta}
+compute_model_beta <- function(brms_model){
+  estimate <- 
+    fixef(brms_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame() %>%
+    rownames_to_column("Coefficient") %>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    filter(Coefficient %in% c("Term", "NotInteracting"))
+  
+  if (nrow(estimate) == 0){
+    return("-")
+  }
+  sprintf('%.4f [%0.2f..%0.2f]', exp(estimate$Estimate), exp(estimate$LowerCI), exp(estimate$UpperCI))
+}
+```
+
+```{r full model alpha}
+compute_model_alpha <- function(brms_model){
+  alpha <-
+    fixef(brms_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
+    data.frame()%>%
+    rownames_to_column("Coefficient")%>%
+    rename(LowerCI=4, UpperCI=5) %>%
+    filter(Coefficient == "Intercept")
+sprintf('%.2f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
+        inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
+  }
+```
+
 
 ```{r full model beta}
 compute_full_model_beta <- function(full_model){
