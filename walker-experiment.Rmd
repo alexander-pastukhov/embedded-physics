@@ -224,18 +224,24 @@ vertical_distance <-
 ### Precompiling BRMS models
 
 ```{r brms models}
-full_prototype <- brm(PcongruentAdj ~ Term + (1|Participant),
+perceptual_coupling_prototype <- brm(PcongruentAdj ~ Term + (1|Participant),
                      family=Beta(),
                      data=vertical_distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
 
-intercept_prototype <- brm(PcongruentAdj ~ (1|Participant),
+independent_prototype <- brm(PcongruentAdj ~ (1|Participant),
                            family=Beta(),
                            chains=0, # this means that model is never sampled
                            data=vertical_distance)
 
-factor_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participant),
+physics_prototype <- brm(PconruentAdj ~ NotInteracting) + (1|Participant),
+                          family=Beta(),
+                          data=vertical_distance,
+                          chains=0,
+                          prior=c(prior(normal(0, 1), class="b")))
+
+pairwise_comparison_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=vertical_distance,
                         chains=0, # this means that model is never sampled
@@ -248,20 +254,21 @@ factor_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participant),
 
 ```{r Fitting vertical distance as a continuous variable via brms}
 set.seed(5515605 )
-vertical_distance_full_model <- fit_prototype(full_prototype, vertical_distance)
-vertical_distance_intercept_model <- fit_prototype(intercept_prototype, vertical_distance)
-vertical_distance_factor_model <- fit_prototype(factor_prototype, vertical_distance, add_loo = FALSE)
+vertical_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, vertical_distance)
+vertical_independent_model <- fit_prototype(independent_prototype, vertical_distance)
+vertical_physics <- fit_prototype(physics_prototype, vertical_distance)
+vertical_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, vertical_distance, add_loo = FALSE)
 ```
 
 ### Full model summary vertical distance
 
 ```{r}
 # Compute estimates for individual parameters
-vertical_distance_alpha <- compute_full_model_alpha(vertical_distance_full_model)
-vertical_distance_beta <- compute_full_model_beta(vertical_distance_full_model)  
+vertical_distance_alpha <- compute_full_model_alpha(vertical_perceptual_coupling_model)
+vertical_distance_beta <- compute_full_model_beta(vertical_perceptual_coupling_model)  
 
 # Compare the two models with term (full) and without it (intercept)
-vertical_distance_comparison <- compare_models(vertical_distance_full_model,vertical_distance_intercept_model)
+vertical_distance_comparison <- compare_models(vertical_perceptual_coupling_model,vertical_independent_model)
 
 # summary text
 vertical_distance_summary <- stringr::str_c(vertical_distance_alpha, vertical_distance_beta, vertical_distance_comparison, sep=', ')
@@ -272,7 +279,7 @@ vertical_distance_summary
 
 ```{r vertical distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-vertical_distance_fit_predictions <- predict(vertical_distance_full_model,
+vertical_distance_fit_predictions <- predict(vertical_perceptual_coupling_model,
                                     newdata = data.frame(Term = seq(0, 4.1, 0.1)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
@@ -292,7 +299,7 @@ vertical_distance_plot <-
   geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.2,
                   aes(x=Distance, group=Distance, y=Pcongruent)) +
   scale_x_continuous(name = "Vertical Distance (degrees)", breaks = unique(vertical_distance$Distance),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_distance_factor_model))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme() +
   labs(subtitle=vertical_distance_summary)
@@ -324,9 +331,9 @@ horizontal_distance <-
 
 ```{r Fitting Horizontal distance as a continuous variable via brms}
 set.seed(5515605 )
-horizontal_distance_full_model <- fit_prototype(full_prototype, horizontal_distance)
-horizontal_distance_intercept_model <- fit_prototype(intercept_prototype, horizontal_distance)
-horizontal_distance_factor_model <- fit_prototype(factor_prototype, horizontal_distance, add_loo = FALSE)
+horizontal_distance_full_model <- fit_prototype(perceptual_coupling_prototype, horizontal_distance)
+horizontal_distance_intercept_model <- fit_prototype(independent_prototype, horizontal_distance)
+horizontal_distance_factor_model <- fit_prototype(pairwise_comparison_prototype, horizontal_distance, add_loo = FALSE)
 ```
 
 ### Full model summary horizontal distance
@@ -399,9 +406,9 @@ sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
 
 ```{r Fitting sphere ambiguity as a continuous variable via brms}
 set.seed(5515605 )
-sphere_ambiguity_full_model <- fit_prototype(full_prototype, sphere_ambiguity)
-sphere_ambiguity_intercept_model <- fit_prototype(intercept_prototype, sphere_ambiguity)
-sphere_ambiguity_factor_model <- fit_prototype(factor_prototype, sphere_ambiguity, add_loo = FALSE)
+sphere_ambiguity_full_model <- fit_prototype(perceptual_coupling_prototype, sphere_ambiguity)
+sphere_ambiguity_intercept_model <- fit_prototype(independent_prototype, sphere_ambiguity)
+sphere_ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, sphere_ambiguity, add_loo = FALSE)
 ```
 
 ### Full model summary sphere ambiguity
@@ -476,9 +483,9 @@ walker_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
 
 ```{r Fitting walker ambiguity as a continuous variable via brms}
 set.seed(5515605 )
-walker_ambiguity_full_model <- fit_prototype(full_prototype, walker_ambiguity)
-walker_ambiguity_intercept_model <- fit_prototype(intercept_prototype, walker_ambiguity)
-walker_ambiguity_factor_model <- fit_prototype(factor_prototype, walker_ambiguity, add_loo = FALSE)
+walker_ambiguity_full_model <- fit_prototype(perceptual_coupling_prototype, walker_ambiguity)
+walker_ambiguity_intercept_model <- fit_prototype(independent_prototype, walker_ambiguity)
+walker_ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, walker_ambiguity, add_loo = FALSE)
 ```
 
 ### Full model summary walker ambiguity
@@ -576,9 +583,9 @@ SOR_walker <-
 ```{r Fitting SOR walker as a continuous variable via brms}
 set.seed(5515605 )
 # error here: 'beta' requires response greater than zero
-SOR_walker_full_model <- fit_prototype(full_prototype, SOR_walker)
-SOR_walker_intercept_model <- fit_prototype(intercept_prototype, SOR_walker)
-SOR_walker_factor_model <- fit_prototype(factor_prototype, SOR_walker, add_loo = FALSE)
+SOR_walker_full_model <- fit_prototype(perceptual_coupling_prototype, SOR_walker)
+SOR_walker_intercept_model <- fit_prototype(independent_prototype, SOR_walker)
+SOR_walker_factor_model <- fit_prototype(pairwise_comparison_prototype, SOR_walker, add_loo = FALSE)
 ```
 
 ### Full model summary SOR walker
@@ -657,9 +664,9 @@ SOR_sphere <-
 ```{r Fitting SOR sphere as a continuous variable via brms}
 set.seed(5515605 )
 # error here: 'beta' requires response greater than zero
-SOR_sphere_full_model <- fit_prototype(full_prototype, SOR_sphere)
-SOR_sphere_intercept_model <- fit_prototype(intercept_prototype, SOR_sphere)
-SOR_sphere_factor_model <- fit_prototype(factor_prototype, SOR_sphere, add_loo = FALSE)
+SOR_sphere_full_model <- fit_prototype(perceptual_coupling_prototype, SOR_sphere)
+SOR_sphere_intercept_model <- fit_prototype(independent_prototype, SOR_sphere)
+SOR_sphere_factor_model <- fit_prototype(pairwise_comparison_prototype, SOR_sphere, add_loo = FALSE)
 ```
 
 ### Full model summary SOR sphere
