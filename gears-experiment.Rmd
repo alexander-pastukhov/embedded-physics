@@ -377,7 +377,6 @@ occlusion<- reports%>%
   # replace "None" with "0" and then turn Occlusion to a numeric variable
  dplyr:: mutate(Occlusion = ifelse(Occlusion == "None", "0", Occlusion), 
          Occlusion = as.numeric(Occlusion)) %>%
-  
   # reorder Occlusion to factor
   # 1. Display to factor
  dplyr:: mutate(Display=as.factor(Display),
@@ -395,7 +394,7 @@ occlusion<- reports%>%
  # duplicating Occlusion as Term for common BRMS model use
   dplyr::mutate(Term = Occlusion,
                 TermAsFactor = OcclusionAsFactor)%>%
-  #dplyr::mutate(NotInteracting= as.integer((Distance > "-8.13")))
+  dplyr::mutate(NotInteracting= as.integer((Occlusion > "-8.13")))# since distance is not part of the data anymore and we know it can always interact, I am just trying sth here
 
 
   
