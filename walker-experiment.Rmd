@@ -96,6 +96,49 @@ compare_models <- function(full_model, intercept_model){
 }
 ```
 
+## Model comparison
+```{r comparing three models}
+compare_models <- function(perceptual_coupling_model, independent_model, physics){
+  models_elpd <- 
+    loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling_model$criteria$loo,
+                          "Independent" = independent_model$criteria$loo,
+                          "Physics"= physics$criteria$loo)) %>%
+      data.frame() %>%
+      rownames_to_column("Model")%>%
+  mutate(dELPD=(sprintf("%.1f±%.2f", elpd_diff, se_diff))) %>%
+  select(Model, dELPD)
+
+  models_weight <-
+    loo::loo_model_weights(list("Perceptual Coupling" = perceptual_coupling_model$criteria$loo,                          "Independent" = independent_model$criteria$loo, "Physics" = physics$criteria$loo))%>%
+    data.matrix()%>%
+    data.frame()%>%
+  rownames_to_column("Model")%>%
+    mutate( Weight= (sprintf("%.2f", .)))%>%
+    select(Model, Weight)
+
+  models_alpha <-
+    purrr::map_df(list("Perceptual Coupling" = perceptual_coupling_model, 
+                     "Independent" = independent_model, 
+                     "Physics" = physics), ~compute_full_model_alpha(.)) %>%
+    t() %>%
+    data.frame() %>%
+    rename(a = 1) %>%
+    rownames_to_column("Model")
+
+  models_beta <-
+    purrr::map_df(list("Perceptual Coupling" = perceptual_coupling_model, 
+                     "Independent" = independent_model, 
+                     "Physics" = physics), ~compute_full_model_beta(.)) %>%
+    t() %>%
+    data.frame() %>%
+    rename(b = 1) %>%
+    rownames_to_column("Model")
+  
+  purrr::reduce(list(models_elpd, models_weight, models_alpha, models_beta), dplyr::left_join, by="Model")
+}
+```
+
+
 ### Computation of coefficient estimates and their 89% credible intervals
 
 ```{r full model beta}
@@ -268,6 +311,13 @@ vertical_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ver
 # Compute estimates for individual parameters
 vertical_distance_alpha <- compute_full_model_alpha(vertical_perceptual_coupling_model)
 vertical_distance_beta <- compute_full_model_beta(vertical_perceptual_coupling_model)  
+```
+
+
+### Compare models
+
+```{r}
+compare_models(vertical_perceptual_coupling_model, vertical_independent_model, vertical_physics)
 ```
 
 ### vertical distance model predictions
