@@ -441,11 +441,10 @@ occlusion_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
                   aes(x=Occlusion, group=Occlusion, y=Pcounterrotate)) +
-  scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_factor_model))) +
+  scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion))+
+                     #sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_factor_model))) +
   scale_y_continuous(name="Pcounter-rotation") +
-  plot_theme() +
-  labs(subtitle=occlusion_summary)
+  plot_theme()
 
 occlusion_plot
 ```
@@ -467,7 +466,10 @@ ambiguity<- reports%>%
               Pcounterrotate=CounterrotateDur/TotalDuration) %>%
   mutate(Padj=Pcounterrotate*0.999+0.0005) %>%
   
-  mutate(Term= Display)#used to be TermAsFactor
+  mutate(Term= Display)%>%#used to be TermAsFactor
+  mutate(TermAsFactor=Display)%>%
+  dplyr::mutate(NotInteracting= as.integer((0)))
+
 ```
 
 ```{r fitting ambiguity}
@@ -488,15 +490,6 @@ ambiguity_factor_model <- fit_prototype(pairwise_comparison_prototype, ambiguity
 ambiguity_intercept_model <- fit_prototype(independent_prototype, ambiguity)
 ```
 
-
-
-Comparing the two models
-```{r}
-ambiguity_alpha <- compute_full_model_alpha(ambiguity_factor_model)
-ambiguity_comparison <- compare_models(ambiguity_factor_model, ambiguity_intercept_model)
-ambiguity_summary <- stringr::str_c(ambiguity_alpha, ambiguity_comparison, sep=", ")
-ambiguity_summary
-```
 Generating predictions
 
 ```{r predicting and plotting ambiguity}
@@ -535,9 +528,7 @@ ambiguity_plot <-
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = compute_factor_level_betas(ambiguity_factor_model)))+
   scale_y_continuous(name="Pcounter-rotation") +
-  plot_theme() +
-  labs(subtitle=ambiguity_summary)
-
+  plot_theme()
 ambiguity_plot
 ```
 
