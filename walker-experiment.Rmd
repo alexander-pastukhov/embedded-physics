@@ -644,7 +644,7 @@ compare_models(SOR_walker_perceptual_coupling_model, SOR_walker_independent_mode
 
 ```{r walker SOR as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-SOR_walker_fit_predictions <- predict(SOR_walker_perceptual_coupling,
+SOR_walker_fit_predictions <- predict(SOR_walker_perceptual_coupling_model,
                                     newdata = data.frame(Term = seq(0, 4.2)),
                                     probs = c(0.055, 0.25, 0.75, 0.945),
                                     re_formula = NA) %>%
