@@ -393,7 +393,7 @@ occlusion<- reports%>%
  # duplicating Occlusion as Term for common BRMS model use
   dplyr::mutate(Term = Occlusion,
                 TermAsFactor = OcclusionAsFactor)%>%
-  dplyr::mutate(NotInteracting= as.integer((0)))
+  dplyr::mutate(NotInteracting= (0))
   
 ```
 
@@ -461,7 +461,7 @@ ambiguity<- reports%>%
   
   mutate(Term= Display)%>%#used to be TermAsFactor
   mutate(TermAsFactor=Display)%>%
-  dplyr::mutate(NotInteracting= as.integer((0)))
+  dplyr::mutate(NotInteracting=(0))
 
 ```
 
