@@ -308,6 +308,12 @@ physics_prototype <- brm(Padj ~ NotInteracting + (1|Participant),
                          chains=0, 
                          prior=c(prior(normal(0, 1), class="b")))
 
+interaction_prototype<- brm(Term + Term:NotInteracting,
+                           family=Beta(),
+                           data=distance,
+                           chains=0,
+                           prior=c(prior(normal(0, 1), class="b")))
+
 pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=distance,
@@ -324,6 +330,8 @@ distance_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, dis
 distance_independent_model <- fit_prototype(independent_prototype, distance)
 distance_physics <- fit_prototype(physics_prototype, distance)
 distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
+
+distance_interaction<- fit_prototype(interaction_prototype, distance)
 ```
 
 
