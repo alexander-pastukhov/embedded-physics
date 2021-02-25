@@ -26,9 +26,6 @@ library(tidyverse)
 extrafont::loadfonts(quiet = TRUE)
 ```
 
-```{r Tabula rasa}
-rm(list=ls())
-```
 
 ## Utilities
 ```{r Custom plotting theme}
