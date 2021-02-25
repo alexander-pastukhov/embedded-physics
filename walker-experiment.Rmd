@@ -239,25 +239,18 @@ read_walker_csv <- function(filename){
 }
 
 reports <- 
-  purrr::map2_dfr(dir_ls(path = "Data", glob  = "*walker*.csv"))
+  # 1. Load files
+  purrr::map_dfr(dir_ls(path = "Data", glob  = "*walker*.csv")) %>%
   
-  # 1. Figure out which files need to be loaded
-  tibble(filename = as.character(dir_ls(path = "Data", glob  = "*walker*.csv"))) %>%
-  
-  # 2. Load files on by one (hence rowwise())
-  group_by(filename) %>% #rowwise() %>%
-  do(read_walker_csv(.$filename[1])) %>%
-  ungroup() %>%
-  
-  # 3. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
+  # 2. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
   group_by(Participant, Session, Block) %>%
   mutate(Duration = lead(Time) - Time) %>%
   ungroup() %>%
 
-  # 4. Drop "end" Percept
+  # 3. Drop "end" Percept
   filter(Percept != "end")%>%
   
-  #5. Renaming Percepts
+  # 4. Renaming Percepts
   mutate(RawPercept = Percept, 
          Percept=as.factor(Percept),
          Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))%>%
