@@ -26,7 +26,6 @@ library(tidyverse)
 extrafont::loadfonts(quiet = TRUE)
 ```
 
-
 ## Utilities
 ```{r Custom plotting theme}
 plot_theme <- function()
@@ -131,7 +130,6 @@ compare_models <- function(perceptual_coupling_model, independent_model, physics
 
 
 ### Computation of coefficient estimates and their 89% credible intervals
-
 
 ```{r full model beta}
 compute_model_beta <- function(brms_model){
@@ -241,6 +239,8 @@ read_walker_csv <- function(filename){
 }
 
 reports <- 
+  purrr::map2_dfr(dir_ls(path = "Data", glob  = "*walker*.csv"))
+  
   # 1. Figure out which files need to be loaded
   tibble(filename = as.character(dir_ls(path = "Data", glob  = "*walker*.csv"))) %>%
   
