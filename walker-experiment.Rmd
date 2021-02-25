@@ -240,7 +240,8 @@ read_walker_csv <- function(filename){
 
 reports <- 
   # 1. Load files
-  purrr::map_dfr(dir_ls(path = "Data", glob  = "*walker*.csv")) %>%
+  purrr::map_dfr(dir_ls(path = "Data", glob  = "*walker*.csv"),
+                 ~read_walker_csv(.)) %>%
   
   # 2. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
   group_by(Participant, Session, Block) %>%
