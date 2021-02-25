@@ -338,7 +338,7 @@ distance_interaction<- fit_prototype(interaction_prototype, distance)
 ### Compare models
 
 ```{r}
-compare_models(distance_perceptual_coupling, distance_independent_model, distance_physics)
+compare_models(distance_perceptual_coupling, distance_independent_model, distance_physics, distance_interaction)
 ```
 
 ### Generate model predictions
@@ -413,10 +413,11 @@ occlusion_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, oc
 occlusion_independent_model <- fit_prototype(independent_prototype, occlusion)
 occlusion_physics<- fit_prototype(physics_prototype, occlusion)
 occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
+occlusion_interaction<- fit_prototype(interaction_prototype, occlusion)
 ```
 
 ```{r comparing models}
-compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlusion_physics)
+compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlusion_physics, occlusion_interaction)
 ```
 
 ### Generate model predictions Occlusion
@@ -479,10 +480,11 @@ ambiguity_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, am
 ambiguity_independent_model <- fit_prototype(independent_prototype, ambiguity)
 ambiguity_physics <- fit_prototype(physics_prototype, ambiguity)
 ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ambiguity, add_loo = FALSE)
+ambiguity_interaction<- fit_prototype(interaction_prototype, ambiguity)
 ```
 
 ```{r comparing models ambiguity}
-compare_models(ambiguity_perceptual_coupling, ambiguity_independent_model, ambiguity_physics)
+compare_models(ambiguity_perceptual_coupling, ambiguity_independent_model, ambiguity_physics, ambiguity_interaction)
 ```
 
 Generating predictions
