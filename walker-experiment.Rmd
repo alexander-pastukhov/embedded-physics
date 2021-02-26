@@ -12,222 +12,23 @@ library(bayestestR)
 library(betareg)
 library(boot)
 library(brms)
-library(dplyr)
 library(extrafont)
 library(fs)
-library(forcats)
 library(ggbeeswarm)
 library(ggpmisc)
 library(ggpubr)
 library(glue)
-library(ggplot2)
 library(grid)
 library(patchwork)
-library(readr)
 library(reshape2)
-library(stringr)
-library(tibble)
-library(tidyr)
+library(tidyverse)
 
 extrafont::loadfonts(quiet = TRUE)
+
+# source does not play well with unicode on Windows
+eval(parse('common_utilities.R', encoding = 'UTF-8'))
 ```
 
-```{r Tabula rasa}
-rm(list=ls())
-```
-
-## Utilities
-```{r Custom plotting theme}
-plot_theme <- function()
-{
-  theme(text=element_text(family="Arial"),
-        axis.text.x = element_text(size = 8, colour = 'black'), 
-        axis.text.y = element_text(size = 8, colour = 'black'), 
-        axis.title.x = element_text(size = 10), 
-        axis.title.y = element_text(size = 10), 
-        panel.grid.minor.x = element_blank(), 
-        panel.grid.minor.y =  element_line(size = 0.24), 
-        axis.ticks = element_line(size = 0.24),
-        plot.subtitle=element_text(size=8, hjust=0.5))
-}
-```
-
-### Computing comparisons between the two models
-```{r compute BF}
-compute_BF <- function(full_model, reduced_model){
-  BF <- brms::bayes_factor(full_model, reduced_model, silent = TRUE)
-  sprintf('BF=%.2g', BF$bf)
-}
-```
-
-```{r compute dELPD}
-compute_dELPD <- function(full_model, intercept_model){
-  dLOO <-   
-    loo::loo_compare(list("Term" = full_model$criteria$loo,
-                          "Intercept" = intercept_model$criteria$loo)) %>%
-    data.frame() %>%
-    rownames_to_column("Coefficient") %>%
-    
-    # invert difference, so it is positive if full model is better (and negative if it worse than intercept only)
-    mutate(elpd_diff = ifelse(Coefficient == "Intercept", -elpd_diff, elpd_diff)) %>%
-    slice(2)
-    
-  sprintf("ΔELPD=%.1f±%.2f", dLOO$elpd_diff[1], dLOO$se_diff[1])
-}
-```
-
-```{r compute full model weight}
-compute_full_model_weight <- function(full_model, intercepts_model){
-  full_model_weight <- 
-    loo::loo_model_weights(list("Term" = full_model$criteria$loo,
-                                "Intercept" = intercepts_model$criteria$loo))["Term"]
-  
-  sprintf("W=%.2f", full_model_weight)
-}
-```
-
-```{r compare two models}
-compare_models <- function(full_model, intercept_model){
-  BF <- compute_BF(full_model, intercept_model)
-  dELPD <- compute_dELPD(full_model, intercept_model)
-  Weight <- compute_full_model_weight(full_model, intercept_model)
-
-  stringr::str_c(dELPD, Weight, BF, sep=', ')
-}
-```
-
-## Model comparison
-```{r comparing three models}
-compare_models <- function(perceptual_coupling_model, independent_model, physics){
-  models_elpd <- 
-    loo::loo_compare(list("Perceptual Coupling" = perceptual_coupling_model$criteria$loo,
-                          "Independent" = independent_model$criteria$loo,
-                          "Physics"= physics$criteria$loo)) %>%
-      data.frame() %>%
-      rownames_to_column("Model")%>%
-  mutate(dELPD=(sprintf("%.1f±%.2f", elpd_diff, se_diff))) %>%
-  select(Model, dELPD)
-
-  models_weight <-
-    loo::loo_model_weights(list("Perceptual Coupling" = perceptual_coupling_model$criteria$loo,                          "Independent" = independent_model$criteria$loo, "Physics" = physics$criteria$loo))%>%
-    data.matrix()%>%
-    data.frame()%>%
-  rownames_to_column("Model")%>%
-    mutate( Weight= (sprintf("%.2f", .)))%>%
-    select(Model, Weight)
-
-  models_alpha <-
-    purrr::map_df(list("Perceptual Coupling" = perceptual_coupling_model, 
-                     "Independent" = independent_model, 
-                     "Physics" = physics), ~compute_model_alpha(.)) %>%
-    t() %>%
-    data.frame() %>%
-    rename(a = 1) %>%
-    rownames_to_column("Model")
-
-  models_beta <-
-    purrr::map_df(list("Perceptual Coupling" = perceptual_coupling_model, 
-                     "Independent" = independent_model, 
-                     "Physics" = physics), ~compute_model_beta(.)) %>%
-    t() %>%
-    data.frame() %>%
-    rename(b = 1) %>%
-    rownames_to_column("Model")
-  
-  purrr::reduce(list(models_elpd, models_weight, models_alpha, models_beta), dplyr::left_join, by="Model")
-}
-```
-
-
-### Computation of coefficient estimates and their 89% credible intervals
-
-
-```{r full model beta}
-compute_model_beta <- function(brms_model){
-  estimate <- 
-    fixef(brms_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
-    data.frame() %>%
-    rownames_to_column("Coefficient") %>%
-    rename(LowerCI=4, UpperCI=5) %>%
-    filter(Coefficient %in% c("Term", "NotInteracting"))
-  
-  if (nrow(estimate) == 0){
-    return("-")
-  }
-  sprintf('%.4f [%0.2f..%0.2f]', exp(estimate$Estimate), exp(estimate$LowerCI), exp(estimate$UpperCI))
-}
-```
-
-```{r full model alpha}
-compute_model_alpha <- function(brms_model){
-  alpha <-
-    fixef(brms_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
-    data.frame()%>%
-    rownames_to_column("Coefficient")%>%
-    rename(LowerCI=4, UpperCI=5) %>%
-    filter(Coefficient == "Intercept")
-sprintf('%.2f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
-        inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
-  }
-```
-
-
-```{r full model beta}
-compute_full_model_beta <- function(full_model){
-  estimate <- 
-    fixef(full_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
-    data.frame() %>%
-    rownames_to_column("Coefficient") %>%
-    rename(LowerCI=4, UpperCI=5) %>%
-    filter(Coefficient == "Term")
-  sprintf('β=%.4f [%0.2f..%0.2f]', exp(estimate$Estimate), exp(estimate$LowerCI), exp(estimate$UpperCI))
-}
-```
-
-```{r full model alpha}
-# should be similar to how I compute beta but use boot:inv.logit() function to convert back to probability space.
-compute_full_model_alpha <- function(full_model){
-  alpha <-
-    fixef(full_model,probs= c((1-0.89)/2, 1-(1-0.89)/2)) %>%
-    data.frame()%>%
-    rownames_to_column("Coefficient")%>%
-    rename(LowerCI=4, UpperCI=5) %>%
-    filter(Coefficient == "Intercept")
-sprintf('α=%.4f [%0.2f..%0.2f]',inv.logit(alpha$Estimate),
-        inv.logit(alpha$LowerCI), inv.logit(alpha$UpperCI))
-  }
-```
-
-```{r factor model pairwise betas}
-compute_factor_level_betas <- function(factor_model){
-  fixef(factor_model, probs = c((1-0.89)/2, 1-(1-0.89)/2)) %>%
-    data.frame() %>%
-    rownames_to_column("Coefficient") %>%
-    rename(LowerCI=4, UpperCI=5) %>%
-    mutate(Label = ifelse(Coefficient == "Intercept", 
-                          "Control\ncondition", 
-                           glue("β={round(exp(Estimate), 2)}\n{round(exp(LowerCI), 1)}..{round(exp(UpperCI), 1)}"))) %>%
-    pull(Label)
-}
-```
-
-
-### Wrapper for commom parameters of the BRMS update 
-```{r brms prototype fit}
-fit_prototype <- function(prototype, data, add_loo=TRUE){
-  fit <- 
-    update(prototype,
-           newdata=data,
-           refresh=0,
-           cores=future::availableCores(),
-           save_all_pars=TRUE)
-  
-  if (add_loo){
-    fit <- add_criterion(fit, "loo", reloo=TRUE)
-  }
-  fit
-}
-```
 
 
 # Importing data
@@ -250,23 +51,19 @@ read_walker_csv <- function(filename){
 }
 
 reports <- 
-  # 1. Figure out which files need to be loaded
-  tibble(filename = as.character(dir_ls(path = "Data", glob  = "*walker*.csv"))) %>%
+  # 1. Load files
+  purrr::map_dfr(dir_ls(path = "Data", glob  = "*walker*.csv"),
+                 ~read_walker_csv(.)) %>%
   
-  # 2. Load files on by one (hence rowwise())
-  group_by(filename) %>% #rowwise() %>%
-  do(read_walker_csv(.$filename[1])) %>%
-  ungroup() %>%
-  
-  # 3. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
+  # 2. Compute duration PER BLOCK. Inside mutate use "lead(Time)".
   group_by(Participant, Session, Block) %>%
   mutate(Duration = lead(Time) - Time) %>%
   ungroup() %>%
 
-  # 4. Drop "end" Percept
+  # 3. Drop "end" Percept
   filter(Percept != "end")%>%
   
-  #5. Renaming Percepts
+  # 4. Renaming Percepts
   mutate(RawPercept = Percept, 
          Percept=as.factor(Percept),
          Percept=fct_recode(Percept, "congruent"="up", "incongruent"="down"))%>%
@@ -287,29 +84,29 @@ vertical_distance <-
   dplyr::group_by(Participant, Distance, DistanceAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
                    CongruentDur = sum(Duration[Percept=="congruent"]),
-                   Pcongruent = CongruentDur / TotalDuration) %>%
+                   Pcongruent = CongruentDur / TotalDuration,
+                   .groups="drop") %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
 
   # duplicating distance as Term for common BRMS model use
   dplyr::mutate(Term = Distance,
                 TermAsFactor = DistanceAsFactor)%>%
   mutate(NotInteracting=as.numeric(Distance > 0 ))
-
 ```
 
 ### Precompiling BRMS models
 
 ```{r brms models}
+independent_prototype <- brm(PcongruentAdj ~ (1|Participant),
+                           family=Beta(),
+                           chains=0, # this means that model is never sampled
+                           data=vertical_distance)
+
 perceptual_coupling_prototype <- brm(PcongruentAdj ~ Term + (1|Participant),
                      family=Beta(),
                      data=vertical_distance,
                      chains=0, # this means that model is never sampled
                      prior=c(prior(normal(0, 1), class="b")))
-
-independent_prototype <- brm(PcongruentAdj ~ (1|Participant),
-                           family=Beta(),
-                           chains=0, # this means that model is never sampled
-                           data=vertical_distance)
 
 physics_prototype <- brm(PcongruentAdj ~ NotInteracting + (1|Participant),
                           family=Beta(),
@@ -317,11 +114,23 @@ physics_prototype <- brm(PcongruentAdj ~ NotInteracting + (1|Participant),
                           chains=0,
                           prior=c(prior(normal(0, 1), class="b")))
 
+interaction_prototype <- brm(PcongruentAdj ~ Term + Term:NotInteracting + (1|Participant),
+                      family=Beta(),
+                      data=vertical_distance,
+                      chains=0,
+                      prior=c(prior(normal(0, 1), class="b")))
+
+
 pairwise_comparison_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participant),
                         family=Beta(),
                         data=vertical_distance,
                         chains=0, # this means that model is never sampled
                         prior=c(prior(normal(0,1), class="b")))
+
+prototypes <- list("Independent" = independent_prototype,
+                   "Perceptual Coupling" = perceptual_coupling_prototype, 
+                   "Physics" = physics_prototype,
+                   "Interaction" = interaction_prototype)
 ```
 
 
@@ -329,28 +138,27 @@ pairwise_comparison_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participa
 ### Fitting vertical distance condition via brms
 
 ```{r Fitting vertical distance as a continuous variable via brms}
-set.seed(5515605 )
-vertical_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, vertical_distance)
-vertical_independent_model <- fit_prototype(independent_prototype, vertical_distance)
-vertical_physics <- fit_prototype(physics_prototype, vertical_distance)
+set.seed(5515605)
+vertical_fits <- purrr::map(prototypes, ~fit_prototype(., vertical_distance))
 vertical_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, vertical_distance, add_loo = FALSE)
 ```
 
 ### Compare models
 
 ```{r}
-compare_models(vertical_perceptual_coupling_model, vertical_independent_model, vertical_physics)
+compare_models(vertical_fits)
 ```
 
 ### vertical distance model predictions
 
 ```{r vertical distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-vertical_distance_fit_predictions <- predict(vertical_perceptual_coupling_model,
-                                    newdata = data.frame(Term = seq(0, 4.1, 0.1)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
-  data.frame() %>%
+vertical_distance_fit_predictions <- 
+  predict(vertical_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(0, 4.1, 0.1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
+  as_tibble() %>%
   add_column(Term = seq(0, 4.1, 0.1)) %>%
   rename(Distance = Term)
 ```
@@ -366,15 +174,14 @@ vertical_distance_plot <-
   geom_quasirandom(data=vertical_distance, method="tukeyDense", width=0.2,
                   aes(x=Distance, group=Distance, y=Pcongruent)) +
   scale_x_continuous(name = "Vertical Distance (degrees)", breaks = unique(vertical_distance$Distance),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(vertical_pairwise_comparison))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(vertical_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme()
 vertical_distance_plot
 ```
 
-
-
 ## Distance horizontal condition
+
 ```{r}
 horizontal_distance <- 
   reports %>%
@@ -383,14 +190,15 @@ horizontal_distance <-
                 ShiftAsFactor = as.factor(ShiftAbs),
                 ShiftAsFactor= fct_relevel(ShiftAsFactor,"0", "1", "2", "3", "4")) %>%
   
-  ## computing Pcongurent for each participant and distance seperatly
+  # computing Pcongurent for each participant and distance seperatly
   dplyr::group_by(Participant, ShiftAbs, ShiftAsFactor) %>%
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
-            Pcongruent = CongruentDur / TotalDuration) %>%
+            Pcongruent = CongruentDur / TotalDuration, .groups="drop") %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
-# duplicating distance as Term for common BRMS model use
+
+  # duplicating distance as Term for common BRMS model use
   dplyr::mutate(Term = ShiftAbs,
                 TermAsFactor = ShiftAsFactor)%>%
   mutate(NotInteracting=as.numeric(ShiftAbs != 0))
@@ -400,26 +208,25 @@ horizontal_distance <-
 
 ```{r Fitting Horizontal distance as a continuous variable via brms}
 set.seed(3829937)
-horizontal_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, horizontal_distance)
-horizontal_independent_model <- fit_prototype(independent_prototype, horizontal_distance)
-horizontal_physics <- fit_prototype(physics_prototype, horizontal_distance)
+horizontal_fits <- purrr::map(prototypes, ~fit_prototype(., horizontal_distance))
 horizontal_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, horizontal_distance, add_loo = FALSE)
 ```
 
 ### Compare models
 
 ```{r}
-compare_models(horizontal_perceptual_coupling_model, horizontal_independent_model, horizontal_physics)
+compare_models(horizontal_fits)
 ```
 
 ### horizontal_distance model predictions
 
 ```{r horizontal_distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-horizontal_distance_fit_predictions <- predict(horizontal_perceptual_coupling_model,
-                                    newdata = data.frame(Term = seq(0, 4.1, 0.1)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
+horizontal_distance_fit_predictions <- 
+  predict(horizontal_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(0, 4.1, 0.1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
   data.frame() %>%
   add_column(Term = seq(0, 4.1, 0.1)) %>%
   rename(ShiftAbs = Term)
@@ -436,14 +243,14 @@ horizontal_distance_plot <-
   geom_quasirandom(data=horizontal_distance, method="tukeyDense", width=0.2,
                   aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Horizontal Distance (degrees)", breaks = unique(horizontal_distance$ShiftAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(horizontal_pairwise_comparison))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(horizontal_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent") +
   plot_theme()
 horizontal_distance_plot
 ```
 ## Sphere ambiguity condition
 ```{r}
-sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as levels of ambiguiation?
+sphere_ambiguity <-
   reports %>%
   filter(SessionTag == "Main", Condition %in% c("Control", "Sphere ambiguity"))%>%
   dplyr::mutate(SphereDisambiguationAbs = abs(SphereDisambiguation), 
@@ -455,9 +262,11 @@ sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
-            Pcongruent = CongruentDur / TotalDuration) %>%
+            Pcongruent = CongruentDur / TotalDuration,
+            .groups="drop") %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005) %>%             
-# duplicating Sphere ambiguity as Term for common BRMS model use
+
+  # duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = SphereDisambiguationAbs,
                 TermAsFactor = SphereDisambiguationAsFactor)%>%
   dplyr::mutate(NotInteracting=1)
@@ -466,10 +275,8 @@ sphere_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
 ### Fitting sphere ambiguity condition via brms
 
 ```{r Fitting sphere ambiguity as a continuous variable via brms}
-set.seed(5515605 )
-sphere_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, sphere_ambiguity)
-sphere_independent_model <- fit_prototype(independent_prototype, sphere_ambiguity)
-sphere_physics <- fit_prototype(physics_prototype, sphere_ambiguity)
+set.seed(5515605)
+sphere_fits <- purrr::map(prototypes, ~fit_prototype(., sphere_ambiguity))
 sphere_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, sphere_ambiguity, add_loo = FALSE)
 ```
 
@@ -477,7 +284,7 @@ sphere_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, spher
 ### Compare models
 
 ```{r}
-compare_models(sphere_perceptual_coupling_model, sphere_independent_model, sphere_physics)
+compare_models(sphere_fits)
 ```
 
 ### sphere ambiguity model predictions
@@ -485,11 +292,11 @@ compare_models(sphere_perceptual_coupling_model, sphere_independent_model, spher
 ```{r sphere ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 sphere_ambiguity_fit_predictions <- 
-  predict(sphere_perceptual_coupling_model,
-                                    newdata = data.frame(Term = seq(0, 1.1, 0.1)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
-  data.frame() %>%
+  predict(sphere_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
+  as_tibble() %>%
   add_column(Term = seq(0, 1.1, 0.1)) %>%
   rename(SphereDisambiguationAbs = Term)
 ```
@@ -505,7 +312,7 @@ sphere_ambiguity_plot <-
   geom_quasirandom(data=sphere_ambiguity, method="tukeyDense", width=0.04,
                   aes(x=SphereDisambiguationAbs, group=SphereDisambiguationAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Sphere Disambiguation (degrees)", breaks = unique(sphere_ambiguity$SphereDisambiguationAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(sphere_pairwise_comparison))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(sphere_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme()
 sphere_ambiguity_plot
@@ -513,7 +320,7 @@ sphere_ambiguity_plot
 ### Walker ambiguity condition
 
 ```{r}
-walker_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as levels of ambiguiation?
+walker_ambiguity <-
   reports %>%
   filter(SessionTag == "Main", Condition %in% c("Control", "Walker ambiguity"))%>%
   dplyr::mutate(WalkerDisambiguationAbs = abs(WalkerDisambiguation), 
@@ -525,38 +332,38 @@ walker_ambiguity <- # how do i make it so -1 and -0.25 will be recognized as lev
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CongruentDur = sum(Duration[Percept=="congruent"]),
-            Pcongruent = CongruentDur / TotalDuration) %>%
+            Pcongruent = CongruentDur / TotalDuration,
+            .groups="drop") %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005) %>%             
-# duplicating Sphere ambiguity as Term for common BRMS model use
+
+  # duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = WalkerDisambiguationAbs,
                 TermAsFactor = WalkerDisambiguationAsFactor)%>%
   dplyr::mutate(NotInteracting=1)
 ```
 
 ### Fitting walker ambiguity condition via brms
-
 ```{r Fitting walker ambiguity as a continuous variable via brms}
-set.seed(5515605 )
-walker_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, walker_ambiguity)
-walker_independent_model <- fit_prototype(independent_prototype, walker_ambiguity)
-walker_physics<- fit_prototype(physics_prototype, walker_ambiguity)
-walker_pairwise_comprarison <- fit_prototype(pairwise_comparison_prototype, walker_ambiguity, add_loo = FALSE)
+set.seed(5515605)
+walker_fits <- purrr::map(prototypes, ~fit_prototype(., walker_ambiguity))
+walker_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, walker_ambiguity, add_loo = FALSE)
 ```
-### Compare models
 
+### Compare models
 ```{r}
-compare_models(walker_perceptual_coupling_model, walker_independent_model, walker_physics)
+compare_models(walker_fits)
 ```
 
 ### walker ambiguity model predictions
 
 ```{r walker ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-walker_ambiguity_fit_predictions <- predict(walker_perceptual_coupling_model,
-                                    newdata = data.frame(Term = seq(0, 1.1, 0.1)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
-  data.frame() %>%
+walker_ambiguity_fit_predictions <- 
+  predict(walker_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
+  as_tibble() %>%
   add_column(Term = seq(0, 1.1, 0.1)) %>%
   rename(WalkerDisambiguationAbs = Term)
 ```
@@ -572,11 +379,12 @@ walker_ambiguity_plot <-
   geom_quasirandom(data=walker_ambiguity, method="tukeyDense", width=0.07,
                   aes(x=WalkerDisambiguationAbs, group=WalkerDisambiguationAbs, y=Pcongruent)) +
   scale_x_continuous(name = "Walker Disambiguation (degrees)",limits= c(-0.09, 1.09),  breaks = unique(walker_ambiguity$WalkerDisambiguationAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(walker_pairwise_comprarison))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(walker_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme()
 walker_ambiguity_plot
 ```
+
 ## All plots together
 
 ```{r}
@@ -594,11 +402,9 @@ sphere_ambiguity_plot / walker_ambiguity_plot +
 # ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
 ggsave('figure-04-walker-ambiguity.png', width=14, height=14, units="cm")
 ggsave('figure-04-walker-ambiguity.svg', width=14, height=14, units="cm")
-
 ```
 
 ## Single Object report walker
-
 
 ```{r}
 SOR_walker <- 
