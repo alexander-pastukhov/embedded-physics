@@ -308,7 +308,7 @@ physics_prototype <- brm(Padj ~ NotInteracting + (1|Participant),
                          chains=0, 
                          prior=c(prior(normal(0, 1), class="b")))
 
-interaction_prototype<- brm(Term + Term:NotInteracting,
+interaction_prototype<- brm(Padj~Term + Term:NotInteracting,
                            family=Beta(),
                            data=distance,
                            chains=0,
@@ -319,6 +319,11 @@ pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
                         data=distance,
                         chains=0, # this means that model is never sampled
                         prior=c(prior(normal(0,1), class="b")))
+
+prototypes <- list("Independent" = independent_prototype,
+                   "Perceptual Coupling" = perceptual_coupling_prototype, 
+                   "Physics" = physics_prototype,
+                   "Interaction" = interaction_prototype)
 ```
 
 ### Fitting distance condition via brms
@@ -326,30 +331,44 @@ pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
 ```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
 set.seed(9578175)
-distance_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
-distance_independent_model <- fit_prototype(independent_prototype, distance)
-distance_physics <- fit_prototype(physics_prototype, distance)
+#distance_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
+#distance_independent_model <- fit_prototype(independent_prototype, distance)
+#distance_physics <- fit_prototype(physics_prototype, distance)
+#distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
+#distance_interaction<- fit_prototype(interaction_prototype, distance)
+
+distance_fits <- purrr::map(prototypes, ~fit_prototype(., distance))
 distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
 
-distance_interaction<- fit_prototype(interaction_prototype, distance)
 ```
 
 
 ### Compare models
 
 ```{r}
-compare_models(distance_perceptual_coupling, distance_independent_model, distance_physics, distance_interaction)
+#compare_models(distance_perceptual_coupling, distance_independent_model, distance_physics, distance_interaction)
+
+compare_models(distance_fits)
 ```
 
 ### Generate model predictions
 
 ```{r Distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-distance_fit_predictions <- predict(distance_perceptual_coupling,
-                                    newdata = data.frame(Term = seq(-10, 70, 1)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
-  data.frame() %>%
+#distance_fit_predictions <- predict(distance_perceptual_coupling,
+#                                    newdata = data.frame(Term = seq(-10, 70, 1)),
+#                                    probs = c(0.055, 0.25, 0.75, 0.945),
+ #                                   re_formula = NA) %>%
+ # data.frame() %>%
+ # add_column(Term = seq(-10, 70, 1)) %>%
+ # rename(Distance = Term)
+
+distance_fit_predictions <- 
+  predict(distance_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(-10, 70, 1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
+  as_tibble() %>%
   add_column(Term = seq(-10, 70, 1)) %>%
   rename(Distance = Term)
 ```
@@ -365,10 +384,10 @@ distance_plot <-
   geom_quasirandom(data=distance, method="tukeyDense", width=2,
                   aes(x=Distance, group=Distance, y=Pcounterrotate)) +
   scale_x_continuous(name = "Distance (degrees)", breaks = unique(distance$Distance),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(distance_pairwise_comparison))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(distance_pairwise_comparison))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
-
+# changed compute_factor_level_betas to compute_factor_level_predicted_difference
 distance_plot
 ```
 
@@ -409,27 +428,40 @@ occlusion<- reports%>%
 ```{r Fitting occlusion as a continuous variable via brms}
 # Computing brm for occlusion condition
 set.seed(9789931)
-occlusion_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, occlusion)
-occlusion_independent_model <- fit_prototype(independent_prototype, occlusion)
-occlusion_physics<- fit_prototype(physics_prototype, occlusion)
+#occlusion_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, occlusion)
+#occlusion_independent_model <- fit_prototype(independent_prototype, occlusion)
+#occlusion_physics<- fit_prototype(physics_prototype, occlusion)
+#occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
+#occlusion_interaction<- fit_prototype(interaction_prototype, occlusion)
+
+occlusion_fits <- purrr::map(prototypes, ~fit_prototype(., occlusion))
 occlusion_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, occlusion, add_loo = FALSE)
-occlusion_interaction<- fit_prototype(interaction_prototype, occlusion)
 ```
 
 ```{r comparing models}
-compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlusion_physics, occlusion_interaction)
+#compare_models(occlusion_perceptual_coupling, occlusion_independent_model, occlusion_physics, occlusion_interaction)
+compare_models(occlusion_fits)
 ```
 
 ### Generate model predictions Occlusion
 
 ```{r Occlusion as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-occlusion_fit_predictions <- predict(occlusion_perceptual_coupling,
-                                    newdata = data.frame(Term = seq(0, 70, 1)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
-  data.frame() %>%
-  add_column(Term = seq(0, 70, 1)) %>%
+#occlusion_fit_predictions <- predict(occlusion_perceptual_coupling,
+ #                                   newdata = data.frame(Term = #seq(0, 70, 1)),
+ #                                   probs = c(0.055, 0.25, 0.75, 0.945),
+ #                                   re_formula = NA) %>%
+ # data.frame() %>%
+  #add_column(Term = seq(0, 70, 1)) %>%
+ # rename(Occlusion = Term)
+
+occlusion_fit_predictions <- 
+  predict(occlusion_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(-10, 70, 1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
+  as_tibble() %>%
+  add_column(Term = seq(-10, 70, 1)) %>%
   rename(Occlusion = Term)
 ```
 
@@ -444,10 +476,10 @@ occlusion_plot <-
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
                   aes(x=Occlusion, group=Occlusion, y=Pcounterrotate)) +
   scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(occlusion_pairwise_comparison))) +
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(occlusion_pairwise_comparison))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
-
+#changed compute_factor_level_betas to compute_factor_level_predicted_difference
 occlusion_plot
 ```
 
