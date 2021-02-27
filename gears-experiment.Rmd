@@ -543,10 +543,12 @@ ambiguity_fit_predictions <-
                               levels(ambiguity$Display)),
                              summary = FALSE,
                             re_formula = NA) %>%
-  data.frame() %>%
+  #data.frame() %>%
+    as_tibble() %>%
 pivot_longer(everything(), names_to = "Display", values_to = "Pcounterrotate") %>%
-mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(ambiguity$Display)))
-  rename(Display = Term)
+mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(ambiguity$Display)))%>%
+  rename(Display = TermAsFactor)
+
 
 ambiguity_fit_moments <-
   ambiguity_fit_predictions %>%
