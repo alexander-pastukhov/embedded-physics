@@ -620,6 +620,8 @@ disambiguation_intercept_model <- fit_prototype(independent_prototype, disambigu
 ```
 
 ```{r comparing the disambiguation models}
+
+## still need to figure this out
 disambiguation_alpha <- compute_full_model_alpha(disambiguation_factor_model)
 disambiguation_comparison <- compare_models(disambiguation_factor_model, disambiguation_intercept_model)
 disambiguation_summary <- stringr::str_c(disambiguation_alpha, disambiguation_comparison, sep=", ")
@@ -659,10 +661,12 @@ disambiguation_plot_main <-
                      breaks = unique(as.numeric(disambiguation$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
-                                          labels = compute_factor_level_betas(disambiguation_factor_model)))+
+                                          labels = compute_factor_level_predicted_difference(disambiguation_factor_model)))+
   scale_y_continuous(name="Pclockwise") +
   plot_theme() +
   labs(subtitle=disambiguation_summary)
+
+#changed compute_factor_level_betas to compute_factor_level_predicted_difference
 
 disambiguation_plot_main
 
