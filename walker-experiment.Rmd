@@ -483,11 +483,14 @@ SOR_walker_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=SOR_walker, method="tukeyDense", width=0.2,
                   aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
-  scale_x_continuous(name = "Shift (degrees)", breaks = unique(SOR_walker$ShiftAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_betas(SOR_walker_pairwise_comparison))) +
+  scale_x_continuous(name = "Shift (degrees)", limits= c(-0.09, 1.09), breaks = unique(SOR_walker$ShiftAbs),
+                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(SOR_walker_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme()
 SOR_walker_plot
+# changed compute_factor_level_betas to compute_factor_level_predicted_difference and added limits
+
+
 
 ```
 
