@@ -69,7 +69,7 @@ rm(list=ls())
 #compute_dELPD <- function(full_model, intercept_model){
  # dLOO <-   
   #  loo::loo_compare(list("Term" = full_model$criteria$loo,
-                          "Intercept" = #intercept_model$criteria$loo)) %>%
+       #                   "Intercept" = #intercept_model$criteria$loo)) %>%
 #    data.frame() %>%
  #   rownames_to_column("Coefficient") %>%
     
@@ -85,7 +85,7 @@ rm(list=ls())
 #compute_full_model_weight <- function(full_model, intercepts_model){
  # full_model_weight <- 
   #  loo::loo_model_weights(list("Term" = full_model$criteria$loo,
-                                "Intercept" = #intercepts_model$criteria$loo))["Term"]
+ #                               "Intercept" = #intercepts_model$criteria$loo))["Term"]
   
 #  sprintf("W=%.2f", full_model_weight)
 #}
@@ -526,7 +526,7 @@ ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, am
 compare_models(ambiguity_fits)
 ```
 
-Generating predictions
+##Generating predictions
 
 ```{r predicting and plotting ambiguity}
 #ambiguity_fit_predictions <- predict(ambiguity_pairwise_comparison,
@@ -574,9 +574,11 @@ ambiguity_plot <-
                      breaks = unique(as.numeric(ambiguity$Display)),
                      labels = c("ambiguous","weak", "medium","medium-strong","strong"),
                      sec.axis =  dup_axis(name = element_blank(),
-                                          labels = compute_factor_level_betas(ambiguity_pairwise_comparison)))+
+                                          labels = compute_factor_level_predicted_difference(ambiguity_pairwise_comparison)))+
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
+
+#changed compute_factor_level_betas to compute_factor_level_predicted_difference
 ambiguity_plot
 ```
 
@@ -611,6 +613,8 @@ mutate(TermAsFactor = Display)
 set.seed(31937)
 disambiguation_factor_model <- fit_prototype(pairwise_comparison_prototype, disambiguation)
 disambiguation_intercept_model <- fit_prototype(independent_prototype, disambiguation)
+
+
 ```
 
 ```{r comparing the disambiguation models}
