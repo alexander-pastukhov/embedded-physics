@@ -434,28 +434,42 @@ SOR_walker <-
 ```{r Fitting SOR walker as a continuous variable via brms}
 set.seed(5515605 )
 # error here: 'beta' requires response greater than zero
-SOR_walker_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, SOR_walker)
-SOR_walker_independent_model <- fit_prototype(independent_prototype, SOR_walker)
-SOR_walker_physics <- fit_prototype(physics_prototype, SOR_walker)
+#SOR_walker_perceptual_coupling_model <- fit_prototype(perceptual_coupling_prototype, SOR_walker)
+#SOR_walker_independent_model <- fit_prototype(independent_prototype, SOR_walker)
+#SOR_walker_physics <- fit_prototype(physics_prototype, SOR_walker)
+#SOR_walker_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, SOR_walker, add_loo = FALSE)
+
+SOR_walker_fits <- purrr::map(prototypes, ~fit_prototype(., SOR_walker))
 SOR_walker_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, SOR_walker, add_loo = FALSE)
 ```
 
 ### Compare models
 
 ```{r}
-compare_models(SOR_walker_perceptual_coupling_model, SOR_walker_independent_model, SOR_walker_physics)
+#compare_models(SOR_walker_perceptual_coupling_model, SOR_walker_independent_model, SOR_walker_physics)
+
+compare_models(SOR_walker_fits)
 ```
 
 ### walker SOR model predictions
 
 ```{r walker SOR as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
-SOR_walker_fit_predictions <- predict(SOR_walker_perceptual_coupling_model,
-                                    newdata = data.frame(Term = seq(0, 4.2)),
-                                    probs = c(0.055, 0.25, 0.75, 0.945),
-                                    re_formula = NA) %>%
-  data.frame() %>%
-  add_column(Term = seq(0, 4.2)) %>%
+#SOR_walker_fit_predictions <- predict(SOR_walker_perceptual_coupling_model,
+#                                    newdata = data.frame(Term = seq(0, 4.2)),
+#                                    probs = c(0.055, 0.25, 0.75, 0.945),
+ #                                   re_formula = NA) %>%
+ # data.frame() %>%
+  #add_column(Term = seq(0, 4.2)) %>%
+  #rename(ShiftAbs = Term)
+
+SOR_walker_fit_predictions <- 
+  predict(SOR_walker_fits$`Perceptual Coupling`,
+          newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+          probs = c(0.055, 0.25, 0.75, 0.945),
+          re_formula = NA) %>%
+  as_tibble() %>%
+  add_column(Term = seq(0, 1.1, 0.1)) %>%
   rename(ShiftAbs = Term)
 ```
 
@@ -474,6 +488,7 @@ SOR_walker_plot <-
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme()
 SOR_walker_plot
+
 ```
 
 ## Single Object report sphere
