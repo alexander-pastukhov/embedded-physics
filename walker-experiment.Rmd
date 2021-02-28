@@ -128,8 +128,8 @@ pairwise_comparison_prototype <- brm(PcongruentAdj ~ TermAsFactor + (1|Participa
                         prior=c(prior(normal(0,1), class="b")))
 
 prototypes <- list("Independent" = independent_prototype,
-                   "Perceptual Coupling" = perceptual_coupling_prototype, 
-                   "Physics" = physics_prototype,
+                   "Stimulus-based" = perceptual_coupling_prototype, 
+                   "Physics-based" = physics_prototype,
                    "Interaction" = interaction_prototype)
 ```
 
@@ -154,7 +154,7 @@ compare_models(vertical_fits)
 ```{r vertical distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 vertical_distance_fit_predictions <- 
-  predict(vertical_fits$`Perceptual Coupling`,
+  predict(vertical_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(0, 4.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -223,7 +223,7 @@ compare_models(horizontal_fits)
 ```{r horizontal_distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 horizontal_distance_fit_predictions <- 
-  predict(horizontal_fits$`Perceptual Coupling`,
+  predict(horizontal_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(0, 4.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -292,7 +292,7 @@ compare_models(sphere_fits)
 ```{r sphere ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 sphere_ambiguity_fit_predictions <- 
-  predict(sphere_fits$`Perceptual Coupling`,
+  predict(sphere_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(0, 1.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -359,7 +359,7 @@ compare_models(walker_fits)
 ```{r walker ambiguity as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 walker_ambiguity_fit_predictions <- 
-  predict(walker_fits$`Perceptual Coupling`,
+  predict(walker_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(0, 1.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -392,16 +392,16 @@ vertical_distance_plot/horizontal_distance_plot  +
   plot_annotation(tag_levels= "A")
 
 # ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-03-walker-distance.png', width=14, height=14, units="cm")
-ggsave('figure-03-walker-distance.svg', width=14, height=14, units="cm")
+ggsave('figure-03-walker-distance.png', width=18.3, height=14, units="cm")
+ggsave('figure-03-walker-distance.svg', width=18.3, height=14, units="cm")
 
 
 sphere_ambiguity_plot / walker_ambiguity_plot + 
   plot_annotation(tag_levels= "A")
 
 # ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-04-walker-ambiguity.png', width=14, height=14, units="cm")
-ggsave('figure-04-walker-ambiguity.svg', width=14, height=14, units="cm")
+ggsave('figure-04-walker-ambiguity.png', width=18.3, height=14, units="cm")
+ggsave('figure-04-walker-ambiguity.svg', width=18.3, height=14, units="cm")
 ```
 
 ## Single Object report walker
@@ -447,7 +447,7 @@ compare_models(SOR_walker_fits)
 
 ```{r walker SOR as continuous predictions}
 SOR_walker_fit_predictions <- 
-  predict(SOR_walker_fits$`Perceptual Coupling`,
+  predict(SOR_walker_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(0, 1.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -530,7 +530,7 @@ compare_models(SOR_sphere_fits)
 ```{r sphere SOR as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 SOR_sphere_fit_predictions <- 
-  predict(SOR_sphere_fits$`Perceptual Coupling`,
+  predict(SOR_sphere_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(0, 1.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -565,6 +565,6 @@ SOR_sphere_plot/SOR_walker_plot  +
   plot_annotation(tag_levels= "A")
 
 # ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-05-walker-single.png', width=14, height=14, units="cm")
-ggsave('figure-05-walker-single.svg', width=14, height=14, units="cm")
+ggsave('figure-05-walker-single.png', width=18.3, height=14, units="cm")
+ggsave('figure-05-walker-single.svg', width=18.3, height=14, units="cm")
 ```
