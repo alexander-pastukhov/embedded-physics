@@ -118,17 +118,23 @@ compute_model_alpha <- function(brms_model, CI=0.89){
 #' @return vector of character with ΔP estimates and CI for each pair. First value is "Control condition"
 #' @export
 compute_factor_level_predicted_difference <- function(factor_model, CI=0.89){
-  predictions <- 
-    predict(factor_model, 
-            newdata = data.frame(TermAsFactor = sort(unique(factor_model$data$TermAsFactor))),
-            summary = FALSE,
-            re_formula = NA) 
+  
+  posterior_samples <- 
+    brms::posterior_samples(factor_model) %>%
+    select(1:length(unique(factor_model$data$TermAsFactor)))
+  
+  baseline <- posterior_samples[, 1]
+  posterior_samples[, 1] <- 0
+  predictions <-
+    baseline + posterior_samples %>%
+    as.matrix() %>%
+    boot::inv.logit()
   
   deltaP <- predictions[, -1] - predictions[, 1]
   
   dP <- 
     tibble(
-      Estimate = apply(deltaP, MARGIN = 2, mean),
+      Estimate = apply(deltaP, MARGIN = 2, median),
       LowerCI = apply(deltaP, MARGIN = 2, quantile, probs=(1-CI)/2),
       UpperCI = apply(deltaP, MARGIN = 2, quantile, 1-(1-CI)/2)) %>%
     mutate(Label = glue("ΔP={round(Estimate, 2)}\n{round(LowerCI, 1)}..{round(UpperCI, 1)}")) %>%
