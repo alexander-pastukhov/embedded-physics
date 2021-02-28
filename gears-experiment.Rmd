@@ -30,10 +30,6 @@ extrafont::loadfonts(quiet = TRUE)
 eval(parse('common_utilities.R', encoding = 'UTF-8'))
 ```
 
-```{r Tabula rasa}
-rm(list=ls())
-```
-
 ## Utilities
 
 
