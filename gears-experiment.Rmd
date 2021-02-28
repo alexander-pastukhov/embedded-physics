@@ -114,7 +114,8 @@ distance <-
   dplyr::summarize(TotalDuration = sum(Duration),
             # if value in the brackets is true it'll be considered if not it will not
             CounterrotateDur = sum(Duration[!IsCorotating]),
-            Pcounterrotate = CounterrotateDur / TotalDuration) %>%
+            Pcounterrotate = CounterrotateDur / TotalDuration,
+            .groups="drop") %>%
 
   # beta distribution does not like 0 and 1
   dplyr::mutate(Padj = Pcounterrotate * 0.999 + 0.0005) %>%
@@ -169,15 +170,9 @@ prototypes <- list("Independent" = independent_prototype,
 ```{r Fitting distance as a continuous variable via brms}
 # Computing brm for distance condition
 set.seed(9578175)
-#distance_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, distance)
-#distance_independent_model <- fit_prototype(independent_prototype, distance)
-#distance_physics <- fit_prototype(physics_prototype, distance)
-#distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
-#distance_interaction<- fit_prototype(interaction_prototype, distance)
-
 distance_fits <- purrr::map(prototypes, ~fit_prototype(., distance))
-distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, distance, add_loo = FALSE)
-
+distance_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, 
+                                              distance, add_loo = FALSE)
 ```
 
 
