@@ -160,8 +160,8 @@ pairwise_comparison_prototype <- brm(Padj ~ TermAsFactor + (1|Participant),
                         prior=c(prior(normal(0,1), class="b")))
 
 prototypes <- list("Independent" = independent_prototype,
-                   "Perceptual Coupling" = perceptual_coupling_prototype, 
-                   "Physics" = physics_prototype,
+                   "Stimulus-based" = perceptual_coupling_prototype, 
+                   "Physics-based" = physics_prototype,
                    "Interaction" = interaction_prototype)
 ```
 
@@ -187,7 +187,7 @@ compare_models(distance_fits)
 ```{r Distance as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 distance_fit_predictions <- 
-  predict(distance_fits$`Perceptual Coupling`,
+  predict(distance_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(-10, 70, 1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -267,7 +267,7 @@ compare_models(occlusion_fits)
 ```{r Occlusion as continuous predictions}
 # predict GROUP-LEVEL Pcorotation
 occlusion_fit_predictions <- 
-  predict(occlusion_fits$`Perceptual Coupling`,
+  predict(occlusion_fits$`Stimulus-based`,
           newdata = data.frame(Term = seq(-10, 70, 1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
@@ -333,7 +333,7 @@ compare_models(ambiguity_fits)
 
 ```{r predicting and plotting ambiguity}
 ambiguity_fit_predictions <- 
-  predict(ambiguity_fits$`Perceptual Coupling`,
+  predict(ambiguity_fits$`Stimulus-based`,
           newdata = data.frame(Term = levels(ambiguity$Display)),
                                summary = FALSE,
                                re_formula = NA) %>%
@@ -380,8 +380,8 @@ distance_plot / occlusion_plot / ambiguity_plot +
   plot_annotation(tag_levels= "A")
 
 # ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-02-gears.png', width=14, height=16, units="cm")
-ggsave('figure-02-gears.svg', width=14, height=16, units="cm")
+ggsave('figure-02-gears.png', width=18.3, height=16, units="cm")
+ggsave('figure-02-gears.svg', width=18.3, height=16, units="cm")
 ```
 
 
