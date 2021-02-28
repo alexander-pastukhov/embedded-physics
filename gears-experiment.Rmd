@@ -297,76 +297,58 @@ occlusion_plot
 
 ```{r}
 ##Computing Ambiguity Duration
-ambiguity<- reports%>%
-  filter(Condition=="Control"|Condition=="Ambiguity")%>% 
-  filter(Percept!="unclear")%>%
+ambiguity <- 
+  reports%>%
+  filter(Condition=="Control" | Condition=="Ambiguity") %>% 
+  filter(Percept!="unclear") %>%
 
-    # each participant and Ambiguity seperatly
-  group_by(Participant, Display)%>% 
+    # each participant and Ambiguity separately
+  group_by(Participant, Display) %>% 
   summarize(TotalDuration=sum(Duration),
-          
-              # if value in the brackets is true itll be considered if not it will not
-              CounterrotateDur=sum(Duration[!IsCorotating]),
-              Pcounterrotate=CounterrotateDur/TotalDuration) %>%
+            # if value in the brackets is true it'll be considered if not it will not
+            CounterrotateDur=sum(Duration[!IsCorotating]),
+            Pcounterrotate=CounterrotateDur/TotalDuration,
+            .groups="drop") %>%
   mutate(Padj=Pcounterrotate*0.999+0.0005) %>%
   
-  mutate(Term= Display)%>%#used to be TermAsFactor
-  mutate(TermAsFactor=Display)%>%
+  #used to be TermAsFactor
+  mutate(Term = Display) %>% 
+  mutate(TermAsFactor = Display)%>%
   dplyr::mutate(NotInteracting=0)
-
 ```
 
 ```{r fitting ambiguity}
 set.seed(472832)
-#ambiguity_perceptual_coupling <- fit_prototype(perceptual_coupling_prototype, ambiguity)
-#ambiguity_independent_model <- fit_prototype(independent_prototype, ambiguity)
-#ambiguity_physics <- fit_prototype(physics_prototype, ambiguity)
-#ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ambiguity, add_loo = FALSE)
-#ambiguity_interaction<- fit_prototype(interaction_prototype, ambiguity)
-
 ambiguity_fits <- purrr::map(prototypes, ~fit_prototype(., ambiguity))
-ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, ambiguity, add_loo = FALSE)
+ambiguity_pairwise_comparison <- fit_prototype(pairwise_comparison_prototype, 
+                                               ambiguity, 
+                                               add_loo=FALSE)
 ```
 
 ```{r comparing models ambiguity}
-#compare_models(ambiguity_perceptual_coupling, ambiguity_independent_model, ambiguity_physics, ambiguity_interaction)
-
 compare_models(ambiguity_fits)
 ```
 
-##Generating predictions
+## Generating predictions
 
 ```{r predicting and plotting ambiguity}
-#ambiguity_fit_predictions <- predict(ambiguity_pairwise_comparison,
-#                                     newdata = #data.frame(TermAsFactor = levels(ambiguity$Display)),
-#                                     summary = FALSE,
- #                                    re_formula = NA) %>%
- # data.frame() %>%
-#  pivot_longer(everything(), names_to = "Display", values_to = "Pcounterrotate") %>%
-#  mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(ambiguity$Display)))
-  
 ambiguity_fit_predictions <- 
   predict(ambiguity_fits$`Perceptual Coupling`,
-          newdata = data.frame(TermAsFactor =
-                              levels(ambiguity$Display)),
-                             summary = FALSE,
-                            re_formula = NA) %>%
-  #data.frame() %>%
-    as_tibble() %>%
-pivot_longer(everything(), names_to = "Display", values_to = "Pcounterrotate") %>%
-mutate(Display = factor(Display, levels = sort(unique(Display)), labels = levels(ambiguity$Display)))%>%
-  rename(Display = TermAsFactor)
-
+          newdata = data.frame(Term = levels(ambiguity$Display)),
+                               summary = FALSE,
+                               re_formula = NA) %>%
+  as_tibble() %>%
+  pivot_longer(everything(), names_to = "Display", values_to = "Pcounterrotate") %>%
+  mutate(Display = factor(Display, 
+                          levels = sort(unique(Display)), 
+                          labels = levels(ambiguity$Display)))
 
 ambiguity_fit_moments <-
   ambiguity_fit_predictions %>%
   group_by(Display) %>%
   summarise(meanP = mean(Pcounterrotate),
-            medianP= median(Pcounterrotate))
-
-
-
-
+            medianP= median(Pcounterrotate),
+            .groups="drop")
 ```
 
 
@@ -388,7 +370,6 @@ ambiguity_plot <-
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
 
-#changed compute_factor_level_betas to compute_factor_level_predicted_difference
 ambiguity_plot
 ```
 
