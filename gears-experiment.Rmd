@@ -459,8 +459,8 @@ disambiguation_plot_main <-
 
 disambiguation_plot_main
 
-ggsave("figure-s01.png", units="cm", width=14, height=7)
-ggsave("figure-s01.pdf", units="cm", width=14, height=7, device=cairo_pdf)
-ggsave("figure-s01.svg", units="cm", width=14, height=7)
+ggsave("figure-s01.png", units="cm", width=18.3, height=7)
+ggsave("figure-s01.pdf", units="cm", width=18.3, height=7, device=cairo_pdf)
+ggsave("figure-s01.svg", units="cm", width=18.3, height=7)
 ```
 
