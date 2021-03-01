@@ -391,17 +391,16 @@ walker_ambiguity_plot
 vertical_distance_plot/horizontal_distance_plot  + 
   plot_annotation(tag_levels= "A")
 
-# ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-03-walker-distance.png', width=18.3, height=14, units="cm")
-ggsave('figure-03-walker-distance.svg', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-03-walker-distance.png', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-03-walker-distance.svg', width=18.3, height=14, units="cm")
 
 
 sphere_ambiguity_plot / walker_ambiguity_plot + 
   plot_annotation(tag_levels= "A")
 
-# ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-04-walker-ambiguity.png', width=18.3, height=14, units="cm")
-ggsave('figure-04-walker-ambiguity.svg', width=18.3, height=14, units="cm")
+# ggsave('Figures/figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
+ggsave('Figures/figure-04-walker-ambiguity.png', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-04-walker-ambiguity.svg', width=18.3, height=14, units="cm")
 ```
 
 ## Single Object report walker
@@ -564,7 +563,7 @@ SOR_sphere_plot
 SOR_sphere_plot/SOR_walker_plot  + 
   plot_annotation(tag_levels= "A")
 
-# ggsave('figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-05-walker-single.png', width=18.3, height=14, units="cm")
-ggsave('figure-05-walker-single.svg', width=18.3, height=14, units="cm")
+# ggsave('Figures/figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
+ggsave('Figures/figure-05-walker-single.png', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-05-walker-single.svg', width=18.3, height=14, units="cm")
 ```

@@ -379,9 +379,9 @@ ambiguity_plot
 distance_plot / occlusion_plot / ambiguity_plot + 
   plot_annotation(tag_levels= "A")
 
-# ggsave('figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('figure-02-gears.png', width=18.3, height=14, units="cm")
-ggsave('figure-02-gears.svg', width=18.3, height=14, units="cm")
+# ggsave('Figures/figure-02-gears.pdf', width=14, height=20, units="cm", device=cairo_pdf)
+ggsave('Figures/figure-02-gears.png', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-02-gears.svg', width=18.3, height=14, units="cm")
 ```
 
 
@@ -404,17 +404,11 @@ mutate(TermAsFactor = Display)
 set.seed(31937)
 disambiguation_factor_model <- fit_prototype(pairwise_comparison_prototype, disambiguation)
 disambiguation_intercept_model <- fit_prototype(independent_prototype, disambiguation)
-
-
 ```
 
 ```{r comparing the disambiguation models}
-
-## still need to figure this out
-disambiguation_alpha <- compute_full_model_alpha(disambiguation_factor_model)
-disambiguation_comparison <- compare_models(disambiguation_factor_model, disambiguation_intercept_model)
-disambiguation_summary <- stringr::str_c(disambiguation_alpha, disambiguation_comparison, sep=", ")
-disambiguation_summary
+compare_models(list("Independent" = disambiguation_intercept_model, 
+                    "Stimulus-based" = disambiguation_factor_model))
 ```
 
 ```{r predicting and plotting ambiguity}
@@ -431,9 +425,8 @@ disambiguation_fit_moments <-
   disambiguation_fit_predictions %>%
   group_by(Display) %>%
   summarise(meanP = mean(Pclockwise),
-            medianP= median(Pclockwise))
-
-
+            medianP= median(Pclockwise),
+            .groups="drop")
 ```
 
 ```{r plotting disambiguation}
@@ -452,15 +445,15 @@ disambiguation_plot_main <-
                      sec.axis =  dup_axis(name = element_blank(),
                                           labels = compute_factor_level_predicted_difference(disambiguation_factor_model)))+
   scale_y_continuous(name="Pclockwise") +
-  plot_theme() +
-  labs(subtitle=disambiguation_summary)
+  plot_theme()
+  # labs(subtitle=disambiguation_summary)
 
 #changed compute_factor_level_betas to compute_factor_level_predicted_difference
 
 disambiguation_plot_main
 
-ggsave("figure-s01.png", units="cm", width=18.3, height=7)
-ggsave("figure-s01.pdf", units="cm", width=18.3, height=7, device=cairo_pdf)
-ggsave("figure-s01.svg", units="cm", width=18.3, height=7)
+ggsave("Figures/figure-s01.png", units="cm", width=18.3, height=7)
+ggsave("Figures/figure-s01.pdf", units="cm", width=18.3, height=7, device=cairo_pdf)
+ggsave("Figures/figure-s01.svg", units="cm", width=18.3, height=7)
 ```
 
