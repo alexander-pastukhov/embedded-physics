@@ -388,19 +388,19 @@ walker_ambiguity_plot
 ## All plots together
 
 ```{r}
-vertical_distance_plot/horizontal_distance_plot  + 
+vertical_distance_plot + horizontal_distance_plot  + 
   plot_annotation(tag_levels= "A")
 
-ggsave('Figures/figure-03-walker-distance.png', width=18.3, height=14, units="cm")
-ggsave('Figures/figure-03-walker-distance.svg', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-03-walker-distance.png', width=18.3, height=8, units="cm")
+ggsave('Figures/figure-03-walker-distance.svg', width=18.3, height=8, units="cm")
 
 
-sphere_ambiguity_plot / walker_ambiguity_plot + 
+sphere_ambiguity_plot + walker_ambiguity_plot + 
   plot_annotation(tag_levels= "A")
 
 # ggsave('Figures/figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('Figures/figure-04-walker-ambiguity.png', width=18.3, height=14, units="cm")
-ggsave('Figures/figure-04-walker-ambiguity.svg', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-04-walker-ambiguity.png', width=18.3, height=8, units="cm")
+ggsave('Figures/figure-04-walker-ambiguity.svg', width=18.3, height=8, units="cm")
 ```
 
 ## Single Object report walker
@@ -445,13 +445,13 @@ compare_models(SOR_walker_fits)
 ### walker SOR model predictions
 
 ```{r walker SOR as continuous predictions}
-SOR_walker_fit_predictions <- 
+SOR_walker_fit_predictions <-
   predict(SOR_walker_fits$`Stimulus-based`,
-          newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+          newdata = data.frame(Term = seq(0, 4.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
   as_tibble() %>%
-  add_column(Term = seq(0, 1.1, 0.1)) %>%
+  add_column(Term = seq(0, 4.1, 0.1)) %>%
   rename(ShiftAbs = Term)
 ```
 
@@ -465,8 +465,11 @@ SOR_walker_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=SOR_walker, method="tukeyDense", width=0.2,
                   aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
-  scale_x_continuous(name = "Shift (degrees)", limits= c(-0.09, 1.09), breaks = unique(SOR_walker$ShiftAbs),
-                     sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(SOR_walker_pairwise_comparison))) +
+  scale_x_continuous(name = "Shift (degrees)", 
+                     limits= c(-0.09, 4.09), 
+                     breaks = unique(SOR_walker$ShiftAbs),
+                     sec.axis =  dup_axis(name=NULL, 
+                                          labels=compute_factor_level_predicted_difference(SOR_walker_pairwise_comparison))) +
   scale_y_continuous(name="Pcongruent", limits= c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   plot_theme()
 SOR_walker_plot
@@ -494,7 +497,8 @@ SOR_sphere <-
   dplyr::summarize(TotalDuration = sum(Duration),
                    # if value in the brackets is true it'll be considered if not it will not
                    ConsistentDur= sum(Duration[InBiasDirection=="TRUE"]),               
-                   Pcongruent = ConsistentDur / TotalDuration) %>%
+                   Pcongruent = ConsistentDur / TotalDuration,
+                   .groups="drop") %>%
   dplyr::mutate(PcongruentAdj = Pcongruent*0.999+0.0005)%>%
 # duplicating Sphere ambiguity as Term for common BRMS model use
   dplyr::mutate(Term = ShiftAbs,
@@ -530,11 +534,11 @@ compare_models(SOR_sphere_fits)
 # predict GROUP-LEVEL Pcorotation
 SOR_sphere_fit_predictions <- 
   predict(SOR_sphere_fits$`Stimulus-based`,
-          newdata = data.frame(Term = seq(0, 1.1, 0.1)),
+          newdata = data.frame(Term = seq(0, 4.1, 0.1)),
           probs = c(0.055, 0.25, 0.75, 0.945),
           re_formula = NA) %>%
   as_tibble() %>%
-  add_column(Term = seq(0, 1.1, 0.1)) %>%
+  add_column(Term = seq(0, 4.1, 0.1)) %>%
   rename(ShiftAbs = Term)
 ```
 
@@ -548,9 +552,9 @@ SOR_sphere_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=SOR_sphere, method="tukeyDense", width=0.2,
                   aes(x=ShiftAbs, group=ShiftAbs, y=Pcongruent)) +
-  scale_x_continuous(name = "Shift (degrees)", limits= c(0, 1),breaks = unique(SOR_sphere$ShiftAbs),
+  scale_x_continuous(name = "Shift (degrees)", limits= c(0, 4.1),breaks = unique(SOR_sphere$ShiftAbs),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(SOR_sphere_pairwise_comparison))) +
-  scale_y_continuous(name="Pconsistent", limits= c(0.9, 1.025), breaks = c(0.9, 0.95,1)) +
+  scale_y_continuous(name="Pconsistent", limits= c(0, 1)) +
   plot_theme()
 
 SOR_sphere_plot
@@ -560,10 +564,10 @@ SOR_sphere_plot
 ```
 
 ```{r}
-SOR_sphere_plot/SOR_walker_plot  + 
+SOR_sphere_plot + SOR_walker_plot  + 
   plot_annotation(tag_levels= "A")
 
 # ggsave('Figures/figure-05-walker.pdf', width=14, height=20, units="cm", device=cairo_pdf)
-ggsave('Figures/figure-05-walker-single.png', width=18.3, height=14, units="cm")
-ggsave('Figures/figure-05-walker-single.svg', width=18.3, height=14, units="cm")
+ggsave('Figures/figure-05-walker-single.png', width=18.3, height=8, units="cm")
+ggsave('Figures/figure-05-walker-single.svg', width=18.3, height=8, units="cm")
 ```

@@ -1,6 +1,6 @@
 ---
 title: "Gears Experiment"
-author: "Lisa Koßmann"
+author: "Lisa Koßmann, Alexander (Sasha) Pastukhov"
 date: "13 Dezember 2019"
 output:
   html_document: default
