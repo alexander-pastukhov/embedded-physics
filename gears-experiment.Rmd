@@ -286,7 +286,7 @@ occlusion_plot <-
   geom_hline(yintercept = 0.5, color="white", size= 1) +
   geom_quasirandom(data=occlusion, method="tukeyDense", width=2,
                   aes(x=Occlusion, group=Occlusion, y=Pcounterrotate)) +
-  scale_x_continuous(name = "Occlusion (degrees)", breaks = unique(occlusion$Occlusion),
+  scale_x_continuous(name = "Occlusion (degrees)", limits=c(0, 70), breaks = unique(occlusion$Occlusion),
                      sec.axis =  dup_axis(name=NULL, labels=compute_factor_level_predicted_difference(occlusion_pairwise_comparison))) +
   scale_y_continuous(name="Pcounter-rotation") +
   plot_theme()
